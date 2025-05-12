@@ -285,7 +285,7 @@ const ClientList = () => {
     if (name === 'price' || name === 'count') {
       setProductFormData({
         ...productFormData,
-        [name]: parseFloat(value) || 0
+        [name]: parseFloat(value)
       });
     } else {
       setProductFormData({
@@ -294,6 +294,7 @@ const ClientList = () => {
       });
     }
   };
+  
 
   const saveProductChanges = () => {
     if (!editingProduct) return;
@@ -990,7 +991,7 @@ const ClientList = () => {
                                 onChange={handleProductFormChange}
                                 min="1"
                                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
-                                placeholder="1"
+                                placeholder="0"
                               />
                             </div>
                           </div>

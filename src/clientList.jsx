@@ -92,7 +92,7 @@ const ClientList = () => {
     if (isDateFilterActive && startDate && endDate) {
       const startDateTime = new Date(startDate).setHours(0, 0, 0, 0);
       const endDateTime = new Date(endDate).setHours(23, 59, 59, 999);
-      
+
       filtered = filtered.filter(client => {
         const clientDate = new Date(client.timestamp).getTime();
         return clientDate >= startDateTime && clientDate <= endDateTime;
@@ -294,7 +294,7 @@ const ClientList = () => {
       });
     }
   };
-  
+
 
   const saveProductChanges = () => {
     if (!editingProduct) return;
@@ -474,7 +474,11 @@ const ClientList = () => {
                   </svg>
                   <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-xl -z-10"></div>
                 </div>
-                <span className="bg-gradient-to-r from-emerald-500 to-teal-400 inline-block text-transparent bg-clip-text">Siyaram Lace</span>
+                {/* <span className="bg-gradient-to-r from-emerald-500 to-teal-400 inline-block text-transparent bg-clip-text">Siyaram Lace</span> */}
+                <a href="/" class="bg-gradient-to-r from-emerald-500 to-teal-400 inline-block text-transparent bg-clip-text">
+                  Siyaram Lace
+                </a>
+
               </h1>
               <div className="flex items-center gap-2 pl-5">
                 {isSmallScreen ? (
@@ -500,26 +504,26 @@ const ClientList = () => {
               </div>
             </div>
             <div className="flex gap-3">
-                {isDateFilterActive && !isSmallScreen && (
-                  <div className={`px-3 py-1.5 ${isDarkMode ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-100 text-amber-700'} rounded-lg text-xs flex items-center`}>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              {isDateFilterActive && !isSmallScreen && (
+                <div className={`px-3 py-1.5 ${isDarkMode ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-100 text-amber-700'} rounded-lg text-xs flex items-center`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  {new Date(startDate).toLocaleDateString()} - {new Date(endDate).toLocaleDateString()}
+                  <button
+                    onClick={() => {
+                      setStartDate('');
+                      setEndDate('');
+                      setIsDateFilterActive(false);
+                    }}
+                    className="ml-2 text-amber-800 hover:text-amber-900"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
-                    {new Date(startDate).toLocaleDateString()} - {new Date(endDate).toLocaleDateString()}
-                    <button 
-                      onClick={() => {
-                        setStartDate('');
-                        setEndDate('');
-                        setIsDateFilterActive(false);
-                      }} 
-                      className="ml-2 text-amber-800 hover:text-amber-900"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                )}
+                  </button>
+                </div>
+              )}
               {savedClients.length > 0 && (
                 <button
                   onClick={deleteAllOrders}
@@ -545,25 +549,25 @@ const ClientList = () => {
 
 
           {isDateFilterActive && isSmallScreen && (
-                  <div className={`px-3 my-2 py-1.5 ${isDarkMode ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-100 text-amber-700'} rounded-lg text-xs flex items-center`}>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    {new Date(startDate).toLocaleDateString()} - {new Date(endDate).toLocaleDateString()}
-                    <button 
-                      onClick={() => {
-                        setStartDate('');
-                        setEndDate('');
-                        setIsDateFilterActive(false);
-                      }} 
-                      className="ml-2 text-amber-800 hover:text-amber-900"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                )}
+            <div className={`px-3 my-2 py-1.5 ${isDarkMode ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-100 text-amber-700'} rounded-lg text-xs flex items-center`}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              {new Date(startDate).toLocaleDateString()} - {new Date(endDate).toLocaleDateString()}
+              <button
+                onClick={() => {
+                  setStartDate('');
+                  setEndDate('');
+                  setIsDateFilterActive(false);
+                }}
+                className="ml-2 text-amber-800 hover:text-amber-900"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          )}
 
           {isInfoOpen && (
             <div className="mb-6 animate-fadeIn">
@@ -597,7 +601,7 @@ const ClientList = () => {
                     <div className="flex items-center justify-between mb-2">
                       <h3 className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Date Range Filter</h3>
                       <div className="flex items-center">
-                        <button 
+                        <button
                           onClick={() => {
                             setIsDateFilterActive(!isDateFilterActive);
                             if (!isDateFilterActive && (!startDate || !endDate)) {
@@ -605,7 +609,7 @@ const ClientList = () => {
                               const today = new Date();
                               const thirtyDaysAgo = new Date();
                               thirtyDaysAgo.setDate(today.getDate() - 30);
-                              
+
                               setStartDate(thirtyDaysAgo.toISOString().split('T')[0]);
                               setEndDate(today.toISOString().split('T')[0]);
                             }
@@ -619,7 +623,7 @@ const ClientList = () => {
                         </span>
                       </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className={`block text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-600'} mb-1`}>Start Date</label>
@@ -640,7 +644,7 @@ const ClientList = () => {
                         />
                       </div>
                     </div>
-                    
+
                     <div className="flex justify-end gap-2 mt-3">
                       <button
                         onClick={() => {

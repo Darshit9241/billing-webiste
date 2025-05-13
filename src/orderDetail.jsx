@@ -15,7 +15,7 @@ const OrderDetail = () => {
   
   // Enhanced PDF options for better responsiveness
   const { toPDF, targetRef } = usePDF({
-    filename: orderData ? `${orderData.clientName}-invoice.pdf` : `invoice-${id}.pdf`,
+    filename: orderData ? `${orderData.clientName}.pdf` : `invoice-${id}.pdf`,
     page: { 
       margin: 15,
       format: 'a4',

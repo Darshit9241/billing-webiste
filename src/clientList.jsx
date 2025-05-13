@@ -344,8 +344,8 @@ const ClientList = () => {
     setEditingProduct({ name: '', price: 0, count: 1, index: editFormData.products.length });
     setProductFormData({
       name: '',
-      price: 0,
-      count: 1
+      price: '',
+      count: ''
     });
   };
 
@@ -978,10 +978,10 @@ const ClientList = () => {
                                   name="price"
                                   value={productFormData.price}
                                   onChange={handleProductFormChange}
-                                  min="0"
+                                  // min="0"
                                   step="0.01"
                                   className="w-full pl-7 px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
-                                  placeholder="0.00"
+                                  // placeholder="0.00"
                                 />
                               </div>
                             </div>
@@ -993,7 +993,7 @@ const ClientList = () => {
                                 name="count"
                                 value={productFormData.count}
                                 onChange={handleProductFormChange}
-                                min="1"
+                                min="0"
                                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
                                 placeholder="0"
                               />

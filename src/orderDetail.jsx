@@ -8,11 +8,34 @@ const OrderDetail = () => {
   const [orderData, setOrderData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isPdfGenerating, setIsPdfGenerating] = useState(false);
   const { id } = useParams();
   const navigate = useNavigate();
+  const pdfRef = useRef(null);
+  
+  // Enhanced PDF options for better responsiveness
   const { toPDF, targetRef } = usePDF({
-    filename: orderData ? `${orderData.clientName}.pdf` : `invoice-${id}.pdf`,
-    page: { margin: 10 }
+    filename: orderData ? `${orderData.clientName}-invoice.pdf` : `invoice-${id}.pdf`,
+    page: { 
+      margin: 15,
+      format: 'a4',
+      orientation: 'portrait'
+    },
+    canvas: {
+      // Improve quality for mobile devices
+      scale: 2,
+      useCORS: true,
+    },
+    // Customize PDF styling
+    overrides: {
+      // Apply custom styles for PDF output
+      pdf: {
+        compress: true
+      },
+      canvas: {
+        useCORS: true
+      }
+    }
   });
 
   const fetchOrder = useCallback(async () => {
@@ -49,9 +72,60 @@ const OrderDetail = () => {
     fetchOrder();
   }, [fetchOrder]);
 
-  const handleDownloadPdf = () => {
-    toPDF();
+  // Enhanced PDF download handler with loading state
+  const handleDownloadPdf = async () => {
+    try {
+      setIsPdfGenerating(true);
+      
+      // Apply mobile-friendly styles before generating PDF
+      const style = document.createElement('style');
+      style.id = 'temp-pdf-styles';
+      style.innerHTML = `
+        @media print {
+          body { margin: 0; padding: 0; }
+          .print-hidden { display: none !important; }
+          table { page-break-inside: avoid; }
+          .print-break-inside-avoid { page-break-inside: avoid; }
+        }
+      `;
+      document.head.appendChild(style);
+      
+      // Generate PDF with delay to ensure styles are applied
+      await toPDF();
+      
+      // Clean up temporary styles
+      const tempStyle = document.getElementById('temp-pdf-styles');
+      if (tempStyle) tempStyle.remove();
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+    } finally {
+      setIsPdfGenerating(false);
+    }
   };
+
+  // Add media queries for print/PDF
+  useEffect(() => {
+    // Add print-specific styles when component mounts
+    const style = document.createElement('style');
+    style.id = 'pdf-print-styles';
+    style.innerHTML = `
+      @media print {
+        body { margin: 0; padding: 0; }
+        .print-hidden { display: none !important; }
+        .print-break-inside-avoid { break-inside: avoid; page-break-inside: avoid; }
+        .print-full-width { width: 100% !important; }
+        table { page-break-inside: avoid; }
+        @page { size: portrait; margin: 10mm; }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // Cleanup when component unmounts
+    return () => {
+      const styleElement = document.getElementById('pdf-print-styles');
+      if (styleElement) styleElement.remove();
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -142,24 +216,39 @@ const OrderDetail = () => {
               </button>
               <button
                 onClick={handleDownloadPdf}
-                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white text-indigo-600 border border-white rounded-lg hover:bg-indigo-50 flex items-center text-xs sm:text-sm font-medium transition-colors"
+                disabled={isPdfGenerating}
+                className={`px-3 py-1.5 sm:px-4 sm:py-2 bg-white text-indigo-600 border border-white rounded-lg flex items-center text-xs sm:text-sm font-medium transition-colors ${
+                  isPdfGenerating ? 'opacity-70 cursor-not-allowed' : 'hover:bg-indigo-50'
+                }`}
                 aria-label="Download PDF"
               >
-                <svg className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                <span className="hidden sm:inline">Download PDF</span>
+                {isPdfGenerating ? (
+                  <>
+                    <svg className="animate-spin h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span className="hidden sm:inline">Generating...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    <span className="hidden sm:inline">Download PDF</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
         </div>
 
         {/* Invoice Content */}
-        <div ref={targetRef} className="px-4 sm:px-6 md:px-8 py-6 sm:py-8">
+        <div ref={targetRef} className="px-4 sm:px-6 md:px-8 py-6 sm:py-8 print:p-4">
           {/* Company Logo and Invoice Title */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-4 border-b">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-4 border-b print-break-inside-avoid">
             <div className="flex items-start sm:items-center sm:flex-row mb-4 md:mb-0 w-full md:w-auto justify-between">
-              <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-2.5 rounded-lg mr-3 shadow-md flex-shrink-0 mb-3 sm:mb-0">
+              <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-2.5 rounded-lg mr-3 shadow-md flex-shrink-0 mb-3 sm:mb-0 print:bg-indigo-500">
                 <svg className="h-6 w-6 sm:h-7 sm:w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
@@ -169,16 +258,18 @@ const OrderDetail = () => {
                 <p className="text-gray-500 text-xs sm:text-sm mt-1 text-left">jay industrial estate, IND 79, Anjana, 1, Anjana, Gujarat 395003</p>
               </div>
             </div>
+            <div className="print:hidden flex flex-row justify-center items-center">
+              <h2 className="text-lg font-semibold text-gray-800">Order Number: {id}</h2>
+            </div>
           </div>
 
           {/* Bill To & Invoice Info */}
-          <div className="flex flex-col md:flex-row justify-between mb-8 gap-6">
-            <div className="bg-gray-50 rounded-lg p-4 sm:p-6 border border-gray-100 md:w-1/2">
+          <div className="flex flex-col md:flex-row justify-between mb-8 gap-6 print-break-inside-avoid">
+            <div className="bg-gray-50 rounded-lg p-4 sm:p-6 border border-gray-100 md:w-1/2 print:bg-white print:border print-full-width">
               <h3 className="text-gray-500 font-medium mb-3 text-xs sm:text-sm uppercase tracking-wider">Client Name: <span className="text-gray-800 font-semibold text-right">{orderData.clientName || 'Client Name'}</span></h3>
-              {/* <p className="text-lg sm:text-xl font-bold text-gray-800 mb-2">{orderData.clientName || 'Client Name'}</p> */}
               <p className="text-sm sm:text-base text-gray-600">{orderData.clientAddress || 'Client Address'}</p>
             </div>
-            <div className="bg-gray-50 rounded-lg p-4 sm:p-6 border border-gray-100 md:w-1/2">
+            <div className="bg-gray-50 rounded-lg p-4 sm:p-6 border border-gray-100 md:w-1/2 print:bg-white print:border print-full-width">
               <div className="grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
                 <div className="text-gray-500 font-medium text-left">Invoice Date:</div>
                 <div className="text-gray-800 font-semibold text-right">
@@ -204,7 +295,7 @@ const OrderDetail = () => {
                 <div className="text-right">
                   <span
                     className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${isPaid ? 'text-green-800' : 'text-amber-800'
-                      }`}
+                      } ${isPaid ? 'print:text-green-800' : 'print:text-amber-800'}`}
                   >
                     {isPaid ? 'Paid' : 'Pending'}
                   </span>
@@ -214,14 +305,14 @@ const OrderDetail = () => {
           </div>
 
           {/* Invoice Items Table */}
-          <div className="mb-8 overflow-x-auto rounded-xl border border-gray-100 shadow-sm">
+          <div className="mb-8 overflow-x-auto rounded-xl border border-gray-100 shadow-sm print-break-inside-avoid">
             <table className="min-w-full divide-y divide-gray-200">
               <thead>
                 <tr>
-                  <th scope="col" className="px-3 sm:px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
-                  <th scope="col" className="px-3 sm:px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
-                  <th scope="col" className="px-3 sm:px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                  <th scope="col" className="px-3 sm:px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                  <th scope="col" className="px-3 sm:px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Item</th>
+                  <th scope="col" className="px-3 sm:px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Qty</th>
+                  <th scope="col" className="px-3 sm:px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Price</th>
+                  <th scope="col" className="px-3 sm:px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Amount</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -240,8 +331,8 @@ const OrderDetail = () => {
           </div>
 
           {/* Invoice Summary - Full Width */}
-          <div className="mb-8">
-            <div className="w-full bg-gray-50 rounded-xl p-4 sm:p-6 border border-gray-100 shadow-sm">
+          <div className="mb-8 print-break-inside-avoid">
+            <div className="w-full bg-gray-50 rounded-xl p-4 sm:p-6 border border-gray-100 shadow-sm print:bg-white print:border">
               <div className="grid grid-cols-2 gap-2 sm:gap-4">
                 <div className="text-xs sm:text-sm text-left text-gray-500">Subtotal</div>
                 <div className="text-xs sm:text-sm font-medium text-gray-900 text-right">₹{typeof orderData.grandTotal === 'number' ? orderData.grandTotal.toFixed(2) : '0.00'}</div>
@@ -263,7 +354,7 @@ const OrderDetail = () => {
             </div>
           </div>
           {/* Thank you note */}
-          <div className="text-center my-6">
+          <div className="text-center my-6 print-break-inside-avoid">
             <p className="text-xs sm:text-sm text-gray-500">Thank you for your business!</p>
           </div>
         </div>

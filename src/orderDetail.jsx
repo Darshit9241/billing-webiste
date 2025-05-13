@@ -267,7 +267,7 @@ const OrderDetail = () => {
           <div className="flex flex-col md:flex-row justify-between mb-8 gap-6 print-break-inside-avoid">
             <div className="bg-gray-50 rounded-lg p-4 sm:p-6 border border-gray-100 md:w-1/2 print:bg-white print:border print-full-width">
               <h3 className="text-gray-500 font-medium mb-3 text-xs sm:text-sm uppercase tracking-wider">Client Name: <span className="text-gray-800 font-semibold text-right">{orderData.clientName || 'Client Name'}</span></h3>
-              <p className="text-sm sm:text-base text-gray-600">{orderData.clientAddress || 'Client Address'}</p>
+              {/* <p className="text-sm sm:text-base text-gray-600">{orderData.clientAddress || 'Client Address'}</p> */}
             </div>
             <div className="bg-gray-50 rounded-lg p-4 sm:p-6 border border-gray-100 md:w-1/2 print:bg-white print:border print-full-width">
               <div className="grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">

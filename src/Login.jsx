@@ -52,6 +52,13 @@ const Login = () => {
     setError('');
     setLoading(true);
     
+    // Check if credentials match the required values
+    if (email !== 'siyaram@gmail.com' || password !== 'siyaram@') {
+      setError('Invalid email or password');
+      setLoading(false);
+      return;
+    }
+    
     try {
       const response = await fetch('https://react-task-cyan-nine.vercel.app/login', {
         method: 'POST',

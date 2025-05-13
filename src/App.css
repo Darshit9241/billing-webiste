@@ -36,3 +36,149 @@
     transform: rotate(360deg);
   }
 }
+
+/* Login Page Animations and Background Effects */
+
+.login-container {
+  background-color: #151c2d;
+  transition: all 1s ease-in-out;
+}
+
+.login-container.animate-in {
+  animation: fadeIn 1s ease-in-out;
+}
+
+.background-gradient {
+  background: linear-gradient(135deg, #1f2b49, #152339, #0a1528);
+  opacity: 0.8;
+  animation: gradientShift 15s ease infinite alternate;
+}
+
+.background-gradient-2 {
+  background: radial-gradient(circle at 50% 50%, rgba(76, 0, 255, 0.1), rgba(39, 76, 189, 0.05), transparent 50%);
+  animation: pulseGlow 8s ease-in-out infinite alternate;
+}
+
+.particles-container {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.particle {
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  box-shadow: 0 0 10px 2px rgba(76, 0, 255, 0.1);
+  animation: float 10s infinite ease-in-out;
+}
+
+.glow-effect {
+  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.15), transparent 70%);
+  animation: glow 3s infinite alternate;
+}
+
+.animate-float {
+  animation: cardFloat 6s ease-in-out infinite;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 1s ease-in-out;
+}
+
+.animate-fadeIn-delayed {
+  animation: fadeIn 1s ease-in-out 0.3s both;
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+.hover:scale-102:hover {
+  transform: scale(1.02);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes pulseGlow {
+  0% {
+    opacity: 0.3;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 0.3;
+    transform: scale(0.9);
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-100px) translateX(20px);
+    opacity: 0;
+  }
+}
+
+@keyframes glow {
+  0% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes cardFloat {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-5px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(5px);
+  }
+}

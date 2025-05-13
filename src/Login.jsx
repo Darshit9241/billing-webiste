@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './App.css';
 
@@ -7,8 +7,45 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [animateBackground, setAnimateBackground] = useState(false);
   
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Set animation to true after component mount for smooth fade-in
+    setAnimateBackground(true);
+    
+    // Add particles effect
+    const particleCount = 100;
+    const container = document.querySelector('.particles-container');
+    
+    if (container) {
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.classList.add('particle');
+        
+        // Random positioning
+        particle.style.top = `${Math.random() * 100}%`;
+        particle.style.left = `${Math.random() * 100}%`;
+        
+        // Random size
+        const size = Math.random() * 5 + 1;
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+        
+        // Random animation delay
+        particle.style.animationDelay = `${Math.random() * 5}s`;
+        
+        container.appendChild(particle);
+      }
+    }
+    
+    return () => {
+      if (container) {
+        container.innerHTML = '';
+      }
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -44,20 +81,28 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="w-full max-w-md">
-        {/* Card */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+    <div className={`login-container min-h-screen flex items-center justify-center p-4 relative overflow-hidden ${animateBackground ? 'animate-in' : ''}`}>
+      {/* Animated background particles */}
+      <div className="particles-container absolute inset-0 z-0"></div>
+      
+      {/* Animated background gradients */}
+      <div className="background-gradient absolute inset-0 z-0"></div>
+      <div className="background-gradient-2 absolute inset-0 z-0"></div>
+      
+      <div className="w-full max-w-md z-10">
+        {/* Card with animation */}
+        <div className="bg-white bg-opacity-90 backdrop-filter backdrop-blur-lg rounded-2xl shadow-2xl overflow-hidden transform transition-all duration-500 hover:scale-102 animate-float">
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-6">
-            <h2 className="text-3xl font-bold text-white text-center">Welcome To Siyaram Lace</h2>
-            <p className="text-blue-100 text-center mt-2">Sign in to your account</p>
+          <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 relative">
+            <div className="glow-effect absolute inset-0"></div>
+            <h2 className="text-3xl font-bold text-white text-center animate-fadeIn">Welcome To Siyaram Lace</h2>
+            <p className="text-blue-100 text-center mt-2 animate-fadeIn-delayed">Sign in to your account</p>
           </div>
           
           {/* Form */}
           <div className="p-8">
             {error && (
-              <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
+              <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-md animate-shake">
                 <div className="flex items-center">
                   <svg className="h-5 w-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -68,7 +113,7 @@ const Login = () => {
             )}
             
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
+              <div className="transform transition duration-500 hover:translate-y-[-2px]">
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                   Email Address
                 </label>
@@ -86,13 +131,13 @@ const Login = () => {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 text-gray-900"
+                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 text-gray-900 hover:shadow-md"
                     placeholder="your.email@example.com"
                   />
                 </div>
               </div>
 
-              <div>
+              <div className="transform transition duration-500 hover:translate-y-[-2px]">
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                   Password
                 </label>
@@ -110,37 +155,17 @@ const Login = () => {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 text-gray-900"
+                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 text-gray-900 hover:shadow-md"
                     placeholder="••••••••"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    id="remember-me"
-                    name="remember-me"
-                    type="checkbox"
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                    Remember me
-                  </label>
-                </div>
-
-                <div className="text-sm">
-                  <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
-                    Forgot password?
-                  </a>
-                </div>
-              </div>
-
-              <div>
+              <div className="pt-2">
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
                   {loading ? (
                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -153,14 +178,6 @@ const Login = () => {
               </div>
             </form>
 
-            <div className="mt-8 text-center">
-              <p className="text-sm text-gray-600">
-                Don't have an account?{' '}
-                <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
-                  Sign up
-                </a>
-              </p>
-            </div>
           </div>
         </div>
       </div>

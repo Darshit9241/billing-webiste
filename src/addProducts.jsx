@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-  import { createClient } from './firebase/clientsFirebase';
+import { createClient } from './firebase/clientsFirebase';
 
 const AddProducts = () => {
   const navigate = useNavigate();
@@ -329,8 +329,20 @@ const AddProducts = () => {
 
           {/* Products section with improved card design */}
           <div className="bg-white border border-gray-200 rounded-xl shadow-lg mb-8 overflow-hidden">
-            <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-800">Product Details</h2>
+            <div className="bg-gradient-to-r flex justify-between from-indigo-50 to-blue-50 p-4 border-b border-gray-200">
+              <div className='flex justify-center text-center'>
+                <h2 className="text-lg font-semibold text-gray-800 flex items-center">Product Details</h2>
+              </div>
+              <div>
+                <button
+                  className="flex items-center justify-center p-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-xl hover:from-indigo-700 hover:to-blue-700 transition-all duration-300 shadow-md"
+                  onClick={addProduct}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             {/* Table header - Only visible on larger screens */}

@@ -381,8 +381,197 @@ const AddProducts = () => {
   const grandTotal = products.reduce((sum, product) => sum + product.total, 0);
 
   return (
-    <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50'}`}>
-      <div className={`max-w-5xl mx-auto ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-xl overflow-hidden transition-all duration-300`}>
+    <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50'} relative overflow-hidden`}>
+      {/* Animated Background */}
+      <div className="absolute inset-0 w-full h-full z-0">
+        {!darkMode ? (
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50">
+            <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
+            <div className="absolute top-0 -right-4 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
+            <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+            <div className="absolute -bottom-8 right-20 w-72 h-72 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-3000"></div>
+            
+            {/* Floating particles for light mode */}
+            <div className="absolute inset-0 overflow-hidden">
+              {[...Array(30)].map((_, i) => {
+                const size = Math.random() * 20 + 10;
+                const animationDuration = Math.random() * 30 + 15;
+                const startPosition = Math.random() * 100;
+                const transparency = Math.random() * 0.2 + 0.05;
+                const hue = Math.floor(Math.random() * 60) + 220; // Blue to purple range
+                
+                return (
+                  <div
+                    key={i}
+                    className="absolute rounded-full animate-float"
+                    style={{
+                      width: `${size}px`,
+                      height: `${size}px`,
+                      left: `${startPosition}%`,
+                      bottom: `-${size}px`,
+                      background: `hsla(${hue}, 70%, 70%, ${transparency})`,
+                      animationDuration: `${animationDuration}s`,
+                      animationDelay: `${Math.random() * 20}s`
+                    }}
+                  />
+                );
+              })}
+            </div>
+            
+            {/* Optional subtle pattern overlay */}
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diamond-upholstery.png')] opacity-5"></div>
+          </div>
+        ) : (
+          <div className="absolute inset-0 bg-gray-900">
+            <div className="absolute top-0 -left-4 w-72 h-72 bg-blue-900 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
+            <div className="absolute top-0 -right-4 w-72 h-72 bg-purple-900 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
+            <div className="absolute -bottom-8 left-20 w-72 h-72 bg-indigo-900 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+            <div className="absolute -bottom-8 right-20 w-72 h-72 bg-blue-900 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-3000"></div>
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+            
+            {/* Stars animation for dark mode */}
+            <div id="stars-container" className="absolute inset-0">
+              {[...Array(50)].map((_, i) => {
+                const size = Math.random() * 2 + 1;
+                const animationDuration = Math.random() * 50 + 20;
+                const left = Math.random() * 100;
+                const top = Math.random() * 100;
+                const animationDelay = Math.random() * 50;
+                
+                return (
+                  <div
+                    key={i}
+                    className="absolute rounded-full bg-white animate-twinkle"
+                    style={{
+                      width: `${size}px`,
+                      height: `${size}px`,
+                      left: `${left}%`,
+                      top: `${top}%`,
+                      animationDuration: `${animationDuration}s`,
+                      animationDelay: `${animationDelay}s`
+                    }}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        )}
+        <style>
+          {`
+            @keyframes blob {
+              0% {
+                transform: translate(0px, 0px) scale(1);
+              }
+              33% {
+                transform: translate(30px, -50px) scale(1.1);
+              }
+              66% {
+                transform: translate(-20px, 20px) scale(0.9);
+              }
+              100% {
+                transform: translate(0px, 0px) scale(1);
+              }
+            }
+            .animate-blob {
+              animation: blob 15s infinite;
+            }
+            .animation-delay-2000 {
+              animation-delay: 2s;
+            }
+            .animation-delay-3000 {
+              animation-delay: 3s;
+            }
+            .animation-delay-4000 {
+              animation-delay: 4s;
+            }
+            
+            @keyframes twinkle {
+              0%, 100% {
+                opacity: 0.2;
+                transform: scale(0.8);
+              }
+              50% {
+                opacity: 1;
+                transform: scale(1.2);
+              }
+            }
+            .animate-twinkle {
+              animation-name: twinkle;
+              animation-duration: 5s;
+              animation-iteration-count: infinite;
+            }
+            
+            @keyframes float {
+              0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0;
+              }
+              10% {
+                opacity: 1;
+              }
+              90% {
+                opacity: 0.5;
+              }
+              100% {
+                transform: translateY(-100vh) rotate(360deg);
+                opacity: 0;
+              }
+            }
+            .animate-float {
+              animation-name: float;
+              animation-iteration-count: infinite;
+              animation-timing-function: ease-in-out;
+            }
+            
+            @keyframes pulse {
+              0%, 100% {
+                transform: scale(1);
+                opacity: 0.4;
+              }
+              50% {
+                transform: scale(1.2);
+                opacity: 0.2;
+              }
+            }
+            .pulse-animation {
+              animation: pulse 3s infinite;
+            }
+            
+            .icon-glow-container {
+              position: relative;
+              overflow: visible;
+            }
+            .icon-glow-container:after {
+              content: '';
+              position: absolute;
+              top: -5px;
+              left: -5px;
+              right: -5px;
+              bottom: -5px;
+              border-radius: 16px;
+              background: linear-gradient(45deg, #ff8a00, #e52e71, #764ba2, #00cdac);
+              background-size: 400% 400%;
+              z-index: 0;
+              filter: blur(8px);
+              opacity: 0.7;
+              animation: glowAnimation 10s ease infinite;
+            }
+            @keyframes glowAnimation {
+              0% {
+                background-position: 0% 50%;
+              }
+              50% {
+                background-position: 100% 50%;
+              }
+              100% {
+                background-position: 0% 50%;
+              }
+            }
+          `}
+        </style>
+      </div>
+      
+      <div className={`max-w-5xl mx-auto ${darkMode ? 'bg-gray-800 bg-opacity-90' : 'bg-white bg-opacity-90'} shadow-xl overflow-hidden transition-all duration-300 backdrop-blur-sm relative z-10`}>
         {/* Enhanced Header with modern glass morphism effect */}
         <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 px-4 sm:px-6 py-5 sm:py-8 relative overflow-hidden">
           <div className="absolute inset-0 bg-white opacity-10 backdrop-blur-xl"></div>
@@ -391,10 +580,11 @@ const AddProducts = () => {
 
           <div className="relative flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-6">
             <div className="flex items-center space-x-3 sm:space-x-4 mb-4 sm:mb-0">
-              <div className="bg-white bg-opacity-20 p-2 sm:p-3 rounded-xl backdrop-blur-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 sm:h-8 sm:w-8 text-white" viewBox="0 0 20 20" fill="currentColor">
+              <div className="bg-white bg-opacity-20 p-2 sm:p-3 rounded-xl backdrop-blur-sm relative icon-glow-container">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 sm:h-8 sm:w-8 text-white relative z-10" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 100-12 6 6 0 000 12zm.75-6a.75.75 0 000-1.5h-1.5a.75.75 0 000 1.5h1.5z" clipRule="evenodd" />
                 </svg>
+                <div className="absolute inset-0 bg-white opacity-40 rounded-xl blur-md pulse-animation"></div>
                 {/* <img
                   src="/siyaramlogo.png"
                   alt="icon"

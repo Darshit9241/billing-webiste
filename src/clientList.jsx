@@ -20,6 +20,67 @@ const customStyles = `
 .animate-pulse-custom {
   animation: pulse 2s ease-in-out infinite;
 }
+
+@keyframes gradientAnimation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes floatingBubbles {
+  0% {
+    opacity: 0;
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-100vh) rotate(360deg);
+  }
+}
+
+.animated-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  background-size: 400% 400%;
+  animation: gradientAnimation 15s ease infinite;
+}
+
+.dark-animated-background {
+  background: linear-gradient(45deg, #0f172a, #1e293b, #334155, #1e293b);
+}
+
+.light-animated-background {
+  background: linear-gradient(45deg, #f8fafc, #e2e8f0, #cbd5e1, #e2e8f0);
+}
+
+.bubble {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+  animation: floatingBubbles 25s linear infinite;
+}
+
+.dark-bubble {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.light-bubble {
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
 `;
 
 const ClientList = () => {
@@ -91,6 +152,33 @@ const ClientList = () => {
     // Apply filters when savedClients or activeFilter changes
     applyFilters();
   }, [savedClients, activeFilter, searchQuery, startDate, endDate, isDateFilterActive]);
+
+  // Function to generate random bubbles for the background effect
+  const generateBubbles = () => {
+    const bubbles = [];
+    for (let i = 0; i < 15; i++) {
+      const size = Math.random() * 100 + 50;
+      const left = Math.random() * 100;
+      const delay = Math.random() * 15;
+      const duration = Math.random() * 15 + 15;
+      
+      bubbles.push(
+        <div 
+          key={i}
+          className={`bubble ${isDarkMode ? 'dark-bubble' : 'light-bubble'}`}
+          style={{
+            width: `${size}px`,
+            height: `${size}px`,
+            left: `${left}%`,
+            bottom: `-${size}px`,
+            animationDelay: `${delay}s`,
+            animationDuration: `${duration}s`
+          }}
+        />
+      );
+    }
+    return bubbles;
+  };
 
   const applyFilters = () => {
     let filtered = savedClients;
@@ -526,26 +614,31 @@ const ClientList = () => {
   };
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-gray-100 to-white'} py-8 px-4 sm:px-6 lg:px-8 transition-colors duration-200`}>
+    <div className={`min-h-screen relative overflow-hidden py-8 px-4 sm:px-6 lg:px-8 transition-colors duration-200`}>
+      {/* Animated Background */}
+      <div className={`animated-background ${isDarkMode ? 'dark-animated-background' : 'light-animated-background'}`}>
+        {generateBubbles()}
+      </div>
+
       {/* Inject custom styles */}
       <style>{customStyles}</style>
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 sm:p-8 transition-all">
+          <div className={`${isDarkMode ? 'bg-slate-900/90' : 'bg-white/90'} backdrop-blur-md rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 sm:p-8 transition-all border ${isDarkMode ? 'border-white/10' : 'border-black/5'}`}>
             <div className="flex items-center space-x-3 mb-5">
               <svg className="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Confirm Payment</h2>
+              <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Confirm Payment</h2>
             </div>
-            <p className="text-gray-700 dark:text-gray-300 mb-6">
+            <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-6`}>
               Are you sure you want to mark this payment as cleared?
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
+                className={`px-4 py-2 text-sm font-medium ${isDarkMode ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-gray-100 text-gray-900 hover:bg-gray-200'} rounded-lg`}
               >
                 Cancel
               </button>
@@ -563,25 +656,22 @@ const ClientList = () => {
         </div>
       )}
 
-
-
-
       {showModalDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 sm:p-8 transition-all">
+          <div className={`${isDarkMode ? 'bg-slate-900/90' : 'bg-white/90'} backdrop-blur-md rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 sm:p-8 transition-all border ${isDarkMode ? 'border-white/10' : 'border-black/5'}`}>
             <div className="flex items-center space-x-3 mb-5">
               <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Delete Confirmation</h2>
+              <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Delete Confirmation</h2>
             </div>
-            <p className="text-gray-700 dark:text-gray-300 mb-6">
+            <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-6`}>
               Are you sure you want to delete this order? This action cannot be undone.
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="px-4 py-2 text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
+                className={`px-4 py-2 text-sm font-medium ${isDarkMode ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-gray-100 text-gray-900 hover:bg-gray-200'} rounded-lg`}
               >
                 Cancel
               </button>
@@ -599,10 +689,9 @@ const ClientList = () => {
         </div>
       )}
 
-
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto relative z-10">
         {/* Header */}
-        <div className={`backdrop-blur-m`}>
+        <div className={`backdrop-blur-lg rounded-xl mb-6 p-4 ${isDarkMode ? 'bg-slate-900/50' : 'bg-white/50'} border ${isDarkMode ? 'border-white/5' : 'border-black/5'} shadow-xl`}>
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
             <div className="flex items-center justify-between w-full sm:w-auto">
               <h1 className={`text-lg sm:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} flex items-center`}>
@@ -612,11 +701,9 @@ const ClientList = () => {
                   </svg>
                   <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-xl -z-10"></div>
                 </div>
-                {/* <span className="bg-gradient-to-r from-emerald-500 to-teal-400 inline-block text-transparent bg-clip-text">Siyaram Lace</span> */}
-                <a href="/" class="bg-gradient-to-r from-emerald-500 to-teal-400 inline-block text-transparent bg-clip-text">
+                <a href="/" className="bg-gradient-to-r from-emerald-500 to-teal-400 inline-block text-transparent bg-clip-text">
                   Siyaram Lace
                 </a>
-
               </h1>
               <div className="flex items-center gap-2 pl-5">
                 {isSmallScreen ? (
@@ -684,7 +771,6 @@ const ClientList = () => {
               </Link>
             </div>
           </div>
-
 
           {isDateFilterActive && isSmallScreen && (
             <div className={`px-3 my-2 py-1.5 ${isDarkMode ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-100 text-amber-700'} rounded-lg text-xs flex items-center`}>
@@ -930,7 +1016,6 @@ const ClientList = () => {
             </div>
           )}
 
-
           {/* Search bar with improved design */}
           <div className="mb-6">
             <div className="relative">
@@ -944,7 +1029,7 @@ const ClientList = () => {
                 placeholder="Search by name or ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={`w-full pl-10 pr-10 py-3 ${isDarkMode ? 'bg-white/5' : 'bg-white'} border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} rounded-xl ${isDarkMode ? 'text-white placeholder-slate-400' : 'text-gray-900 placeholder-gray-400'} focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 shadow-sm`}
+                className={`w-full pl-10 pr-10 py-3 ${isDarkMode ? 'bg-white/5' : 'bg-white/70'} border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} rounded-xl ${isDarkMode ? 'text-white placeholder-slate-400' : 'text-gray-900 placeholder-gray-400'} focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 shadow-sm backdrop-blur-md`}
               />
               {searchQuery && (
                 <button
@@ -1435,10 +1520,10 @@ const ClientList = () => {
             {filteredClients.map((client) => (
               <div
                 key={client.id}
-                className={`backdrop-blur-md ${isDarkMode ? 'bg-white/10' : 'bg-white'} rounded-xl shadow-xl overflow-hidden border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} group hover:shadow-emerald-500/10 transition-all duration-300 hover:-translate-y-1`}
+                className={`backdrop-blur-md ${isDarkMode ? 'bg-slate-900/40' : 'bg-white/60'} rounded-xl shadow-xl overflow-hidden border ${isDarkMode ? 'border-white/10' : 'border-gray-200/70'} group hover:shadow-emerald-500/20 transition-all duration-300 hover:-translate-y-1`}
               >
                 {/* Card header */}
-                <div className={`p-5 ${isDarkMode ? 'bg-gradient-to-r from-slate-800/80 to-slate-700/80' : 'bg-gradient-to-r from-gray-50 to-gray-100'} border-b ${isDarkMode ? 'border-slate-600/30' : 'border-gray-200'}`}>
+                <div className={`p-5 ${isDarkMode ? 'bg-gradient-to-r from-slate-800/80 to-slate-700/60' : 'bg-gradient-to-r from-gray-50/90 to-gray-100/80'} border-b ${isDarkMode ? 'border-slate-600/30' : 'border-gray-200/70'} backdrop-blur-sm`}>
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className={`font-semibold text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{client.clientName || 'Unnamed Client'}</h3>
@@ -1452,9 +1537,9 @@ const ClientList = () => {
                         </p>
                       )}
                     </div>
-                    <span className={`text-xs px-3 py-1 rounded-full font-medium ${client.paymentStatus === 'cleared'
-                      ? `${isDarkMode ? 'bg-sky-500/20' : 'bg-sky-100'} ${isDarkMode ? 'text-sky-300' : 'text-sky-700'} border ${isDarkMode ? 'border-sky-500/30' : 'border-sky-200'}`
-                      : `${isDarkMode ? 'bg-amber-500/20' : 'bg-amber-100'} ${isDarkMode ? 'text-amber-300' : 'text-amber-700'} border ${isDarkMode ? 'border-amber-500/30' : 'border-amber-200'}`
+                    <span className={`text-xs px-3 py-1 rounded-full font-medium backdrop-blur-sm ${client.paymentStatus === 'cleared'
+                      ? `${isDarkMode ? 'bg-sky-500/20' : 'bg-sky-100/80'} ${isDarkMode ? 'text-sky-300' : 'text-sky-700'} border ${isDarkMode ? 'border-sky-500/30' : 'border-sky-200/80'}`
+                      : `${isDarkMode ? 'bg-amber-500/20' : 'bg-amber-100/80'} ${isDarkMode ? 'text-amber-300' : 'text-amber-700'} border ${isDarkMode ? 'border-amber-500/30' : 'border-amber-200/80'}`
                       }`}>
                       {client.paymentStatus === 'cleared' ? 'Paid' : 'Pending'}
                     </span>
@@ -1468,15 +1553,15 @@ const ClientList = () => {
                 <div className="p-5 space-y-4">
                   {/* Financial summary */}
                   <div className="grid grid-cols-1 xs:grid-cols-3 gap-2 xs:gap-3">
-                    <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} backdrop-blur-md rounded-lg p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} flex flex-row xs:flex-col justify-between xs:justify-start`}>
+                    <div className={`${isDarkMode ? 'bg-white/5' : 'bg-white/40'} backdrop-blur-md rounded-lg p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200/60'} flex flex-row xs:flex-col justify-between xs:justify-start`}>
                       <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Total:</p>
                       <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'} text-sm sm:text-base`}>₹{typeof client.grandTotal === 'number' ? client.grandTotal.toFixed(2) : '0.00'}</p>
                     </div>
-                    <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} backdrop-blur-md rounded-lg p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} flex flex-row xs:flex-col justify-between xs:justify-start`}>
+                    <div className={`${isDarkMode ? 'bg-white/5' : 'bg-white/40'} backdrop-blur-md rounded-lg p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200/60'} flex flex-row xs:flex-col justify-between xs:justify-start`}>
                       <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Amount Paid:</p>
                       <p className="font-medium text-emerald-500 text-sm sm:text-base">₹{typeof client.amountPaid === 'number' ? client.amountPaid.toFixed(2) : '0.00'}</p>
                     </div>
-                    <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} backdrop-blur-md rounded-lg p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} flex flex-row xs:flex-col justify-between xs:justify-start`}>
+                    <div className={`${isDarkMode ? 'bg-white/5' : 'bg-white/40'} backdrop-blur-md rounded-lg p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200/60'} flex flex-row xs:flex-col justify-between xs:justify-start`}>
                       <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Balance Due:</p>
                       <p className={`font-medium text-sm sm:text-base ${((typeof client.grandTotal === 'number' ? client.grandTotal : 0) -
                         (typeof client.amountPaid === 'number' ? client.amountPaid : 0)) <= 0 ? 'text-sky-500' : 'text-amber-500'
@@ -1488,10 +1573,10 @@ const ClientList = () => {
                   </div>
 
                   {/* Products section */}
-                  <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} backdrop-blur-md rounded-lg p-3 sm:p-4 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
+                  <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50/60'} backdrop-blur-md rounded-lg p-3 sm:p-4 border ${isDarkMode ? 'border-white/10' : 'border-gray-200/60'}`}>
                     <div className="flex justify-between items-center mb-2 sm:mb-3">
                       <p className={`text-xs sm:text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Products</p>
-                      <span className={`${isDarkMode ? 'bg-white/10' : 'bg-white'} text-xs ${isDarkMode ? 'text-white' : 'text-gray-700'} px-2 py-0.5 sm:py-1 rounded-full`}>
+                      <span className={`${isDarkMode ? 'bg-slate-800/70' : 'bg-white/70'} backdrop-blur-sm text-xs ${isDarkMode ? 'text-white' : 'text-gray-700'} px-2 py-0.5 sm:py-1 rounded-full`}>
                         {client.products?.length || 0} items
                       </span>
                     </div>
@@ -1500,11 +1585,11 @@ const ClientList = () => {
                       <div className="max-h-32 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800 hide-scrollbar">
                         <ul className="space-y-2">
                           {client.products.slice().reverse().map((product, index) => (
-                            <li key={index} className={`flex justify-between items-center text-sm ${isDarkMode ? 'bg-white/5' : 'bg-white'} rounded-lg p-2 border ${isDarkMode ? 'border-white/5' : 'border-gray-100'}`}>
+                            <li key={index} className={`flex justify-between items-center text-sm ${isDarkMode ? 'bg-slate-800/50' : 'bg-white/70'} backdrop-blur-sm rounded-lg p-2 border ${isDarkMode ? 'border-white/5' : 'border-gray-100/70'}`}>
                               <span className={`${isDarkMode ? 'text-slate-300' : 'text-gray-700'} truncate max-w-[120px] sm:max-w-[180px]`}>
                                 {product.name || 'Unnamed Product'}
                               </span>
-                              <span className={`${isDarkMode ? 'text-slate-400' : 'text-gray-500'} whitespace-nowrap text-xs ${isDarkMode ? 'bg-white/10' : 'bg-gray-100'} px-2 py-0.5 rounded ml-2`}>
+                              <span className={`${isDarkMode ? 'text-slate-400 bg-white/10' : 'text-gray-500 bg-gray-100/80'} whitespace-nowrap text-xs px-2 py-0.5 rounded ml-2`}>
                                 {product.count} × ₹{typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(product.price || 0).toFixed(2)}
                               </span>
                             </li>
@@ -1518,10 +1603,10 @@ const ClientList = () => {
                 </div>
 
                 {/* Card actions */}
-                <div className={`grid grid-cols-4 border-t ${isDarkMode ? 'border-slate-700/50' : 'border-gray-200'}`}>
+                <div className={`grid grid-cols-4 border-t ${isDarkMode ? 'border-slate-700/50' : 'border-gray-200/70'} backdrop-blur-md`}>
                   <button
                     onClick={() => navigate(`/order/${client.id}`)}
-                    className={`py-2 sm:py-3 text-center text-xs sm:text-sm font-medium ${isDarkMode ? 'text-slate-300' : 'text-gray-600'} hover:${isDarkMode ? 'bg-white/10' : 'bg-gray-50'} transition-colors border-r ${isDarkMode ? 'border-slate-700/50' : 'border-gray-200'} flex items-center justify-center`}
+                    className={`py-2 sm:py-3 text-center text-xs sm:text-sm font-medium ${isDarkMode ? 'text-slate-300 hover:bg-white/10' : 'text-gray-600 hover:bg-gray-50/80'} transition-colors border-r ${isDarkMode ? 'border-slate-700/50' : 'border-gray-200/70'} flex items-center justify-center`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -1531,7 +1616,7 @@ const ClientList = () => {
                   </button>
                   <button
                     onClick={() => editClient(client)}
-                    className={`py-2 sm:py-3 text-center text-xs sm:text-sm font-medium text-indigo-500 hover:${isDarkMode ? 'bg-indigo-500/10' : 'bg-indigo-50'} transition-colors border-r ${isDarkMode ? 'border-slate-700/50' : 'border-gray-200'} flex items-center justify-center`}
+                    className={`py-2 sm:py-3 text-center text-xs sm:text-sm font-medium text-indigo-500 hover:${isDarkMode ? 'bg-indigo-500/10' : 'bg-indigo-50/80'} transition-colors border-r ${isDarkMode ? 'border-slate-700/50' : 'border-gray-200/70'} flex items-center justify-center`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -1582,9 +1667,9 @@ const ClientList = () => {
       {/* Payment Modal */}
       {showPaymentModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 border border-slate-700">
+          <div className={`${isDarkMode ? 'bg-slate-900/90' : 'bg-white/90'} backdrop-blur-md rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 border ${isDarkMode ? 'border-white/10' : 'border-black/5'}`}>
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-bold text-white">
+              <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                 {editingPayment !== null ? 'Edit Payment' : 'Add Payment'}
               </h3>
               <button
@@ -1637,7 +1722,7 @@ const ClientList = () => {
                   setEditingPayment(null);
                   setNewPayment('');
                 }}
-                className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors"
+                className={`px-4 py-2 ${isDarkMode ? 'bg-white/5 hover:bg-white/10 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'} rounded-xl transition-colors`}
               >
                 Cancel
               </button>
@@ -1646,7 +1731,7 @@ const ClientList = () => {
                 onClick={addNewPayment}
                 disabled={!newPayment || parseFloat(newPayment) <= 0}
                 className={`px-4 py-2 rounded-xl transition-colors ${!newPayment || parseFloat(newPayment) <= 0
-                    ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
+                    ? `${isDarkMode ? 'bg-slate-700 text-slate-400' : 'bg-gray-200 text-gray-400'} cursor-not-allowed`
                     : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white'
                   }`}
               >
@@ -1660,15 +1745,15 @@ const ClientList = () => {
       {/* Delete Payment Confirmation Modal */}
       {showDeletePaymentModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 border border-slate-700">
+          <div className={`${isDarkMode ? 'bg-slate-900/90' : 'bg-white/90'} backdrop-blur-md rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 border ${isDarkMode ? 'border-white/10' : 'border-black/5'}`}>
             <div className="flex items-center mb-5">
               <svg className="w-6 h-6 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <h3 className="text-lg font-bold text-white">Delete Payment</h3>
+              <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Delete Payment</h3>
             </div>
 
-            <p className="text-slate-300 mb-6">
+            <p className={`${isDarkMode ? 'text-slate-300' : 'text-gray-700'} mb-6`}>
               Are you sure you want to delete this payment? This will reduce the total amount paid and cannot be undone.
             </p>
 
@@ -1679,7 +1764,7 @@ const ClientList = () => {
                   setShowDeletePaymentModal(false);
                   setSelectedPaymentIndex(null);
                 }}
-                className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors"
+                className={`px-4 py-2 ${isDarkMode ? 'bg-white/5 hover:bg-white/10 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'} rounded-xl transition-colors`}
               >
                 Cancel
               </button>
@@ -1698,15 +1783,15 @@ const ClientList = () => {
       {/* Delete Product Confirmation Modal */}
       {showDeleteProductModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 border border-slate-700">
+          <div className={`${isDarkMode ? 'bg-slate-900/90' : 'bg-white/90'} backdrop-blur-md rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 border ${isDarkMode ? 'border-white/10' : 'border-black/5'}`}>
             <div className="flex items-center mb-5">
               <svg className="w-6 h-6 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <h3 className="text-lg font-bold text-white">Delete Product</h3>
+              <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Delete Product</h3>
             </div>
 
-            <p className="text-slate-300 mb-6">
+            <p className={`${isDarkMode ? 'text-slate-300' : 'text-gray-700'} mb-6`}>
               Are you sure you want to delete this product? This cannot be undone.
             </p>
 
@@ -1717,7 +1802,7 @@ const ClientList = () => {
                   setShowDeleteProductModal(false);
                   setSelectedProductIndex(null);
                 }}
-                className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors"
+                className={`px-4 py-2 ${isDarkMode ? 'bg-white/5 hover:bg-white/10 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'} rounded-xl transition-colors`}
               >
                 Cancel
               </button>

@@ -959,7 +959,7 @@ const ClientList = () => {
                 </button>
               </div>
 
-              <form onSubmit={saveClientChanges} className="overflow-y-auto max-h-[calc(100vh-200px)]">
+              <form onSubmit={saveClientChanges} className="overflow-y-auto max-h-[calc(100vh-200px)] hide-scrollbar">
                 {activeTab === 'general' ? (
                   <div className="p-5 space-y-4">
                     <div>

@@ -349,23 +349,28 @@ const AddProducts = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50">
       <div className="max-w-5xl mx-auto bg-white shadow-xl overflow-hidden transition-all duration-300">
-        {/* Header with glass morphism effect */}
-        <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 px-6 py-6 relative overflow-hidden">
+        {/* Enhanced Header with modern glass morphism effect */}
+        <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 px-6 py-8 relative overflow-hidden">
           <div className="absolute inset-0 bg-white opacity-10 backdrop-blur-xl"></div>
           <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-gradient-to-br from-white to-transparent opacity-10"></div>
           <div className="absolute -left-10 -bottom-16 w-40 h-40 rounded-full bg-indigo-300 opacity-10"></div>
 
-          <div className="relative flex flex-col sm:flex-row justify-between items-center gap-4">
-            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 100-12 6 6 0 000 12zm.75-6a.75.75 0 000-1.5h-1.5a.75.75 0 000 1.5h1.5z" clipRule="evenodd" />
-              </svg>
-              Siyaram Lace
-            </h1>
+          <div className="relative flex flex-col sm:flex-row justify-between items-center gap-6">
+            <div className="flex items-center space-x-4">
+              <div className="bg-white bg-opacity-20 p-3 rounded-xl backdrop-blur-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 100-12 6 6 0 000 12zm.75-6a.75.75 0 000-1.5h-1.5a.75.75 0 000 1.5h1.5z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Siyaram Lace</h1>
+                <p className="text-indigo-100 text-sm mt-1">Billing System</p>
+              </div>
+            </div>
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={() => navigate('/clients')}
-                className="flex items-center px-4 py-2.5 bg-white bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-all duration-300 text-sm font-medium backdrop-blur-sm shadow-sm"
+                className="flex items-center px-4 py-2.5 bg-white bg-opacity-20 text-white rounded-xl hover:bg-opacity-30 transition-all duration-300 text-sm font-medium backdrop-blur-sm shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
@@ -374,7 +379,7 @@ const AddProducts = () => {
               </button>
               <button
                 onClick={handleLogout}
-                className="flex items-center px-4 py-2.5 bg-red-500 bg-opacity-90 text-white rounded-lg hover:bg-opacity-100 transition-all duration-300 text-sm font-medium shadow-sm"
+                className="flex items-center px-4 py-2.5 bg-red-500 bg-opacity-90 text-white rounded-xl hover:bg-opacity-100 transition-all duration-300 text-sm font-medium shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V4a1 1 0 00-1-1H3zm11 4a1 1 0 10-2 0v4a1 1 0 102 0V7z" clipRule="evenodd" />
@@ -387,14 +392,48 @@ const AddProducts = () => {
         </div>
 
         <div className="p-6 sm:p-8">
-          {/* Client information section */}
-          <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Client name input with floating label and suggestions */}
-            <div className="relative">
+          {/* Enhanced Bill Mode Toggle */}
+          <div className="mb-8">
+            <div className="flex justify-center">
+              <div className="bg-gray-100 p-1 rounded-2xl inline-flex shadow-inner">
+                <button
+                  onClick={() => setBillMode('full')}
+                  className={`px-8 py-3 rounded-xl transition-all duration-300 flex items-center space-x-2 ${
+                    billMode === 'full'
+                      ? 'bg-white text-indigo-600 shadow-md transform scale-105'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                  </svg>
+                  <span>Full Bill</span>
+                </button>
+                <button
+                  onClick={() => setBillMode('half')}
+                  className={`px-8 py-3 rounded-xl transition-all duration-300 flex items-center space-x-2 ${
+                    billMode === 'half'
+                      ? 'bg-white text-indigo-600 shadow-md transform scale-105'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                    <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
+                  </svg>
+                  <span>Half Bill</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          {/* Enhanced Client information section */}
+          <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Client name input with enhanced floating label and suggestions */}
+            <div className="relative group">
               <input
                 type="text"
                 id="clientName"
-                className="block w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-800 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 peer placeholder-transparent"
+                className="block w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-800 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 peer placeholder-transparent group-hover:border-indigo-300"
                 value={clientName}
                 onChange={handleClientNameChange}
                 placeholder="Client Name"
@@ -404,31 +443,31 @@ const AddProducts = () => {
               />
               <label
                 htmlFor="clientName"
-                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 peer-focus:text-indigo-600 bg-white px-1"
+                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 peer-focus:text-indigo-600 bg-white px-1 group-hover:text-indigo-500"
               >
                 Client Name
               </label>
               
-              {/* Client name suggestions dropdown */}
+              {/* Enhanced client name suggestions dropdown */}
               {showSuggestions && clientSuggestions.length > 0 && (
-                <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto divide-y divide-gray-100">
+                <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-y-auto divide-y divide-gray-100 transform transition-all duration-200 origin-top">
                   {clientSuggestions.map((client, index) => (
                     <div 
                       key={client.id || index}
-                      className="px-4 py-3 cursor-pointer hover:bg-indigo-50 transition-colors duration-150 flex flex-col"
+                      className="px-4 py-3 cursor-pointer hover:bg-indigo-50 transition-colors duration-150 flex flex-col group/item"
                       onClick={() => selectClient(client)}
                     >
-                      <div className="flex items-center space-x-2">
-                        <div className="bg-indigo-100 rounded-full p-1.5">
+                      <div className="flex items-center space-x-3">
+                        <div className="bg-indigo-100 rounded-full p-2 group-hover/item:bg-indigo-200 transition-colors duration-200">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-indigo-600" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                           </svg>
                         </div>
-                        <span className="font-medium text-gray-800">{client.clientName}</span>
+                        <span className="font-medium text-gray-800 group-hover/item:text-indigo-600 transition-colors duration-200">{client.clientName}</span>
                       </div>
-                      <div className="ml-6 mt-1 flex flex-col">
+                      <div className="ml-11 mt-2 flex flex-col space-y-1">
                         {client.clientPhone && (
-                          <div className="flex items-center mt-1">
+                          <div className="flex items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-gray-400 mr-1" viewBox="0 0 20 20" fill="currentColor">
                               <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
                             </svg>
@@ -436,7 +475,7 @@ const AddProducts = () => {
                           </div>
                         )}
                         {client.clientGst && (
-                          <div className="flex items-center mt-1">
+                          <div className="flex items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-indigo-400 mr-1" viewBox="0 0 20 20" fill="currentColor">
                               <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
                             </svg>
@@ -450,12 +489,12 @@ const AddProducts = () => {
               )}
             </div>
 
-            {/* Client address input with floating label */}
-            <div className="relative">
+            {/* Client address input with enhanced floating label */}
+            <div className="relative group">
               <input
                 type="text"
                 id="clientAddress"
-                className="block w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-800 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 peer placeholder-transparent"
+                className="block w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-800 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 peer placeholder-transparent group-hover:border-indigo-300"
                 value={clientAddress}
                 onChange={(e) => setClientAddress(e.target.value)}
                 placeholder="Client Address"
@@ -464,18 +503,18 @@ const AddProducts = () => {
               />
               <label
                 htmlFor="clientAddress"
-                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 peer-focus:text-indigo-600 bg-white px-1"
+                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 peer-focus:text-indigo-600 bg-white px-1 group-hover:text-indigo-500"
               >
                 Client Address
               </label>
             </div>
 
-            {/* Client phone input with floating label */}
-            <div className="relative">
+            {/* Client phone input with enhanced floating label */}
+            <div className="relative group">
               <input
                 type="text"
                 id="clientPhone"
-                className="block w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-800 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 peer placeholder-transparent"
+                className="block w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-800 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 peer placeholder-transparent group-hover:border-indigo-300"
                 value={clientPhone}
                 onChange={(e) => setClientPhone(e.target.value)}
                 placeholder="Client Phone"
@@ -484,18 +523,18 @@ const AddProducts = () => {
               />
               <label
                 htmlFor="clientPhone"
-                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 peer-focus:text-indigo-600 bg-white px-1"
+                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 peer-focus:text-indigo-600 bg-white px-1 group-hover:text-indigo-500"
               >
                 Client Phone
               </label>
             </div>
 
-            {/* Client GST input with floating label */}
-            <div className="relative">
+            {/* Client GST input with enhanced floating label */}
+            <div className="relative group">
               <input
                 type="text"
                 id="clientGst"
-                className="block w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-800 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 peer placeholder-transparent"
+                className="block w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-800 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 peer placeholder-transparent group-hover:border-indigo-300"
                 value={clientGst}
                 onChange={(e) => {
                   setClientGst(e.target.value);
@@ -508,36 +547,36 @@ const AddProducts = () => {
               />
               <label
                 htmlFor="clientGst"
-                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 peer-focus:text-indigo-600 bg-white px-1"
+                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 peer-focus:text-indigo-600 bg-white px-1 group-hover:text-indigo-500"
               >
                 GST Number
               </label>
               
-              {/* GST-specific suggestions dropdown */}
+              {/* Enhanced GST-specific suggestions dropdown */}
               {showGstSuggestions && gstSuggestions.length > 0 && (
-                <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto divide-y divide-gray-100">
+                <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-y-auto divide-y divide-gray-100 transform transition-all duration-200 origin-top">
                   {gstSuggestions.map((client, index) => (
                     <div 
                       key={client.id || index}
-                      className="px-4 py-3 cursor-pointer hover:bg-indigo-50 transition-colors duration-150 flex flex-col"
+                      className="px-4 py-3 cursor-pointer hover:bg-indigo-50 transition-colors duration-150 flex flex-col group/item"
                       onClick={() => selectClient(client)}
                     >
-                      <div className="flex items-center">
-                        <div className="bg-indigo-100 rounded-full p-1.5 mr-2">
+                      <div className="flex items-center space-x-3">
+                        <div className="bg-indigo-100 rounded-full p-2 group-hover/item:bg-indigo-200 transition-colors duration-200">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-indigo-600" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
                           </svg>
                         </div>
                         <div>
                           <div className="flex items-center">
-                            <span className="text-sm font-semibold text-indigo-600">GST: {client.clientGst}</span>
+                            <span className="text-sm font-semibold text-indigo-600 group-hover/item:text-indigo-700 transition-colors duration-200">GST: {client.clientGst}</span>
                           </div>
-                          <span className="font-medium text-gray-800">{client.clientName}</span>
+                          <span className="font-medium text-gray-800 group-hover/item:text-indigo-600 transition-colors duration-200">{client.clientName}</span>
                         </div>
                       </div>
-                      <div className="ml-8 mt-1">
+                      <div className="ml-11 mt-2 flex flex-col space-y-1">
                         {client.clientPhone && (
-                          <div className="flex items-center mt-1">
+                          <div className="flex items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-gray-400 mr-1" viewBox="0 0 20 20" fill="currentColor">
                               <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
                             </svg>
@@ -545,7 +584,7 @@ const AddProducts = () => {
                           </div>
                         )}
                         {client.clientAddress && (
-                          <div className="flex items-center mt-1">
+                          <div className="flex items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-gray-400 mr-1" viewBox="0 0 20 20" fill="currentColor">
                               <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                             </svg>
@@ -559,86 +598,6 @@ const AddProducts = () => {
               )}
             </div>
           </div>
-
-          {/* Bill Mode Toggle */}
-          <div className="mb-6">
-            <div className="flex justify-center space-x-4">
-              <button
-                onClick={() => setBillMode('full')}
-                className={`px-6 py-3 rounded-xl transition-all duration-300 ${billMode === 'full'
-                  ? 'bg-indigo-600 text-white shadow-md'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-              >
-                Full Bill
-              </button>
-              <button
-                onClick={() => setBillMode('half')}
-                className={`px-6 py-3 rounded-xl transition-all duration-300 ${billMode === 'half'
-                  ? 'bg-indigo-600 text-white shadow-md'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-              >
-                Half Bill
-              </button>
-            </div>
-          </div>
-
-          {/* Payment status and amount section with improved design */}
-          {billMode === 'full' && (
-            <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-gray-50 rounded-xl p-4 shadow-sm border border-gray-100">
-                <label className="block text-gray-700 font-medium mb-3 text-sm">Payment Status</label>
-                <div className="flex gap-6">
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="radio"
-                      name="paymentStatus"
-                      value="pending"
-                      checked={paymentStatus === 'pending'}
-                      onChange={() => setPaymentStatus('pending')}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-500"></div>
-                    <span className="ml-3 text-gray-700">Pending</span>
-                  </label>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="radio"
-                      name="paymentStatus"
-                      value="cleared"
-                      checked={paymentStatus === 'cleared'}
-                      onChange={() => setPaymentStatus('cleared')}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-                    <span className="ml-3 text-gray-700">Cleared</span>
-                  </label>
-                </div>
-              </div>
-
-              <div className="relative">
-                <input
-                  type="number"
-                  id="amountPaid"
-                  className="block w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-800 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 peer placeholder-transparent"
-                  value={amountPaid}
-                  onChange={(e) => setAmountPaid(e.target.value)}
-                  placeholder="0.00"
-                  min="0"
-                  step="0.01"
-                  ref={amountPaidRef}
-                  onKeyDown={(e) => handleKeyPress(e, null, 'amountPaid')}
-                />
-                <label
-                  htmlFor="amountPaid"
-                  className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 peer-focus:text-indigo-600 bg-white px-1"
-                >
-                  Amount Paid
-                </label>
-              </div>
-            </div>
-          )}
 
           {/* Products section with improved card design */}
           <div className="bg-white border border-gray-200 rounded-xl shadow-lg mb-8 overflow-hidden">
@@ -789,6 +748,62 @@ const AddProducts = () => {
               ))}
             </div>
           </div>
+
+          {/* Payment status and amount section with improved design */}
+          {billMode === 'full' && (
+            <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-gray-50 rounded-xl p-4 shadow-sm border border-gray-100">
+                <label className="block text-gray-700 font-medium mb-3 text-sm">Payment Status</label>
+                <div className="flex gap-6">
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="radio"
+                      name="paymentStatus"
+                      value="pending"
+                      checked={paymentStatus === 'pending'}
+                      onChange={() => setPaymentStatus('pending')}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-500"></div>
+                    <span className="ml-3 text-gray-700">Pending</span>
+                  </label>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="radio"
+                      name="paymentStatus"
+                      value="cleared"
+                      checked={paymentStatus === 'cleared'}
+                      onChange={() => setPaymentStatus('cleared')}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                    <span className="ml-3 text-gray-700">Cleared</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="relative">
+                <input
+                  type="number"
+                  id="amountPaid"
+                  className="block w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-800 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 peer placeholder-transparent"
+                  value={amountPaid}
+                  onChange={(e) => setAmountPaid(e.target.value)}
+                  placeholder="0.00"
+                  min="0"
+                  step="0.01"
+                  ref={amountPaidRef}
+                  onKeyDown={(e) => handleKeyPress(e, null, 'amountPaid')}
+                />
+                <label
+                  htmlFor="amountPaid"
+                  className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 peer-focus:text-indigo-600 bg-white px-1"
+                >
+                  Amount Paid
+                </label>
+              </div>
+            </div>
+          )}
 
           {/* Actions and total section with glass morphism effect */}
           <div className="mt-6 md:mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
@@ -1048,7 +1063,7 @@ const AddProducts = () => {
       {showErrorModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
           <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"></div>
-          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 relative z-10 transform transition-all duration-300 scale-100 opacity-100">
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 relative z-10 transform transition-all duration-300 scale-100">
             <div className="text-center relative z-10">
               <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
                 <svg className="h-10 w-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

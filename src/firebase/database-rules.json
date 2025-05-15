@@ -1,7 +1,13 @@
 {
   "rules": {
-    ".read": true,
-    ".write": true,
+    ".read": "auth != null && auth.token.email == 'siyaram@gmail.com'",
+    ".write": "auth != null && auth.token.email == 'siyaram@gmail.com'",
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
+        ".write": "auth != null && auth.uid == $uid"
+      }
+    },
     "clients": {
       ".indexOn": ["timestamp"]
     }

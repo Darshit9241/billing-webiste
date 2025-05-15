@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './App.css';
-import { auth } from './firebase/config';
-import { signInWithEmailAndPassword } from 'firebase/auth';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -54,39 +52,36 @@ const Login = () => {
     setError('');
     setLoading(true);
     
-    // Only allow login with specific credentials
-    if (email !== 'siyaram@gmail.com') {
-      setError('Invalid email address');
+    // Check if credentials match the required values
+    if (email !== 'siyaram@gmail.com' || password !== 'siyaram@') {
+      setError('Invalid email or password');
       setLoading(false);
       return;
     }
     
     try {
-      // Use Firebase authentication
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const response = await fetch('https://react-task-cyan-nine.vercel.app/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
       
-      // Store authentication state
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+      
+      // Store token or user data in localStorage if needed
+      localStorage.setItem('token', data.token);
       localStorage.setItem('isLoggedIn', 'true');
       
       // Redirect to calculator page
       navigate('/');
     } catch (err) {
-      // Handle Firebase auth errors
-      switch(err.code) {
-        case 'auth/wrong-password':
-        case 'auth/invalid-credential':
-          setError('Invalid password. Please try again.');
-          break;
-        case 'auth/user-not-found':
-          setError('No account found with this email');
-          break;
-        case 'auth/too-many-requests':
-          setError('Too many failed login attempts. Please try again later');
-          break;
-        default:
-          setError('Login failed: ' + err.message);
-      }
-      console.error('Firebase auth error:', err.code, err.message);
+      setError(err.message || 'An error occurred during login');
     } finally {
       setLoading(false);
     }
@@ -198,3 +193,13 @@ const Login = () => {
 };
 
 export default Login; 
+
+
+
+
+// {
+//   "rules": {
+//     ".read": "false",
+//     ".write": "false"
+//   }
+// }

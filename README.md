@@ -169,4 +169,44 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
-# calculator-Api
+
+# Siyaram Lace Application
+
+## Firebase Authentication Setup
+
+This application uses Firebase Authentication with a single authorized user:
+
+- Email: siyaram@gmail.com
+- Password: siyaram@
+
+### Configuration Steps:
+
+1. The Firebase project is already configured in `src/firebase/config.js`
+
+2. To create the authorized user in Firebase:
+   - Run the script `src/firebase/createUser.js` once:
+     ```
+     node src/firebase/createUser.js
+     ```
+   - After successful user creation, delete this file for security
+
+3. Database rules have been set up to restrict access to only the authorized user (siyaram@gmail.com)
+
+4. The login page in `src/Login.jsx` has been configured to:
+   - Only allow login with email "siyaram@gmail.com"
+   - Validate the password using Firebase Authentication
+
+### Security Notes:
+
+- The database rules in `src/firebase/database-rules.json` should be deployed to your Firebase project
+- Authentication is handled by Firebase, not through local hardcoded values
+- Ensure your Firebase project has Email/Password authentication enabled in the Firebase Console
+
+### Deploying Rules:
+
+To deploy the database rules to Firebase:
+```
+firebase deploy --only database
+```
+
+Remember to keep your Firebase credentials secure and not expose them in client-side code or public repositories.

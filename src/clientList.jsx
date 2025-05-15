@@ -67,6 +67,9 @@ const ClientList = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [newPayment, setNewPayment] = useState('');
   const [showPaymentStatusDropdown, setShowPaymentStatusDropdown] = useState(false);
+  const [editingPayment, setEditingPayment] = useState(null);
+  const [showDeletePaymentModal, setShowDeletePaymentModal] = useState(false);
+  const [selectedPaymentIndex, setSelectedPaymentIndex] = useState(null);
 
   useEffect(() => {
     // Fetch clients from API when component mounts
@@ -393,28 +396,87 @@ const ClientList = () => {
     const paymentAmount = parseFloat(newPayment);
     const currentDate = new Date().toISOString();
     
-    // Create new payment entry
-    const paymentEntry = {
-      amount: paymentAmount,
-      date: currentDate
-    };
-    
-    // Calculate new total paid amount
-    const previousPaid = parseFloat(editFormData.amountPaid) || 0;
-    const newTotalPaid = previousPaid + paymentAmount;
-    
-    // Update payment history and total amount
-    setEditFormData({
-      ...editFormData,
-      amountPaid: newTotalPaid,
-      paymentHistory: [...(editFormData.paymentHistory || []), paymentEntry],
-      // If new total equals or exceeds grand total, set payment status to cleared
-      paymentStatus: newTotalPaid >= (editingClient?.grandTotal || 0) ? 'cleared' : 'pending'
-    });
+    if (editingPayment !== null) {
+      // Update existing payment
+      const updatedPaymentHistory = [...editFormData.paymentHistory];
+      const oldAmount = updatedPaymentHistory[editingPayment].amount;
+      updatedPaymentHistory[editingPayment] = {
+        amount: paymentAmount,
+        date: currentDate
+      };
+      
+      // Recalculate total paid amount
+      const previousTotal = parseFloat(editFormData.amountPaid) || 0;
+      const newTotalPaid = previousTotal - oldAmount + paymentAmount;
+      
+      setEditFormData({
+        ...editFormData,
+        amountPaid: newTotalPaid,
+        paymentHistory: updatedPaymentHistory,
+        paymentStatus: newTotalPaid >= (editingClient?.grandTotal || 0) ? 'cleared' : 'pending'
+      });
+      
+      setEditingPayment(null);
+    } else {
+      // Create new payment entry
+      const paymentEntry = {
+        amount: paymentAmount,
+        date: currentDate
+      };
+      
+      // Calculate new total paid amount
+      const previousPaid = parseFloat(editFormData.amountPaid) || 0;
+      const newTotalPaid = previousPaid + paymentAmount;
+      
+      // Update payment history and total amount
+      setEditFormData({
+        ...editFormData,
+        amountPaid: newTotalPaid,
+        paymentHistory: [...(editFormData.paymentHistory || []), paymentEntry],
+        // If new total equals or exceeds grand total, set payment status to cleared
+        paymentStatus: newTotalPaid >= (editingClient?.grandTotal || 0) ? 'cleared' : 'pending'
+      });
+    }
     
     // Close modal and reset new payment input
     setShowPaymentModal(false);
     setNewPayment('');
+  };
+
+  const editPaymentEntry = (index) => {
+    if (editFormData.paymentHistory && editFormData.paymentHistory[index]) {
+      const payment = editFormData.paymentHistory[index];
+      setNewPayment(payment.amount.toString());
+      setEditingPayment(index);
+      setShowPaymentModal(true);
+    }
+  };
+
+  const deletePaymentEntry = () => {
+    if (selectedPaymentIndex === null || !editFormData.paymentHistory) return;
+    
+    // Get the payment amount to be deleted
+    const paymentToDelete = editFormData.paymentHistory[selectedPaymentIndex];
+    const amountToRemove = parseFloat(paymentToDelete.amount) || 0;
+    
+    // Remove payment from history
+    const updatedPaymentHistory = [...editFormData.paymentHistory];
+    updatedPaymentHistory.splice(selectedPaymentIndex, 1);
+    
+    // Recalculate total paid amount
+    const previousPaid = parseFloat(editFormData.amountPaid) || 0;
+    const newTotalPaid = Math.max(0, previousPaid - amountToRemove); // Ensure it's not negative
+    
+    // Update state
+    setEditFormData({
+      ...editFormData,
+      amountPaid: newTotalPaid,
+      paymentHistory: updatedPaymentHistory,
+      paymentStatus: newTotalPaid >= (editingClient?.grandTotal || 0) ? 'cleared' : 'pending'
+    });
+    
+    setShowDeletePaymentModal(false);
+    setSelectedPaymentIndex(null);
   };
 
   const saveClientChanges = async (e) => {
@@ -1054,6 +1116,7 @@ const ClientList = () => {
                                 <tr>
                                   <th className="px-4 py-2 text-left text-xs font-medium text-slate-400">Date</th>
                                   <th className="px-4 py-2 text-right text-xs font-medium text-slate-400">Amount</th>
+                                  <th className="px-4 py-2 text-right text-xs font-medium text-slate-400">Actions</th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-white/5">
@@ -1068,6 +1131,31 @@ const ClientList = () => {
                                     </td>
                                     <td className="px-4 py-2 text-right text-xs font-medium text-emerald-500">
                                       ₹{parseFloat(payment.amount).toFixed(2)}
+                                    </td>
+                                    <td className="px-4 py-2 text-right">
+                                      <div className="flex justify-end items-center space-x-2">
+                                        <button
+                                          type="button"
+                                          onClick={() => editPaymentEntry(index)}
+                                          className="p-1 text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+                                        >
+                                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                          </svg>
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setSelectedPaymentIndex(index);
+                                            setShowDeletePaymentModal(true);
+                                          }}
+                                          className="p-1 text-xs text-red-400 hover:text-red-300 transition-colors"
+                                        >
+                                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                          </svg>
+                                        </button>
+                                      </div>
                                     </td>
                                   </tr>
                                 ))}
@@ -1490,9 +1578,15 @@ const ClientList = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
           <div className="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 border border-slate-700">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-bold text-white">Add Payment</h3>
+              <h3 className="text-lg font-bold text-white">
+                {editingPayment !== null ? 'Edit Payment' : 'Add Payment'}
+              </h3>
               <button
-                onClick={() => setShowPaymentModal(false)}
+                onClick={() => {
+                  setShowPaymentModal(false);
+                  setEditingPayment(null);
+                  setNewPayment('');
+                }}
                 className="text-slate-400 hover:text-white"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -1523,14 +1617,20 @@ const ClientList = () => {
                 />
               </div>
               <p className="mt-2 text-xs text-slate-400">
-                Current date and time will be recorded with this payment.
+                {editingPayment !== null 
+                  ? "Editing this payment will update the payment timestamp to now."
+                  : "Current date and time will be recorded with this payment."}
               </p>
             </div>
             
             <div className="flex justify-end gap-3">
               <button
                 type="button"
-                onClick={() => setShowPaymentModal(false)}
+                onClick={() => {
+                  setShowPaymentModal(false);
+                  setEditingPayment(null);
+                  setNewPayment('');
+                }}
                 className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors"
               >
                 Cancel
@@ -1545,7 +1645,45 @@ const ClientList = () => {
                     : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white'
                 }`}
               >
-                Add Payment
+                {editingPayment !== null ? 'Update Payment' : 'Add Payment'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Payment Confirmation Modal */}
+      {showDeletePaymentModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 border border-slate-700">
+            <div className="flex items-center mb-5">
+              <svg className="w-6 h-6 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h3 className="text-lg font-bold text-white">Delete Payment</h3>
+            </div>
+            
+            <p className="text-slate-300 mb-6">
+              Are you sure you want to delete this payment? This will reduce the total amount paid and cannot be undone.
+            </p>
+            
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeletePaymentModal(false);
+                  setSelectedPaymentIndex(null);
+                }}
+                className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={deletePaymentEntry}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors"
+              >
+                Delete Payment
               </button>
             </div>
           </div>

@@ -106,11 +106,15 @@ const AddProducts = () => {
       clientPhoneRef.current?.focus();
     } else if (!client.clientGst) {
       clientGstRef.current?.focus();
-    } else if (billMode === 'full') {
-      amountPaidRef.current?.focus();
     } else {
+      // Focus on the first product's input field
       const firstProductId = products[0]?.id;
-      productRefs.current[`${firstProductId}_count`]?.focus();
+      if (firstProductId) {
+        const firstField = billMode === 'full' ? 'name' : 'count';
+        setTimeout(() => {
+          productRefs.current[`${firstProductId}_${firstField}`]?.focus();
+        }, 0);
+      }
     }
   };
 
@@ -139,20 +143,24 @@ const AddProducts = () => {
 
       // Client GST field handling
       if (field === 'clientGst') {
-        if (billMode === 'full') {
-          amountPaidRef.current?.focus();
-        } else {
-          // If in half bill mode, focus on first product quantity field
-          const firstProductId = products[0]?.id;
-          productRefs.current[`${firstProductId}_count`]?.focus();
-        }
+        // Focus on first product's input field regardless of bill mode
+        const firstProductId = products[0]?.id;
+        const firstField = billMode === 'full' ? 'name' : 'count';
+        productRefs.current[`${firstProductId}_${firstField}`]?.focus();
         return;
       }
 
       // Amount paid field handling
       if (field === 'amountPaid') {
-        const firstProductId = products[0]?.id;
-        productRefs.current[`${firstProductId}_${billMode === 'full' ? 'name' : 'count'}`]?.focus();
+        // Focus on Save Order button
+        const saveButton = document.querySelector('button[onClick="saveOrder"]');
+        if (saveButton) {
+          saveButton.focus();
+          // Also trigger click if Enter was pressed
+          if (e.key === 'Enter') {
+            saveButton.click();
+          }
+        }
         return;
       }
 

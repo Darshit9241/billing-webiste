@@ -1058,7 +1058,7 @@ const ClientList = () => {
                               </thead>
                               <tbody className="divide-y divide-white/5">
                                 {editFormData.paymentHistory.map((payment, index) => (
-                                  <tr key={index} className="text-white">
+                                  <tr key={index} className="text-white text-left">
                                     <td className="px-4 py-2 text-xs text-slate-300">
                                       {new Date(payment.date).toLocaleString(undefined, { 
                                         dateStyle: 'medium', 

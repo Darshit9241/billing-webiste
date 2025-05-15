@@ -1375,7 +1375,7 @@ const ClientList = () => {
                       type="submit"
                       className="px-4 py-2 bg-gradient-to-br from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl shadow-lg hover:shadow-emerald-500/30 transition-all"
                     >
-                      Save Changes
+                      Save
                     </button>
                   </div>
                 </div>
@@ -1645,7 +1645,7 @@ const ClientList = () => {
                     : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white'
                 }`}
               >
-                {editingPayment !== null ? 'Update Payment' : 'Add Payment'}
+                {editingPayment !== null ? 'Update' : 'Add Payment'}
               </button>
             </div>
           </div>

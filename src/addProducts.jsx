@@ -24,6 +24,7 @@ const AddProducts = () => {
   const [gstSuggestions, setGstSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showGstSuggestions, setShowGstSuggestions] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
 
   // Create refs for input fields
   const clientNameRef = useRef(null);
@@ -51,6 +52,31 @@ const AddProducts = () => {
     
     loadExistingClients();
   }, []);
+
+  // Initialize dark mode from localStorage
+  useEffect(() => {
+    const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+    setDarkMode(savedDarkMode);
+    
+    if (savedDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
+  
+  // Toggle dark mode
+  const toggleDarkMode = () => {
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    localStorage.setItem('darkMode', newDarkMode.toString());
+    
+    if (newDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
 
   // Handle client name change and check for existing clients
   const handleClientNameChange = (e) => {
@@ -355,8 +381,8 @@ const AddProducts = () => {
   const grandTotal = products.reduce((sum, product) => sum + product.total, 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50">
-      <div className="max-w-5xl mx-auto bg-white shadow-xl overflow-hidden transition-all duration-300">
+    <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50'}`}>
+      <div className={`max-w-5xl mx-auto ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-xl overflow-hidden transition-all duration-300`}>
         {/* Enhanced Header with modern glass morphism effect */}
         <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 px-6 py-8 relative overflow-hidden">
           <div className="absolute inset-0 bg-white opacity-10 backdrop-blur-xl"></div>
@@ -376,6 +402,22 @@ const AddProducts = () => {
               </div>
             </div>
             <div className="flex flex-wrap gap-3">
+              {/* Dark mode toggle button */}
+              <button
+                onClick={toggleDarkMode}
+                className="flex items-center px-4 py-2.5 bg-white bg-opacity-20 text-white rounded-xl hover:bg-opacity-30 transition-all duration-300 text-sm font-medium backdrop-blur-sm shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+              >
+                {darkMode ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                  </svg>
+                )}
+                {darkMode ? 'Light Mode' : 'Dark Mode'}
+              </button>
               <button
                 onClick={() => navigate('/clients')}
                 className="flex items-center px-4 py-2.5 bg-white bg-opacity-20 text-white rounded-xl hover:bg-opacity-30 transition-all duration-300 text-sm font-medium backdrop-blur-sm shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
@@ -403,13 +445,13 @@ const AddProducts = () => {
           {/* Enhanced Bill Mode Toggle */}
           <div className="mb-8">
             <div className="flex justify-center">
-              <div className="bg-gray-100 p-1 rounded-2xl inline-flex shadow-inner">
+              <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} p-1 rounded-2xl inline-flex shadow-inner`}>
                 <button
                   onClick={() => setBillMode('full')}
                   className={`px-8 py-3 rounded-xl transition-all duration-300 flex items-center space-x-2 ${
                     billMode === 'full'
-                      ? 'bg-white text-indigo-600 shadow-md transform scale-105'
-                      : 'text-gray-600 hover:text-gray-800'
+                      ? `${darkMode ? 'bg-gray-800 text-indigo-400' : 'bg-white text-indigo-600'} shadow-md transform scale-105`
+                      : `${darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-800'}`
                   }`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -421,8 +463,8 @@ const AddProducts = () => {
                   onClick={() => setBillMode('half')}
                   className={`px-8 py-3 rounded-xl transition-all duration-300 flex items-center space-x-2 ${
                     billMode === 'half'
-                      ? 'bg-white text-indigo-600 shadow-md transform scale-105'
-                      : 'text-gray-600 hover:text-gray-800'
+                      ? `${darkMode ? 'bg-gray-800 text-indigo-400' : 'bg-white text-indigo-600'} shadow-md transform scale-105`
+                      : `${darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-800'}`
                   }`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -441,7 +483,7 @@ const AddProducts = () => {
               <input
                 type="text"
                 id="clientName"
-                className="block w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-800 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 peer placeholder-transparent group-hover:border-indigo-300"
+                className={`block w-full px-4 py-4 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400 placeholder-gray-400' : 'border-gray-300 bg-white text-gray-800 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200 peer placeholder-transparent group-hover:border-indigo-300`}
                 value={clientName}
                 onChange={handleClientNameChange}
                 placeholder="Client Name"
@@ -451,43 +493,43 @@ const AddProducts = () => {
               />
               <label
                 htmlFor="clientName"
-                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 peer-focus:text-indigo-600 bg-white px-1 group-hover:text-indigo-500"
+                className={`absolute text-sm ${darkMode ? 'text-gray-400 bg-gray-700 peer-focus:text-indigo-400 group-hover:text-indigo-400' : 'text-gray-500 bg-white peer-focus:text-indigo-600 group-hover:text-indigo-500'} duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 px-1`}
               >
                 Client Name
               </label>
               
               {/* Enhanced client name suggestions dropdown */}
               {showSuggestions && clientSuggestions.length > 0 && (
-                <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-y-auto divide-y divide-gray-100 transform transition-all duration-200 origin-top">
+                <div className={`absolute z-20 w-full mt-1 ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'} border rounded-xl shadow-lg max-h-60 overflow-y-auto divide-y ${darkMode ? 'divide-gray-600' : 'divide-gray-100'} transform transition-all duration-200 origin-top`}>
                   {clientSuggestions.map((client, index) => (
                     <div 
                       key={client.id || index}
-                      className="px-4 py-3 cursor-pointer hover:bg-indigo-50 transition-colors duration-150 flex flex-col group/item"
+                      className={`px-4 py-3 cursor-pointer ${darkMode ? 'hover:bg-gray-600' : 'hover:bg-indigo-50'} transition-colors duration-150 flex flex-col group/item`}
                       onClick={() => selectClient(client)}
                     >
                       <div className="flex items-center space-x-3">
-                        <div className="bg-indigo-100 rounded-full p-2 group-hover/item:bg-indigo-200 transition-colors duration-200">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-indigo-600" viewBox="0 0 20 20" fill="currentColor">
+                        <div className={`${darkMode ? 'bg-gray-600 group-hover/item:bg-gray-500' : 'bg-indigo-100 group-hover/item:bg-indigo-200'} rounded-full p-2 transition-colors duration-200`}>
+                          <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${darkMode ? 'text-indigo-300' : 'text-indigo-600'}`} viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                           </svg>
                         </div>
-                        <span className="font-medium text-gray-800 group-hover/item:text-indigo-600 transition-colors duration-200">{client.clientName}</span>
+                        <span className={`font-medium ${darkMode ? 'text-white group-hover/item:text-indigo-300' : 'text-gray-800 group-hover/item:text-indigo-600'} transition-colors duration-200`}>{client.clientName}</span>
                       </div>
                       <div className="ml-11 mt-2 flex flex-col space-y-1">
                         {client.clientPhone && (
                           <div className="flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-gray-400 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${darkMode ? 'text-gray-400' : 'text-gray-400'} mr-1`} viewBox="0 0 20 20" fill="currentColor">
                               <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
                             </svg>
-                            <span className="text-xs text-gray-500">{client.clientPhone}</span>
+                            <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>{client.clientPhone}</span>
                           </div>
                         )}
                         {client.clientGst && (
                           <div className="flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-indigo-400 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${darkMode ? 'text-indigo-300' : 'text-indigo-400'} mr-1`} viewBox="0 0 20 20" fill="currentColor">
                               <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
                             </svg>
-                            <span className="text-xs text-indigo-600 font-medium">GST: {client.clientGst}</span>
+                            <span className={`text-xs ${darkMode ? 'text-indigo-300 font-medium' : 'text-indigo-600 font-medium'}`}>GST: {client.clientGst}</span>
                           </div>
                         )}
                       </div>
@@ -502,7 +544,7 @@ const AddProducts = () => {
               <input
                 type="text"
                 id="clientAddress"
-                className="block w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-800 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 peer placeholder-transparent group-hover:border-indigo-300"
+                className={`block w-full px-4 py-4 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400 placeholder-gray-400' : 'border-gray-300 bg-white text-gray-800 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200 peer placeholder-transparent group-hover:border-indigo-300`}
                 value={clientAddress}
                 onChange={(e) => setClientAddress(e.target.value)}
                 placeholder="Client Address"
@@ -511,7 +553,7 @@ const AddProducts = () => {
               />
               <label
                 htmlFor="clientAddress"
-                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 peer-focus:text-indigo-600 bg-white px-1 group-hover:text-indigo-500"
+                className={`absolute text-sm ${darkMode ? 'text-gray-400 bg-gray-700 peer-focus:text-indigo-400 group-hover:text-indigo-400' : 'text-gray-500 bg-white peer-focus:text-indigo-600 group-hover:text-indigo-500'} duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 px-1`}
               >
                 Client Address
               </label>
@@ -522,7 +564,7 @@ const AddProducts = () => {
               <input
                 type="text"
                 id="clientPhone"
-                className="block w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-800 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 peer placeholder-transparent group-hover:border-indigo-300"
+                className={`block w-full px-4 py-4 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400 placeholder-gray-400' : 'border-gray-300 bg-white text-gray-800 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200 peer placeholder-transparent group-hover:border-indigo-300`}
                 value={clientPhone}
                 onChange={(e) => setClientPhone(e.target.value)}
                 placeholder="Client Phone"
@@ -531,7 +573,7 @@ const AddProducts = () => {
               />
               <label
                 htmlFor="clientPhone"
-                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 peer-focus:text-indigo-600 bg-white px-1 group-hover:text-indigo-500"
+                className={`absolute text-sm ${darkMode ? 'text-gray-400 bg-gray-700 peer-focus:text-indigo-400 group-hover:text-indigo-400' : 'text-gray-500 bg-white peer-focus:text-indigo-600 group-hover:text-indigo-500'} duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 px-1`}
               >
                 Client Phone
               </label>
@@ -542,7 +584,7 @@ const AddProducts = () => {
               <input
                 type="text"
                 id="clientGst"
-                className="block w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-800 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 peer placeholder-transparent group-hover:border-indigo-300"
+                className={`block w-full px-4 py-4 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400 placeholder-gray-400' : 'border-gray-300 bg-white text-gray-800 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200 peer placeholder-transparent group-hover:border-indigo-300`}
                 value={clientGst}
                 onChange={(e) => {
                   setClientGst(e.target.value);
@@ -555,7 +597,7 @@ const AddProducts = () => {
               />
               <label
                 htmlFor="clientGst"
-                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 peer-focus:text-indigo-600 bg-white px-1 group-hover:text-indigo-500"
+                className={`absolute text-sm ${darkMode ? 'text-gray-400 bg-gray-700 peer-focus:text-indigo-400 group-hover:text-indigo-400' : 'text-gray-500 bg-white peer-focus:text-indigo-600 group-hover:text-indigo-500'} duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 px-1`}
               >
                 GST Number
               </label>
@@ -608,10 +650,10 @@ const AddProducts = () => {
           </div>
 
           {/* Products section with improved card design */}
-          <div className="bg-white border border-gray-200 rounded-xl shadow-lg mb-8 overflow-hidden">
-            <div className="bg-gradient-to-r flex justify-between from-indigo-50 to-blue-50 p-4 border-b border-gray-200">
+          <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-xl shadow-lg mb-8 overflow-hidden`}>
+            <div className={`${darkMode ? 'from-gray-700 to-gray-800' : 'from-indigo-50 to-blue-50'} bg-gradient-to-r flex justify-between p-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
               <div className='flex justify-center text-center'>
-                <h2 className="text-lg font-semibold text-gray-800 flex items-center">Product Details</h2>
+                <h2 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-800'} flex items-center`}>Product Details</h2>
               </div>
               <div>
                 <button
@@ -626,7 +668,7 @@ const AddProducts = () => {
             </div>
 
             {/* Table header - Only visible on larger screens */}
-            <div className="hidden md:grid md:grid-cols-12 md:gap-4 font-semibold text-gray-700 border-b p-4 bg-gray-50">
+            <div className={`hidden md:grid md:grid-cols-12 md:gap-4 font-semibold ${darkMode ? 'text-gray-300 bg-gray-700 border-gray-600' : 'text-gray-700 bg-gray-50 border-gray-200'} border-b p-4`}>
               {billMode === 'full' && <div className="col-span-3">Product Name</div>}
               <div className={billMode === 'full' ? "col-span-2" : "col-span-4"}>Quantity</div>
               <div className={billMode === 'full' ? "col-span-2" : "col-span-4"}>Price</div>
@@ -634,17 +676,17 @@ const AddProducts = () => {
               <div className="col-span-2">Action</div>
             </div>
 
-            <div className="divide-y divide-gray-100">
+            <div className={`divide-y ${darkMode ? 'divide-gray-700' : 'divide-gray-100'}`}>
               {products.map(product => (
-                <div key={product.id} className="p-4 md:grid md:grid-cols-12 md:gap-4 md:items-center transition-all duration-200 hover:bg-gray-50">
+                <div key={product.id} className={`p-4 md:grid md:grid-cols-12 md:gap-4 md:items-center transition-all duration-200 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}`}>
                   {/* Mobile layout - stacked fields with labels */}
                   <div className="md:hidden mb-3">
                     {billMode === 'full' && (
                       <div className="mb-3">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
+                        <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Product Name</label>
                         <input
                           type="text"
-                          className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
+                          className={`w-full p-3 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200`}
                           value={product.name}
                           onChange={(e) => handleChange(product.id, 'name', e.target.value)}
                           placeholder="Product name"
@@ -655,10 +697,10 @@ const AddProducts = () => {
                     )}
                     <div className="mb-3 grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                        <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Quantity</label>
                         <input
                           type="number"
-                          className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
+                          className={`w-full p-3 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200`}
                           value={product.count}
                           onChange={(e) => handleChange(product.id, 'count', e.target.value)}
                           min="0"
@@ -667,10 +709,10 @@ const AddProducts = () => {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
+                        <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Price</label>
                         <input
                           type="number"
-                          className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
+                          className={`w-full p-3 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200`}
                           value={product.price}
                           onChange={(e) => handleChange(product.id, 'price', e.target.value)}
                           min="0"
@@ -682,8 +724,8 @@ const AddProducts = () => {
                     </div>
                     <div className="mb-3 flex justify-between items-center">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Total</label>
-                        <div className="p-3 bg-indigo-50 text-indigo-800 rounded-xl font-medium border border-indigo-100">
+                        <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Total</label>
+                        <div className={`p-3 ${darkMode ? 'bg-gray-600 text-indigo-300 border-gray-700' : 'bg-indigo-50 text-indigo-800 border-indigo-100'} rounded-xl font-medium border`}>
                           ₹ {product.total.toFixed(2)}
                         </div>
                       </div>
@@ -704,7 +746,7 @@ const AddProducts = () => {
                     <div className="hidden md:block md:col-span-3">
                       <input
                         type="text"
-                        className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
+                        className={`w-full p-3 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200`}
                         value={product.name}
                         onChange={(e) => handleChange(product.id, 'name', e.target.value)}
                         placeholder="Product name"
@@ -716,7 +758,7 @@ const AddProducts = () => {
                   <div className={`hidden md:block ${billMode === 'full' ? "md:col-span-2" : "md:col-span-4"}`}>
                     <input
                       type="number"
-                      className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
+                      className={`w-full p-3 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200`}
                       value={product.count}
                       onChange={(e) => handleChange(product.id, 'count', e.target.value)}
                       min="0"
@@ -727,7 +769,7 @@ const AddProducts = () => {
                   <div className={`hidden md:block ${billMode === 'full' ? "md:col-span-2" : "md:col-span-4"}`}>
                     <input
                       type="number"
-                      className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
+                      className={`w-full p-3 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200`}
                       value={product.price}
                       onChange={(e) => handleChange(product.id, 'price', e.target.value)}
                       min="0"
@@ -737,7 +779,7 @@ const AddProducts = () => {
                     />
                   </div>
                   <div className={`hidden md:block font-medium ${billMode === 'full' ? "md:col-span-3" : "md:col-span-2"}`}>
-                    <div className="p-3 bg-indigo-50 text-indigo-800 rounded-xl border border-indigo-100">
+                    <div className={`p-3 ${darkMode ? 'bg-gray-600 text-indigo-300 border-gray-700' : 'bg-indigo-50 text-indigo-800 border-indigo-100'} rounded-xl border`}>
                       ₹ {product.total.toFixed(2)}
                     </div>
                   </div>
@@ -760,8 +802,8 @@ const AddProducts = () => {
           {/* Payment status and amount section with improved design */}
           {billMode === 'full' && (
             <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-gray-50 rounded-xl p-4 shadow-sm border border-gray-100">
-                <label className="block text-gray-700 font-medium mb-3 text-sm">Payment Status</label>
+              <div className={`${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-100'} rounded-xl p-4 shadow-sm border`}>
+                <label className={`block ${darkMode ? 'text-gray-300' : 'text-gray-700'} font-medium mb-3 text-sm`}>Payment Status</label>
                 <div className="flex gap-6">
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
@@ -773,7 +815,7 @@ const AddProducts = () => {
                       className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-500"></div>
-                    <span className="ml-3 text-gray-700">Pending</span>
+                    <span className={`ml-3 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Pending</span>
                   </label>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
@@ -785,7 +827,7 @@ const AddProducts = () => {
                       className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-                    <span className="ml-3 text-gray-700">Cleared</span>
+                    <span className={`ml-3 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Cleared</span>
                   </label>
                 </div>
               </div>
@@ -794,7 +836,7 @@ const AddProducts = () => {
                 <input
                   type="number"
                   id="amountPaid"
-                  className="block w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-800 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 peer placeholder-transparent"
+                  className={`block w-full px-4 py-4 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400 placeholder-gray-400' : 'border-gray-300 bg-white text-gray-800 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200 peer placeholder-transparent`}
                   value={amountPaid}
                   onChange={(e) => setAmountPaid(e.target.value)}
                   placeholder="0.00"
@@ -805,7 +847,7 @@ const AddProducts = () => {
                 />
                 <label
                   htmlFor="amountPaid"
-                  className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 peer-focus:text-indigo-600 bg-white px-1"
+                  className={`absolute text-sm ${darkMode ? 'text-gray-400 bg-gray-700 peer-focus:text-indigo-400' : 'text-gray-500 bg-white peer-focus:text-indigo-600'} duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 px-1`}
                 >
                   Amount Paid
                 </label>
@@ -850,59 +892,61 @@ const AddProducts = () => {
               </button>
             </div>
 
-            <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-6 rounded-xl border border-indigo-200 shadow-lg relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-full bg-white opacity-90 backdrop-blur-sm"></div>
+            <div className={`${darkMode ? 'bg-gradient-to-r from-indigo-700 to-purple-700 border-indigo-600' : 'bg-gradient-to-r from-indigo-500 to-purple-500 border-indigo-200'} p-6 rounded-xl border shadow-lg relative overflow-hidden`}>
+              <div className={`absolute top-0 left-0 w-full h-full ${darkMode ? 'bg-gray-800 opacity-80' : 'bg-white opacity-90'} backdrop-blur-sm`}></div>
               <div className="relative">
-                <div className="text-xl md:text-2xl font-bold text-gray-800 text-center mb-3">
+                <div className={`text-xl md:text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'} text-center mb-3`}>
                   {clientName ? `${clientName}'s Order` : 'Order Summary'}
                 </div>
 
                 {clientName && (
-                  <div className="mb-4 p-3 bg-white bg-opacity-80 backdrop-blur-sm rounded-lg">
+                  <div className={`mb-4 p-3 ${darkMode ? 'bg-gray-700 bg-opacity-80' : 'bg-white bg-opacity-80'} backdrop-blur-sm rounded-lg`}>
                     <div className="grid grid-cols-1 gap-2">
                       {clientAddress && (
                         <div className="flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'} mr-2`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                           </svg>
-                          <span className="text-sm text-gray-700">{clientAddress}</span>
+                          <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{clientAddress}</span>
                         </div>
                       )}
                       {clientPhone && (
                         <div className="flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'} mr-2`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                           </svg>
-                          <span className="text-sm text-gray-700">{clientPhone}</span>
+                          <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{clientPhone}</span>
                         </div>
                       )}
                       {clientGst && (
                         <div className="flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'} mr-2`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
-                          <span className="text-sm text-gray-700">GST: {clientGst}</span>
+                          <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>GST: {clientGst}</span>
                         </div>
                       )}
                     </div>
                   </div>
                 )}
 
-                <div className="flex justify-between items-center mt-4 p-3 bg-white bg-opacity-80 backdrop-blur-sm rounded-lg">
-                  <span className="font-medium text-gray-700">Grand Total:</span>
-                  <span className="font-bold text-xl text-indigo-700">₹ {grandTotal.toFixed(2)}</span>
+                <div className={`flex justify-between items-center mt-4 p-3 ${darkMode ? 'bg-gray-700 bg-opacity-80' : 'bg-white bg-opacity-80'} backdrop-blur-sm rounded-lg`}>
+                  <span className={`font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Grand Total:</span>
+                  <span className={`font-bold text-xl ${darkMode ? 'text-indigo-300' : 'text-indigo-700'}`}>₹ {grandTotal.toFixed(2)}</span>
                 </div>
 
                 {billMode === 'full' && amountPaid && (
                   <div className="mt-3 grid grid-cols-2 gap-3">
-                    <div className="p-3 bg-white bg-opacity-80 backdrop-blur-sm rounded-lg">
-                      <span className="text-gray-600 text-sm">Amount Paid</span>
-                      <div className="font-bold text-green-600">₹ {parseFloat(amountPaid).toFixed(2)}</div>
+                    <div className={`p-3 ${darkMode ? 'bg-gray-700 bg-opacity-80' : 'bg-white bg-opacity-80'} backdrop-blur-sm rounded-lg`}>
+                      <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} text-sm`}>Amount Paid</span>
+                      <div className={`font-bold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>₹ {parseFloat(amountPaid).toFixed(2)}</div>
                     </div>
-                    <div className="p-3 bg-white bg-opacity-80 backdrop-blur-sm rounded-lg">
-                      <span className="text-gray-600 text-sm">Balance</span>
-                      <div className={`font-bold ${(grandTotal - parseFloat(amountPaid || 0)) <= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    <div className={`p-3 ${darkMode ? 'bg-gray-700 bg-opacity-80' : 'bg-white bg-opacity-80'} backdrop-blur-sm rounded-lg`}>
+                      <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} text-sm`}>Balance</span>
+                      <div className={`font-bold ${(grandTotal - parseFloat(amountPaid || 0)) <= 0 
+                          ? (darkMode ? 'text-green-400' : 'text-green-600') 
+                          : (darkMode ? 'text-red-400' : 'text-red-600')}`}>
                         ₹ {(grandTotal - parseFloat(amountPaid || 0)).toFixed(2)}
                       </div>
                     </div>
@@ -911,7 +955,11 @@ const AddProducts = () => {
 
                 {billMode === 'full' && (
                   <div className="mt-3 text-center">
-                    <span className={`inline-block px-4 py-2 rounded-full ${paymentStatus === 'pending' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' : 'bg-green-100 text-green-800 border border-green-200'}`}>
+                    <span className={`inline-block px-4 py-2 rounded-full ${
+                      paymentStatus === 'pending' 
+                        ? (darkMode ? 'bg-yellow-800 text-yellow-200 border border-yellow-700' : 'bg-yellow-100 text-yellow-800 border border-yellow-200')
+                        : (darkMode ? 'bg-green-800 text-green-200 border border-green-700' : 'bg-green-100 text-green-800 border border-green-200')
+                    } border`}>
                       {paymentStatus === 'pending' ? '⏳ Payment Pending' : '✓ Payment Cleared'}
                     </span>
                   </div>
@@ -922,7 +970,11 @@ const AddProducts = () => {
 
           {/* Status message with animation */}
           {saveStatus && (
-            <div className={`mt-6 p-4 ${saveStatus.includes('Error') ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'} rounded-xl text-center animate-pulse border ${saveStatus.includes('Error') ? 'border-red-200' : 'border-green-200'} shadow-md`}>
+            <div className={`mt-6 p-4 ${
+              saveStatus.includes('Error') 
+                ? (darkMode ? 'bg-red-900 text-red-200 border-red-800' : 'bg-red-100 text-red-800 border-red-200')
+                : (darkMode ? 'bg-green-900 text-green-200 border-green-800' : 'bg-green-100 text-green-800 border-green-200')
+            } rounded-xl text-center animate-pulse border shadow-md`}>
               {saveStatus.includes('Error') ? (
                 <div className="flex items-center justify-center">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -942,7 +994,7 @@ const AddProducts = () => {
           )}
 
           {/* Footer */}
-          <div className="mt-10 pt-4 border-t border-gray-200 text-center text-gray-500 text-sm">
+          <div className={`mt-10 pt-4 border-t ${darkMode ? 'border-gray-700 text-gray-400' : 'border-gray-200 text-gray-500'} text-center text-sm`}>
             <p>Siyaram Lace © {new Date().getFullYear()} | Billing System</p>
           </div>
         </div>
@@ -952,7 +1004,7 @@ const AddProducts = () => {
       {showSuccessModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
           <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"></div>
-          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 relative z-10 transform transition-all duration-300 scale-100 opacity-100" style={{ animation: 'fadeIn 0.3s ease-out' }}>
+          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 relative z-10 transform transition-all duration-300 scale-100 opacity-100`} style={{ animation: 'fadeIn 0.3s ease-out' }}>
             <style>
               {`
                 @keyframes fadeIn {
@@ -1054,8 +1106,8 @@ const AddProducts = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h3 className="text-xl font-medium text-gray-900 mb-2">Order Saved Successfully!</h3>
-              <p className="text-gray-500 mb-5">Your order has been saved and is now available in the client list.</p>
+              <h3 className={`text-xl font-medium ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>Order Saved Successfully!</h3>
+              <p className={`${darkMode ? 'text-gray-300' : 'text-gray-500'} mb-5`}>Your order has been saved and is now available in the client list.</p>
               <button
                 onClick={() => setShowSuccessModal(false)}
                 className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:text-sm transition-colors duration-200"
@@ -1071,15 +1123,15 @@ const AddProducts = () => {
       {showErrorModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
           <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"></div>
-          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 relative z-10 transform transition-all duration-300 scale-100">
+          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 relative z-10 transform transition-all duration-300 scale-100`}>
             <div className="text-center relative z-10">
               <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
                 <svg className="h-10 w-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-medium text-gray-900 mb-2">Validation Error</h3>
-              <p className="text-gray-500 mb-5">{errorMessage}</p>
+              <h3 className={`text-xl font-medium ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>Validation Error</h3>
+              <p className={`${darkMode ? 'text-gray-300' : 'text-gray-500'} mb-5`}>{errorMessage}</p>
               <button
                 onClick={() => setShowErrorModal(false)}
                 className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm transition-colors duration-200"

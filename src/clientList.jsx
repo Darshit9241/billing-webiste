@@ -272,7 +272,7 @@ const ClientList = () => {
     if (name === 'amountPaid') {
       const newAmountPaid = value === '' ? '' : parseFloat(value) || 0;
       const currentAmountPaid = parseFloat(editFormData.amountPaid) || 0;
-      
+
       // If this is a new payment (greater than current amount)
       if (newAmountPaid > currentAmountPaid) {
         // Create a payment entry for the difference
@@ -280,7 +280,7 @@ const ClientList = () => {
           amount: newAmountPaid - currentAmountPaid,
           date: Date.now()
         };
-        
+
         setEditFormData({
           ...editFormData,
           [name]: newAmountPaid,
@@ -392,10 +392,10 @@ const ClientList = () => {
 
   const addNewPayment = () => {
     if (!newPayment || parseFloat(newPayment) <= 0) return;
-    
+
     const paymentAmount = parseFloat(newPayment);
     const currentDate = new Date().toISOString();
-    
+
     if (editingPayment !== null) {
       // Update existing payment
       const updatedPaymentHistory = [...editFormData.paymentHistory];
@@ -404,18 +404,18 @@ const ClientList = () => {
         amount: paymentAmount,
         date: currentDate
       };
-      
+
       // Recalculate total paid amount
       const previousTotal = parseFloat(editFormData.amountPaid) || 0;
       const newTotalPaid = previousTotal - oldAmount + paymentAmount;
-      
+
       setEditFormData({
         ...editFormData,
         amountPaid: newTotalPaid,
         paymentHistory: updatedPaymentHistory,
         paymentStatus: newTotalPaid >= (editingClient?.grandTotal || 0) ? 'cleared' : 'pending'
       });
-      
+
       setEditingPayment(null);
     } else {
       // Create new payment entry
@@ -423,11 +423,11 @@ const ClientList = () => {
         amount: paymentAmount,
         date: currentDate
       };
-      
+
       // Calculate new total paid amount
       const previousPaid = parseFloat(editFormData.amountPaid) || 0;
       const newTotalPaid = previousPaid + paymentAmount;
-      
+
       // Update payment history and total amount
       setEditFormData({
         ...editFormData,
@@ -437,7 +437,7 @@ const ClientList = () => {
         paymentStatus: newTotalPaid >= (editingClient?.grandTotal || 0) ? 'cleared' : 'pending'
       });
     }
-    
+
     // Close modal and reset new payment input
     setShowPaymentModal(false);
     setNewPayment('');
@@ -454,19 +454,19 @@ const ClientList = () => {
 
   const deletePaymentEntry = () => {
     if (selectedPaymentIndex === null || !editFormData.paymentHistory) return;
-    
+
     // Get the payment amount to be deleted
     const paymentToDelete = editFormData.paymentHistory[selectedPaymentIndex];
     const amountToRemove = parseFloat(paymentToDelete.amount) || 0;
-    
+
     // Remove payment from history
     const updatedPaymentHistory = [...editFormData.paymentHistory];
     updatedPaymentHistory.splice(selectedPaymentIndex, 1);
-    
+
     // Recalculate total paid amount
     const previousPaid = parseFloat(editFormData.amountPaid) || 0;
     const newTotalPaid = Math.max(0, previousPaid - amountToRemove); // Ensure it's not negative
-    
+
     // Update state
     setEditFormData({
       ...editFormData,
@@ -474,7 +474,7 @@ const ClientList = () => {
       paymentHistory: updatedPaymentHistory,
       paymentStatus: newTotalPaid >= (editingClient?.grandTotal || 0) ? 'cleared' : 'pending'
     });
-    
+
     setShowDeletePaymentModal(false);
     setSelectedPaymentIndex(null);
   };
@@ -1104,7 +1104,7 @@ const ClientList = () => {
                         </button>
                       </div>
                     </div>
-                    
+
                     {/* Payment History Section */}
                     {editFormData.paymentHistory && editFormData.paymentHistory.length > 0 && (
                       <div className="mt-4">
@@ -1123,11 +1123,13 @@ const ClientList = () => {
                                 {editFormData.paymentHistory.map((payment, index) => (
                                   <tr key={index} className="text-white text-left">
                                     <td className="px-4 py-2 text-xs text-slate-300">
-                                      {new Date(payment.date).toLocaleString(undefined, { 
-                                        dateStyle: 'medium', 
+                                      {new Date(payment.date).toLocaleString('en-IN', {
+                                        dateStyle: 'medium',
                                         timeStyle: 'short',
-                                        timeZone: 'Asia/Kolkata'
+                                        timeZone: 'Asia/Kolkata',
+                                        hour12: true
                                       })}
+
                                     </td>
                                     <td className="px-4 py-2 text-right text-xs font-medium text-emerald-500">
                                       ₹{parseFloat(payment.amount).toFixed(2)}
@@ -1182,7 +1184,7 @@ const ClientList = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                           </svg>
                         </button>
-                        
+
                         {showPaymentStatusDropdown && (
                           <div className="absolute z-10 w-full mt-1 bg-slate-700 rounded-xl shadow-lg border border-slate-600 overflow-hidden">
                             <div className="py-1">
@@ -1192,9 +1194,8 @@ const ClientList = () => {
                                   setEditFormData({ ...editFormData, paymentStatus: 'pending' });
                                   setShowPaymentStatusDropdown(false);
                                 }}
-                                className={`w-full px-4 py-2 text-left text-sm flex items-center hover:bg-white/5 transition-colors ${
-                                  editFormData.paymentStatus === 'pending' ? 'text-white bg-white/10' : 'text-slate-300'
-                                }`}
+                                className={`w-full px-4 py-2 text-left text-sm flex items-center hover:bg-white/5 transition-colors ${editFormData.paymentStatus === 'pending' ? 'text-white bg-white/10' : 'text-slate-300'
+                                  }`}
                               >
                                 <span className="w-2 h-2 rounded-full bg-amber-500 mr-2"></span>
                                 Pending
@@ -1205,9 +1206,8 @@ const ClientList = () => {
                                   setEditFormData({ ...editFormData, paymentStatus: 'cleared' });
                                   setShowPaymentStatusDropdown(false);
                                 }}
-                                className={`w-full px-4 py-2 text-left text-sm flex items-center hover:bg-white/5 transition-colors ${
-                                  editFormData.paymentStatus === 'cleared' ? 'text-white bg-white/10' : 'text-slate-300'
-                                }`}
+                                className={`w-full px-4 py-2 text-left text-sm flex items-center hover:bg-white/5 transition-colors ${editFormData.paymentStatus === 'cleared' ? 'text-white bg-white/10' : 'text-slate-300'
+                                  }`}
                               >
                                 <span className="w-2 h-2 rounded-full bg-sky-500 mr-2"></span>
                                 Cleared
@@ -1246,6 +1246,18 @@ const ClientList = () => {
                           </div>
 
                           <div className="grid grid-cols-2 gap-3">
+                          <div>
+                              <label className="block text-sm font-medium text-slate-300 mb-1">Quantity</label>
+                              <input
+                                type="number"
+                                name="count"
+                                value={productFormData.count}
+                                onChange={handleProductFormChange}
+                                min="0"
+                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
+                                placeholder="0"
+                              />
+                            </div>
                             <div>
                               <label className="block text-sm font-medium text-slate-300 mb-1">Price (₹)</label>
                               <div className="relative">
@@ -1260,22 +1272,9 @@ const ClientList = () => {
                                   // min="0"
                                   step="0.01"
                                   className="w-full pl-7 px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
-                                  // placeholder="0.00"
+                                // placeholder="0.00"
                                 />
                               </div>
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium text-slate-300 mb-1">Quantity</label>
-                              <input
-                                type="number"
-                                name="count"
-                                value={productFormData.count}
-                                onChange={handleProductFormChange}
-                                min="0"
-                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
-                                placeholder="0"
-                              />
                             </div>
                           </div>
 
@@ -1594,7 +1593,7 @@ const ClientList = () => {
                 </svg>
               </button>
             </div>
-            
+
             <div className="mb-5">
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Payment Amount (₹)
@@ -1617,12 +1616,12 @@ const ClientList = () => {
                 />
               </div>
               <p className="mt-2 text-xs text-slate-400">
-                {editingPayment !== null 
+                {editingPayment !== null
                   ? "Editing this payment will update the payment timestamp to now."
                   : "Current date and time will be recorded with this payment."}
               </p>
             </div>
-            
+
             <div className="flex justify-end gap-3">
               <button
                 type="button"
@@ -1639,11 +1638,10 @@ const ClientList = () => {
                 type="button"
                 onClick={addNewPayment}
                 disabled={!newPayment || parseFloat(newPayment) <= 0}
-                className={`px-4 py-2 rounded-xl transition-colors ${
-                  !newPayment || parseFloat(newPayment) <= 0
+                className={`px-4 py-2 rounded-xl transition-colors ${!newPayment || parseFloat(newPayment) <= 0
                     ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
                     : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white'
-                }`}
+                  }`}
               >
                 {editingPayment !== null ? 'Update' : 'Add Payment'}
               </button>
@@ -1662,11 +1660,11 @@ const ClientList = () => {
               </svg>
               <h3 className="text-lg font-bold text-white">Delete Payment</h3>
             </div>
-            
+
             <p className="text-slate-300 mb-6">
               Are you sure you want to delete this payment? This will reduce the total amount paid and cannot be undone.
             </p>
-            
+
             <div className="flex justify-end gap-3">
               <button
                 type="button"

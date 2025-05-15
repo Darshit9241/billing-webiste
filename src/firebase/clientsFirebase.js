@@ -71,11 +71,21 @@ export const deleteClient = async (id) => {
 // Clear client payment
 export const clearClientPayment = async (client) => {
   try {
-    // Update the payment status to cleared
+    // Create payment entry
+    const paymentEntry = {
+      amount: client.grandTotal - (client.amountPaid || 0),
+      date: Date.now()
+    };
+    
+    // Update the payment status to cleared with payment history
     const updatedClient = {
       ...client,
       paymentStatus: 'cleared',
-      amountPaid: client.grandTotal // Set amount paid to the grand total
+      amountPaid: client.grandTotal, // Set amount paid to the grand total
+      paymentHistory: [
+        ...(client.paymentHistory || []),
+        paymentEntry
+      ]
     };
     
     await update(ref(database, `${CLIENTS_COLLECTION}/${client.id}`), updatedClient);

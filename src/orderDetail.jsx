@@ -266,8 +266,27 @@ const OrderDetail = () => {
           {/* Bill To & Invoice Info */}
           <div className="flex flex-col md:flex-row justify-between mb-8 gap-6 print-break-inside-avoid">
             <div className="bg-gray-50 rounded-lg p-4 sm:p-6 border border-gray-100 md:w-1/2 print:bg-white print:border print-full-width">
-              <h3 className="text-gray-500 font-medium mb-3 text-xs sm:text-sm uppercase tracking-wider">Client Name: <span className="text-gray-800 font-semibold text-right">{orderData.clientName || 'Client Name'}</span></h3>
-              {/* <p className="text-sm sm:text-base text-gray-600">{orderData.clientAddress || 'Client Address'}</p> */}
+              <h3 className="text-gray-500 font-medium mb-3 text-xs sm:text-sm uppercase tracking-wider">Client Information</h3>
+              <div className="grid grid-cols-1 gap-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-500 font-medium text-xs sm:text-sm">Name:</span>
+                  <span className="text-gray-800 font-semibold text-xs sm:text-sm">{orderData.clientName || 'N/A'}</span>
+                </div>
+                
+                {orderData.clientAddress && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500 font-medium text-xs sm:text-sm">Address:</span>
+                    <span className="text-gray-800 font-semibold text-xs sm:text-sm">{orderData.clientAddress}</span>
+                  </div>
+                )}
+                
+                {orderData.clientPhone && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500 font-medium text-xs sm:text-sm">Phone:</span>
+                    <span className="text-gray-800 font-semibold text-xs sm:text-sm">{orderData.clientPhone}</span>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="bg-gray-50 rounded-lg p-4 sm:p-6 border border-gray-100 md:w-1/2 print:bg-white print:border print-full-width">
               <div className="grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
@@ -353,6 +372,43 @@ const OrderDetail = () => {
               </div>
             </div>
           </div>
+          
+          {/* Payment History Section */}
+          {orderData.paymentHistory && orderData.paymentHistory.length > 0 && (
+            <div className="mb-8 print-break-inside-avoid">
+              <h3 className="text-gray-700 font-semibold mb-3 text-sm sm:text-base">Payment History</h3>
+              <div className="overflow-x-auto rounded-xl border border-gray-100 shadow-sm">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead>
+                    <tr>
+                      <th scope="col" className="px-3 sm:px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Date</th>
+                      <th scope="col" className="px-3 sm:px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {orderData.paymentHistory.map((payment, index) => (
+                      <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                        <td className="px-3 sm:px-6 py-3 text-left text-xs sm:text-sm text-gray-500">
+                          {new Date(payment.date).toLocaleString('en-IN', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            timeZone: 'Asia/Kolkata'
+                          })}
+                        </td>
+                        <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-xs sm:text-sm font-medium text-green-600 text-right">
+                          ₹{parseFloat(payment.amount).toFixed(2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+          
           {/* Thank you note */}
           <div className="text-center my-6 print-break-inside-avoid">
             <p className="text-xs sm:text-sm text-gray-500">Thank you for your business!</p>

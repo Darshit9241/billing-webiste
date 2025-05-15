@@ -46,7 +46,8 @@ const ClientList = () => {
     clientName: '',
     amountPaid: '',
     paymentStatus: 'pending',
-    products: []
+    products: [],
+    paymentHistory: []
   });
   const [editingProduct, setEditingProduct] = useState(null);
   const [productFormData, setProductFormData] = useState({
@@ -59,6 +60,9 @@ const ClientList = () => {
   const [isStatsOpen, setIsStatsOpen] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const navigate = useNavigate();
+
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [newPayment, setNewPayment] = useState('');
 
   useEffect(() => {
     // Fetch clients from API when component mounts
@@ -225,7 +229,8 @@ const ClientList = () => {
       clientName: client.clientName || '',
       amountPaid: client.amountPaid || '',
       paymentStatus: client.paymentStatus || 'pending',
-      products: client.products ? [...client.products] : []
+      products: client.products ? [...client.products] : [],
+      paymentHistory: client.paymentHistory ? [...client.paymentHistory] : []
     });
     setActiveTab('general');
   };
@@ -236,7 +241,8 @@ const ClientList = () => {
       clientName: '',
       amountPaid: '',
       paymentStatus: 'pending',
-      products: []
+      products: [],
+      paymentHistory: []
     });
     setEditingProduct(null);
     setProductFormData({
@@ -250,12 +256,33 @@ const ClientList = () => {
     const { name, value } = e.target;
     // For numeric fields, convert to number
     if (name === 'amountPaid') {
-      setEditFormData({
-        ...editFormData,
-        [name]: value === '' ? '' : parseFloat(value) || 0,
-        // If amount paid equals grand total, automatically set payment status to cleared
-        paymentStatus: value !== '' && parseFloat(value) >= (editingClient?.grandTotal || 0) ? 'cleared' : 'pending'
-      });
+      const newAmountPaid = value === '' ? '' : parseFloat(value) || 0;
+      const currentAmountPaid = parseFloat(editFormData.amountPaid) || 0;
+      
+      // If this is a new payment (greater than current amount)
+      if (newAmountPaid > currentAmountPaid) {
+        // Create a payment entry for the difference
+        const paymentEntry = {
+          amount: newAmountPaid - currentAmountPaid,
+          date: Date.now()
+        };
+        
+        setEditFormData({
+          ...editFormData,
+          [name]: newAmountPaid,
+          // If amount paid equals grand total, automatically set payment status to cleared
+          paymentStatus: newAmountPaid >= (editingClient?.grandTotal || 0) ? 'cleared' : 'pending',
+          // Add the payment to history
+          paymentHistory: [...(editFormData.paymentHistory || []), paymentEntry]
+        });
+      } else {
+        setEditFormData({
+          ...editFormData,
+          [name]: newAmountPaid,
+          // If amount paid equals grand total, automatically set payment status to cleared
+          paymentStatus: newAmountPaid >= (editingClient?.grandTotal || 0) ? 'cleared' : 'pending'
+        });
+      }
     } else {
       setEditFormData({ ...editFormData, [name]: value });
     }
@@ -349,6 +376,36 @@ const ClientList = () => {
     });
   };
 
+  const addNewPayment = () => {
+    if (!newPayment || parseFloat(newPayment) <= 0) return;
+    
+    const paymentAmount = parseFloat(newPayment);
+    const currentDate = new Date().toISOString();
+    
+    // Create new payment entry
+    const paymentEntry = {
+      amount: paymentAmount,
+      date: currentDate
+    };
+    
+    // Calculate new total paid amount
+    const previousPaid = parseFloat(editFormData.amountPaid) || 0;
+    const newTotalPaid = previousPaid + paymentAmount;
+    
+    // Update payment history and total amount
+    setEditFormData({
+      ...editFormData,
+      amountPaid: newTotalPaid,
+      paymentHistory: [...(editFormData.paymentHistory || []), paymentEntry],
+      // If new total equals or exceeds grand total, set payment status to cleared
+      paymentStatus: newTotalPaid >= (editingClient?.grandTotal || 0) ? 'cleared' : 'pending'
+    });
+    
+    // Close modal and reset new payment input
+    setShowPaymentModal(false);
+    setNewPayment('');
+  };
+
   const saveClientChanges = async (e) => {
     e.preventDefault();
 
@@ -366,7 +423,8 @@ const ClientList = () => {
         amountPaid: editFormData.amountPaid,
         paymentStatus: editFormData.paymentStatus,
         products: editFormData.products,
-        grandTotal: grandTotal
+        grandTotal: grandTotal,
+        paymentHistory: editFormData.paymentHistory
       };
 
       await updateClient(updatedClient);
@@ -909,22 +967,69 @@ const ClientList = () => {
                             total + (parseFloat(product.price) || 0) * (parseFloat(product.count) || 0), 0).toFixed(2)}
                         </span>
                       </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <span className="text-slate-400">₹</span>
+                      <div className="flex space-x-2 items-center">
+                        <div className="relative flex-1">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span className="text-slate-400">₹</span>
+                          </div>
+                          <input
+                            type="number"
+                            name="amountPaid"
+                            value={editFormData.amountPaid}
+                            onChange={handleEditInputChange}
+                            min="0"
+                            step="0.01"
+                            placeholder="0.00"
+                            className="w-full pl-8 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
+                            readOnly
+                          />
                         </div>
-                        <input
-                          type="number"
-                          name="amountPaid"
-                          value={editFormData.amountPaid}
-                          onChange={handleEditInputChange}
-                          min="0"
-                          step="0.01"
-                          placeholder="0.00"
-                          className="w-full pl-8 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
-                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPaymentModal(true)}
+                          className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-colors flex items-center justify-center"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+                          </svg>
+                        </button>
                       </div>
                     </div>
+                    
+                    {/* Payment History Section */}
+                    {editFormData.paymentHistory && editFormData.paymentHistory.length > 0 && (
+                      <div className="mt-4">
+                        <h4 className="text-sm font-medium text-slate-300 mb-2">Payment History</h4>
+                        <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+                          <div className="max-h-40 overflow-y-auto">
+                            <table className="w-full">
+                              <thead className="border-b border-white/10">
+                                <tr>
+                                  <th className="px-4 py-2 text-left text-xs font-medium text-slate-400">Date</th>
+                                  <th className="px-4 py-2 text-right text-xs font-medium text-slate-400">Amount</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-white/5">
+                                {editFormData.paymentHistory.map((payment, index) => (
+                                  <tr key={index} className="text-white">
+                                    <td className="px-4 py-2 text-xs text-slate-300">
+                                      {new Date(payment.date).toLocaleString(undefined, { 
+                                        dateStyle: 'medium', 
+                                        timeStyle: 'short',
+                                        timeZone: 'Asia/Kolkata'
+                                      })}
+                                    </td>
+                                    <td className="px-4 py-2 text-right text-xs font-medium text-emerald-500">
+                                      ₹{parseFloat(payment.amount).toFixed(2)}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     <div>
                       <label className="block text-sm font-medium text-slate-300 mb-1">Payment Status</label>
@@ -1285,6 +1390,73 @@ const ClientList = () => {
           </div>
         )}
       </div>
+
+      {/* Payment Modal */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 border border-slate-700">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-lg font-bold text-white">Add Payment</h3>
+              <button
+                onClick={() => setShowPaymentModal(false)}
+                className="text-slate-400 hover:text-white"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="mb-5">
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Payment Amount (₹)
+                <span className="text-xs text-slate-500 ml-2">
+                  Remaining: ₹{((editingClient?.grandTotal || 0) - (parseFloat(editFormData.amountPaid) || 0)).toFixed(2)}
+                </span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span className="text-slate-400">₹</span>
+                </div>
+                <input
+                  type="number"
+                  value={newPayment}
+                  onChange={(e) => setNewPayment(e.target.value)}
+                  min="0.01"
+                  step="0.01"
+                  placeholder="0.00"
+                  className="w-full pl-8 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
+                />
+              </div>
+              <p className="mt-2 text-xs text-slate-400">
+                Current date and time will be recorded with this payment.
+              </p>
+            </div>
+            
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowPaymentModal(false)}
+                className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={addNewPayment}
+                disabled={!newPayment || parseFloat(newPayment) <= 0}
+                className={`px-4 py-2 rounded-xl transition-colors ${
+                  !newPayment || parseFloat(newPayment) <= 0
+                    ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white'
+                }`}
+              >
+                Add Payment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

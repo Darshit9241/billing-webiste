@@ -5,6 +5,8 @@ import { createClient } from './firebase/clientsFirebase';
 const AddProducts = () => {
   const navigate = useNavigate();
   const [clientName, setClientName] = useState('');
+  const [clientAddress, setClientAddress] = useState('');
+  const [clientPhone, setClientPhone] = useState('');
   const [products, setProducts] = useState([
     { id: 1, name: '', count: '', price: '', total: 0 }
   ]);
@@ -17,6 +19,8 @@ const AddProducts = () => {
 
   // Create refs for input fields
   const clientNameRef = useRef(null);
+  const clientAddressRef = useRef(null);
+  const clientPhoneRef = useRef(null);
   const amountPaidRef = useRef(null);
   const productRefs = useRef({});
 
@@ -32,6 +36,18 @@ const AddProducts = () => {
 
       // Client name field handling
       if (field === 'clientName') {
+        clientAddressRef.current?.focus();
+        return;
+      }
+
+      // Client address field handling
+      if (field === 'clientAddress') {
+        clientPhoneRef.current?.focus();
+        return;
+      }
+
+      // Client phone field handling
+      if (field === 'clientPhone') {
         if (billMode === 'full') {
           amountPaidRef.current?.focus();
         } else {
@@ -127,16 +143,30 @@ const AddProducts = () => {
   };
 
   const saveOrder = async () => {
+    // Create payment history if there's an amount paid
+    const initialPaymentAmount = billMode === 'half' ? 0 : (amountPaid === '' ? 0 : parseFloat(amountPaid));
+    let paymentHistory = [];
+    
+    if (initialPaymentAmount > 0) {
+      paymentHistory.push({
+        amount: initialPaymentAmount,
+        date: Date.now()
+      });
+    }
+    
     // Create order data object
     const orderData = {
       clientName,
+      clientAddress,
+      clientPhone,
       products,
       grandTotal,
       // Always include payment information regardless of bill mode
       paymentStatus: billMode === 'half' ? 'pending' : paymentStatus,
-      amountPaid: billMode === 'half' ? 0 : (amountPaid === '' ? 0 : parseFloat(amountPaid)),
+      amountPaid: initialPaymentAmount,
       timestamp: new Date().getTime(),
-      billMode
+      billMode,
+      paymentHistory
     };
 
     // Show loading status
@@ -225,8 +255,9 @@ const AddProducts = () => {
         </div>
 
         <div className="p-6 sm:p-8">
-          {/* Client name input with floating label */}
-          <div className="mb-6 relative">
+          {/* Client information section */}
+          <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Client name input with floating label */}
             <div className="relative">
               <input
                 type="text"
@@ -243,6 +274,46 @@ const AddProducts = () => {
                 className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 peer-focus:text-indigo-600 bg-white px-1"
               >
                 Client Name
+              </label>
+            </div>
+
+            {/* Client address input with floating label */}
+            <div className="relative">
+              <input
+                type="text"
+                id="clientAddress"
+                className="block w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-800 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 peer placeholder-transparent"
+                value={clientAddress}
+                onChange={(e) => setClientAddress(e.target.value)}
+                placeholder="Client Address"
+                ref={clientAddressRef}
+                onKeyDown={(e) => handleKeyPress(e, null, 'clientAddress')}
+              />
+              <label
+                htmlFor="clientAddress"
+                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 peer-focus:text-indigo-600 bg-white px-1"
+              >
+                Client Address
+              </label>
+            </div>
+
+            {/* Client phone input with floating label */}
+            <div className="relative">
+              <input
+                type="text"
+                id="clientPhone"
+                className="block w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-800 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 peer placeholder-transparent"
+                value={clientPhone}
+                onChange={(e) => setClientPhone(e.target.value)}
+                placeholder="Client Phone"
+                ref={clientPhoneRef}
+                onKeyDown={(e) => handleKeyPress(e, null, 'clientPhone')}
+              />
+              <label
+                htmlFor="clientPhone"
+                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 peer-focus:text-indigo-600 bg-white px-1"
+              >
+                Client Phone
               </label>
             </div>
           </div>
@@ -517,9 +588,34 @@ const AddProducts = () => {
             <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-6 rounded-xl border border-indigo-200 shadow-lg relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-full bg-white opacity-90 backdrop-blur-sm"></div>
               <div className="relative">
-                <div className="text-xl md:text-2xl font-bold text-gray-800 text-center">
+                <div className="text-xl md:text-2xl font-bold text-gray-800 text-center mb-3">
                   {clientName ? `${clientName}'s Order` : 'Order Summary'}
                 </div>
+
+                {clientName && (
+                  <div className="mb-4 p-3 bg-white bg-opacity-80 backdrop-blur-sm rounded-lg">
+                    <div className="grid grid-cols-1 gap-2">
+                      {clientAddress && (
+                        <div className="flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          <span className="text-sm text-gray-700">{clientAddress}</span>
+                        </div>
+                      )}
+                      {clientPhone && (
+                        <div className="flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                          </svg>
+                          <span className="text-sm text-gray-700">{clientPhone}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex justify-between items-center mt-4 p-3 bg-white bg-opacity-80 backdrop-blur-sm rounded-lg">
                   <span className="font-medium text-gray-700">Grand Total:</span>
                   <span className="font-bold text-xl text-indigo-700">₹ {grandTotal.toFixed(2)}</span>

@@ -44,6 +44,9 @@ const ClientList = () => {
 
   const [editFormData, setEditFormData] = useState({
     clientName: '',
+    clientAddress: '',
+    clientPhone: '',
+    clientGst: '',
     amountPaid: '',
     paymentStatus: 'pending',
     products: [],
@@ -108,7 +111,8 @@ const ClientList = () => {
       const query = searchQuery.toLowerCase().trim();
       filtered = filtered.filter(client =>
         (client.id && client.id.toLowerCase().includes(query)) ||
-        (client.clientName && client.clientName.toLowerCase().includes(query))
+        (client.clientName && client.clientName.toLowerCase().includes(query)) ||
+        (client.clientGst && client.clientGst.toLowerCase().includes(query))
       );
     }
 
@@ -227,6 +231,9 @@ const ClientList = () => {
     setEditingClient(client);
     setEditFormData({
       clientName: client.clientName || '',
+      clientAddress: client.clientAddress || '',
+      clientPhone: client.clientPhone || '',
+      clientGst: client.clientGst || '',
       amountPaid: client.amountPaid || '',
       paymentStatus: client.paymentStatus || 'pending',
       products: client.products ? [...client.products] : [],
@@ -239,6 +246,9 @@ const ClientList = () => {
     setEditingClient(null);
     setEditFormData({
       clientName: '',
+      clientAddress: '',
+      clientPhone: '',
+      clientGst: '',
       amountPaid: '',
       paymentStatus: 'pending',
       products: [],
@@ -420,6 +430,9 @@ const ClientList = () => {
       const updatedClient = {
         ...editingClient,
         clientName: editFormData.clientName,
+        clientAddress: editFormData.clientAddress,
+        clientPhone: editFormData.clientPhone,
+        clientGst: editFormData.clientGst,
         amountPaid: editFormData.amountPaid,
         paymentStatus: editFormData.paymentStatus,
         products: editFormData.products,
@@ -960,6 +973,39 @@ const ClientList = () => {
                     </div>
 
                     <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-1">Client Address</label>
+                      <input
+                        type="text"
+                        name="clientAddress"
+                        value={editFormData.clientAddress}
+                        onChange={handleEditInputChange}
+                        className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-1">Client Phone</label>
+                      <input
+                        type="text"
+                        name="clientPhone"
+                        value={editFormData.clientPhone}
+                        onChange={handleEditInputChange}
+                        className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-1">GST Number</label>
+                      <input
+                        type="text"
+                        name="clientGst"
+                        value={editFormData.clientGst}
+                        onChange={handleEditInputChange}
+                        className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
+                      />
+                    </div>
+
+                    <div>
                       <label className="block text-sm font-medium text-slate-300 mb-1">
                         Amount Paid (₹)
                         <span className="text-xs text-slate-500 ml-2">
@@ -1263,6 +1309,14 @@ const ClientList = () => {
                     <div>
                       <h3 className={`font-semibold text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{client.clientName || 'Unnamed Client'}</h3>
                       <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mt-1`}>Order ID: {client.id}</p>
+                      {client.clientGst && (
+                        <p className={`text-xs ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'} mt-1 flex items-center`}>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          GST: {client.clientGst}
+                        </p>
+                      )}
                     </div>
                     <span className={`text-xs px-3 py-1 rounded-full font-medium ${client.paymentStatus === 'cleared'
                       ? `${isDarkMode ? 'bg-sky-500/20' : 'bg-sky-100'} ${isDarkMode ? 'text-sky-300' : 'text-sky-700'} border ${isDarkMode ? 'border-sky-500/30' : 'border-sky-200'}`

@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createClient } from './firebase/clientsFirebase';
+import { createClient, fetchAllClients } from './firebase/clientsFirebase';
 
 const AddProducts = () => {
   const navigate = useNavigate();
   const [clientName, setClientName] = useState('');
   const [clientAddress, setClientAddress] = useState('');
   const [clientPhone, setClientPhone] = useState('');
+  const [clientGst, setClientGst] = useState('');
   const [products, setProducts] = useState([
     { id: 1, name: '', count: '', price: '', total: 0 }
   ]);
@@ -16,11 +17,17 @@ const AddProducts = () => {
   const [amountPaid, setAmountPaid] = useState('');
   const [billMode, setBillMode] = useState('full');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [existingClients, setExistingClients] = useState([]);
+  const [clientSuggestions, setClientSuggestions] = useState([]);
+  const [gstSuggestions, setGstSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showGstSuggestions, setShowGstSuggestions] = useState(false);
 
   // Create refs for input fields
   const clientNameRef = useRef(null);
   const clientAddressRef = useRef(null);
   const clientPhoneRef = useRef(null);
+  const clientGstRef = useRef(null);
   const amountPaidRef = useRef(null);
   const productRefs = useRef({});
 
@@ -28,6 +35,82 @@ const AddProducts = () => {
   useEffect(() => {
     productRefs.current = {};
   }, []);
+
+  // Fetch existing clients
+  useEffect(() => {
+    const loadExistingClients = async () => {
+      try {
+        const clients = await fetchAllClients();
+        setExistingClients(clients);
+      } catch (error) {
+        console.error("Error loading client data:", error);
+      }
+    };
+    
+    loadExistingClients();
+  }, []);
+
+  // Handle client name change and check for existing clients
+  const handleClientNameChange = (e) => {
+    const value = e.target.value;
+    setClientName(value);
+    
+    if (value.trim() === '') {
+      setShowSuggestions(false);
+      return;
+    }
+
+    // Filter existing clients based on name search
+    const matchingClients = existingClients.filter(client => 
+      client.clientName && client.clientName.toLowerCase().includes(value.toLowerCase())
+    );
+    
+    setClientSuggestions(matchingClients);
+    setShowSuggestions(matchingClients.length > 0);
+  };
+
+  // Handle GST number input change for search
+  const handleGstChange = (e) => {
+    const value = e.target.value;
+    setClientGst(value);
+    
+    if (value.trim() === '') {
+      setShowGstSuggestions(false);
+      return;
+    }
+
+    // Filter existing clients based on GST number search
+    const matchingClients = existingClients.filter(client => 
+      client.clientGst && client.clientGst.toLowerCase().includes(value.toLowerCase())
+    );
+    
+    setGstSuggestions(matchingClients);
+    setShowGstSuggestions(matchingClients.length > 0);
+  };
+
+  // Select a client from suggestions
+  const selectClient = (client) => {
+    setClientName(client.clientName);
+    setClientAddress(client.clientAddress || '');
+    setClientPhone(client.clientPhone || '');
+    setClientGst(client.clientGst || '');
+    setShowSuggestions(false);
+    setShowGstSuggestions(false);
+    
+    // Focus on next empty field after auto-fill
+    if (!client.clientAddress) {
+      clientAddressRef.current?.focus();
+    } else if (!client.clientPhone) {
+      clientPhoneRef.current?.focus();
+    } else if (!client.clientGst) {
+      clientGstRef.current?.focus();
+    } else if (billMode === 'full') {
+      amountPaidRef.current?.focus();
+    } else {
+      const firstProductId = products[0]?.id;
+      productRefs.current[`${firstProductId}_count`]?.focus();
+    }
+  };
 
   // Handle key press events to navigate between input fields
   const handleKeyPress = (e, id, field, isLast = false) => {
@@ -48,6 +131,12 @@ const AddProducts = () => {
 
       // Client phone field handling
       if (field === 'clientPhone') {
+        clientGstRef.current?.focus();
+        return;
+      }
+
+      // Client GST field handling
+      if (field === 'clientGst') {
         if (billMode === 'full') {
           amountPaidRef.current?.focus();
         } else {
@@ -159,6 +248,7 @@ const AddProducts = () => {
       clientName,
       clientAddress,
       clientPhone,
+      clientGst,
       products,
       grandTotal,
       // Always include payment information regardless of bill mode
@@ -256,18 +346,19 @@ const AddProducts = () => {
 
         <div className="p-6 sm:p-8">
           {/* Client information section */}
-          <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Client name input with floating label */}
+          <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Client name input with floating label and suggestions */}
             <div className="relative">
               <input
                 type="text"
                 id="clientName"
                 className="block w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-800 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 peer placeholder-transparent"
                 value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
+                onChange={handleClientNameChange}
                 placeholder="Client Name"
                 ref={clientNameRef}
                 onKeyDown={(e) => handleKeyPress(e, null, 'clientName')}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
               />
               <label
                 htmlFor="clientName"
@@ -275,6 +366,46 @@ const AddProducts = () => {
               >
                 Client Name
               </label>
+              
+              {/* Client name suggestions dropdown */}
+              {showSuggestions && clientSuggestions.length > 0 && (
+                <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto divide-y divide-gray-100">
+                  {clientSuggestions.map((client, index) => (
+                    <div 
+                      key={client.id || index}
+                      className="px-4 py-3 cursor-pointer hover:bg-indigo-50 transition-colors duration-150 flex flex-col"
+                      onClick={() => selectClient(client)}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <div className="bg-indigo-100 rounded-full p-1.5">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-indigo-600" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <span className="font-medium text-gray-800">{client.clientName}</span>
+                      </div>
+                      <div className="ml-6 mt-1 flex flex-col">
+                        {client.clientPhone && (
+                          <div className="flex items-center mt-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-gray-400 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                              <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                            </svg>
+                            <span className="text-xs text-gray-500">{client.clientPhone}</span>
+                          </div>
+                        )}
+                        {client.clientGst && (
+                          <div className="flex items-center mt-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-indigo-400 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                            </svg>
+                            <span className="text-xs text-indigo-600 font-medium">GST: {client.clientGst}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Client address input with floating label */}
@@ -315,6 +446,75 @@ const AddProducts = () => {
               >
                 Client Phone
               </label>
+            </div>
+
+            {/* Client GST input with floating label */}
+            <div className="relative">
+              <input
+                type="text"
+                id="clientGst"
+                className="block w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-800 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 peer placeholder-transparent"
+                value={clientGst}
+                onChange={(e) => {
+                  setClientGst(e.target.value);
+                  handleGstChange(e);
+                }}
+                placeholder="GST Number"
+                ref={clientGstRef}
+                onKeyDown={(e) => handleKeyPress(e, null, 'clientGst')}
+                onBlur={() => setTimeout(() => setShowGstSuggestions(false), 200)}
+              />
+              <label
+                htmlFor="clientGst"
+                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 peer-focus:text-indigo-600 bg-white px-1"
+              >
+                GST Number
+              </label>
+              
+              {/* GST-specific suggestions dropdown */}
+              {showGstSuggestions && gstSuggestions.length > 0 && (
+                <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto divide-y divide-gray-100">
+                  {gstSuggestions.map((client, index) => (
+                    <div 
+                      key={client.id || index}
+                      className="px-4 py-3 cursor-pointer hover:bg-indigo-50 transition-colors duration-150 flex flex-col"
+                      onClick={() => selectClient(client)}
+                    >
+                      <div className="flex items-center">
+                        <div className="bg-indigo-100 rounded-full p-1.5 mr-2">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-indigo-600" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div>
+                          <div className="flex items-center">
+                            <span className="text-sm font-semibold text-indigo-600">GST: {client.clientGst}</span>
+                          </div>
+                          <span className="font-medium text-gray-800">{client.clientName}</span>
+                        </div>
+                      </div>
+                      <div className="ml-8 mt-1">
+                        {client.clientPhone && (
+                          <div className="flex items-center mt-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-gray-400 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                              <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                            </svg>
+                            <span className="text-xs text-gray-500">{client.clientPhone}</span>
+                          </div>
+                        )}
+                        {client.clientAddress && (
+                          <div className="flex items-center mt-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-gray-400 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                            </svg>
+                            <span className="text-xs text-gray-500 truncate max-w-[15rem]">{client.clientAddress}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -483,7 +683,7 @@ const AddProducts = () => {
                         onClick={() => removeProduct(product.id)}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                         </svg>
                         Remove
                       </button>
@@ -610,6 +810,14 @@ const AddProducts = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                           </svg>
                           <span className="text-sm text-gray-700">{clientPhone}</span>
+                        </div>
+                      )}
+                      {clientGst && (
+                        <div className="flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          <span className="text-sm text-gray-700">GST: {clientGst}</span>
                         </div>
                       )}
                     </div>

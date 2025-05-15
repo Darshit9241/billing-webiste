@@ -286,6 +286,13 @@ const OrderDetail = () => {
                     <span className="text-gray-800 font-semibold text-xs sm:text-sm">{orderData.clientPhone}</span>
                   </div>
                 )}
+                
+                {orderData.clientGst && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500 font-medium text-xs sm:text-sm">GST No:</span>
+                    <span className="text-gray-800 font-semibold text-xs sm:text-sm">{orderData.clientGst}</span>
+                  </div>
+                )}
               </div>
             </div>
             <div className="bg-gray-50 rounded-lg p-4 sm:p-6 border border-gray-100 md:w-1/2 print:bg-white print:border print-full-width">

@@ -1110,7 +1110,7 @@ const ClientList = () => {
                       <div className="mt-4">
                         <h4 className="text-sm font-medium text-slate-300 mb-2">Payment History</h4>
                         <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
-                          <div className="max-h-40 overflow-y-auto">
+                          <div className="max-h-40 overflow-y-auto hide-scrollbar">
                             <table className="w-full">
                               <thead className="border-b border-white/10">
                                 <tr>

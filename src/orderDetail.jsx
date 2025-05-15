@@ -256,6 +256,7 @@ const OrderDetail = () => {
               <div className="text-center sm:text-left">
                 <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 text-left">Siyaram Lace</h1>
                 <p className="text-gray-500 text-xs sm:text-sm mt-1 text-left">jay industrial estate, IND 79, Anjana, 1, Anjana, Gujarat 395003</p>
+                <p className="text-gray-500 text-xs sm:text-sm mt-1 text-left">Contact Number: 9825000000</p>
               </div>
             </div>
             <div className="print:hidden flex flex-row justify-center items-center">
@@ -263,39 +264,72 @@ const OrderDetail = () => {
             </div>
           </div>
 
+          {/* INVOICE STAMP */}
+          {/* <div className="absolute top-4 right-4 print:top-8 print:right-8">
+            <div className={`rounded-full w-20 h-20 flex items-center justify-center border-2 rotate-12 ${isPaid ? 'border-green-500' : 'border-orange-500'} opacity-90 print:opacity-100`}>
+              <span className={`text-sm font-bold uppercase ${isPaid ? 'text-green-600' : 'text-orange-600'}`}>
+                {isPaid ? 'PAID' : 'PENDING'}
+              </span>
+            </div>
+          </div> */}
+
+          {/* Invoice Number and Date Header */}
+          <div className="w-full mb-6 bg-gray-50 border border-gray-100 rounded-lg p-4 print:bg-gray-100">
+            <div className="flex flex-wrap justify-between items-center">
+              <div>
+                <span className="block text-xs text-gray-500 uppercase font-medium">Invoice</span>
+                <span className="block text-lg font-bold text-gray-900">#{id}</span>
+              </div>
+              <div className="text-right">
+                <span className="block text-xs text-gray-500 uppercase font-medium">Date Issued</span>
+                <span className="block text-sm font-medium text-gray-900">
+                  {new Date(orderData.timestamp).toLocaleDateString('en-IN', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    timeZone: 'Asia/Kolkata',
+                  })}
+                </span>
+              </div>
+            </div>
+          </div>
+
           {/* Bill To & Invoice Info */}
           <div className="flex flex-col md:flex-row justify-between mb-8 gap-6 print-break-inside-avoid">
             <div className="bg-gray-50 rounded-lg p-4 sm:p-6 border border-gray-100 md:w-1/2 print:bg-white print:border print-full-width">
               <h3 className="text-gray-500 font-medium mb-3 text-xs sm:text-sm uppercase tracking-wider">Client Information</h3>
-              <div className="grid grid-cols-1 gap-2">
-                <div className="flex justify-between">
-                  <span className="text-gray-500 font-medium text-xs sm:text-sm">Name:</span>
-                  <span className="text-gray-800 font-semibold text-xs sm:text-sm">{orderData.clientName || 'N/A'}</span>
+              <div className="space-y-2">
+                <div className="flex flex-col">
+                  <span className="text-gray-500 text-xs uppercase mb-1">Bill To:</span>
+                  <span className="text-gray-900 font-semibold text-sm sm:text-base">{orderData.clientName || 'N/A'}</span>
+                  
+                  {orderData.clientAddress && (
+                    <span className="text-gray-700 text-xs sm:text-sm mt-1 leading-tight">{orderData.clientAddress}</span>
+                  )}
+                  
+                  {orderData.clientPhone && (
+                    <span className="text-gray-700 text-xs sm:text-sm mt-1">
+                      <span className="inline-block mr-1">
+                        <svg className="h-3 w-3 inline-block -mt-0.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                      </span>
+                      {orderData.clientPhone}
+                    </span>
+                  )}
                 </div>
                 
-                {orderData.clientAddress && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-500 font-medium text-xs sm:text-sm">Address:</span>
-                    <span className="text-gray-800 font-semibold text-xs sm:text-sm">{orderData.clientAddress}</span>
-                  </div>
-                )}
-                
-                {orderData.clientPhone && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-500 font-medium text-xs sm:text-sm">Phone:</span>
-                    <span className="text-gray-800 font-semibold text-xs sm:text-sm">{orderData.clientPhone}</span>
-                  </div>
-                )}
-                
                 {orderData.clientGst && (
-                  <div className="flex justify-between">
+                  <div className="border-t border-gray-200 pt-2 mt-3">
                     <span className="text-gray-500 font-medium text-xs sm:text-sm">GST No:</span>
-                    <span className="text-gray-800 font-semibold text-xs sm:text-sm">{orderData.clientGst}</span>
+                    <span className="text-gray-800 font-semibold text-xs sm:text-sm ml-2">{orderData.clientGst}</span>
                   </div>
                 )}
               </div>
             </div>
+
             <div className="bg-gray-50 rounded-lg p-4 sm:p-6 border border-gray-100 md:w-1/2 print:bg-white print:border print-full-width">
+              <h3 className="text-gray-500 font-medium mb-3 text-xs sm:text-sm uppercase tracking-wider">Payment Details</h3>
               <div className="grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
                 <div className="text-gray-500 font-medium text-left">Invoice Date:</div>
                 <div className="text-gray-800 font-semibold text-right">
@@ -334,16 +368,18 @@ const OrderDetail = () => {
           <div className="mb-8 overflow-x-auto rounded-xl border border-gray-100 shadow-sm print-break-inside-avoid">
             <table className="min-w-full divide-y divide-gray-200">
               <thead>
-                <tr>
-                  <th scope="col" className="px-3 sm:px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Item</th>
-                  <th scope="col" className="px-3 sm:px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Qty</th>
-                  <th scope="col" className="px-3 sm:px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Price</th>
-                  <th scope="col" className="px-3 sm:px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Amount</th>
+                <tr className="bg-gradient-to-r from-gray-50 to-gray-100">
+                  <th scope="col" className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">#</th>
+                  <th scope="col" className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Item</th>
+                  <th scope="col" className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Qty</th>
+                  <th scope="col" className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Price</th>
+                  <th scope="col" className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Amount</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {orderData.products?.map((product, index) => (
-                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <tr key={index} className={index % 2 === 0 ? 'bg-white hover:bg-gray-50' : 'bg-gray-50 hover:bg-gray-100'}>
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs text-gray-500">{index + 1}</td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium text-gray-900">{product.name || 'Product Item'}</td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 text-right">{product.count}</td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 text-right">₹{typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(product.price || 0).toFixed(2)}</td>
@@ -358,23 +394,37 @@ const OrderDetail = () => {
 
           {/* Invoice Summary - Full Width */}
           <div className="mb-8 print-break-inside-avoid">
-            <div className="w-full bg-gray-50 rounded-xl p-4 sm:p-6 border border-gray-100 shadow-sm print:bg-white print:border">
-              <div className="grid grid-cols-2 gap-2 sm:gap-4">
-                <div className="text-xs sm:text-sm text-left text-gray-500">Subtotal</div>
-                <div className="text-xs sm:text-sm font-medium text-gray-900 text-right">₹{typeof orderData.grandTotal === 'number' ? orderData.grandTotal.toFixed(2) : '0.00'}</div>
-
-                <div className="text-xs sm:text-sm text-left text-gray-500 border-b border-gray-200 pb-2">Tax</div>
-                <div className="text-xs sm:text-sm font-medium text-gray-900 text-right border-b border-gray-200 pb-2">₹0.00</div>
-
-                <div className="text-xs sm:text-sm text-left font-bold text-gray-900 pt-2">Total</div>
-                <div className="text-base sm:text-lg font-bold text-gray-900 text-right pt-2">₹{typeof orderData.grandTotal === 'number' ? orderData.grandTotal.toFixed(2) : '0.00'}</div>
-
-                <div className="text-xs sm:text-sm text-left text-gray-500">Amount Paid</div>
-                <div className="text-xs sm:text-sm font-medium text-gray-900 text-right">₹{(typeof orderData.amountPaid === 'number' ? orderData.amountPaid.toFixed(2) : '0.00')}</div>
-
-                <div className={`text-xs sm:text-sm text-left font-bold ${isPaid ? 'text-green-600' : 'text-red-600'} border-t border-gray-200 pt-2`}>Balance Due</div>
-                <div className={`text-base sm:text-lg font-bold ${isPaid ? 'text-green-600' : 'text-red-600'} text-right border-t border-gray-200 pt-2`}>
-                  ₹{Math.max(0, balanceDue).toFixed(2)}
+            <div className="w-full grid grid-cols-1 lg:grid-cols-5 gap-4">
+              
+              {/* Payment Totals - Right Side */}
+              <div className="lg:col-span-12">
+                <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border border-gray-100 shadow-sm print:bg-white print:border">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm text-gray-600 pb-2">
+                      <span>Subtotal</span>
+                      <span className="font-medium">₹{typeof orderData.grandTotal === 'number' ? orderData.grandTotal.toFixed(2) : '0.00'}</span>
+                    </div>
+                    
+                    <div className="flex justify-between text-sm text-gray-600 pb-2 border-b border-gray-200">
+                      <span>Tax</span>
+                      <span className="font-medium">₹0.00</span>
+                    </div>
+                    
+                    <div className="flex justify-between text-sm font-semibold text-gray-800 pt-2">
+                      <span>Total</span>
+                      <span className="text-lg">₹{typeof orderData.grandTotal === 'number' ? orderData.grandTotal.toFixed(2) : '0.00'}</span>
+                    </div>
+                    
+                    <div className="flex justify-between text-sm text-gray-600 pt-2 pb-2 border-b border-gray-200">
+                      <span>Amount Paid</span>
+                      <span className="font-medium text-green-600">₹{(typeof orderData.amountPaid === 'number' ? orderData.amountPaid.toFixed(2) : '0.00')}</span>
+                    </div>
+                    
+                    <div className="flex justify-between text-base font-bold pt-2">
+                      <span className={isPaid ? 'text-green-600' : 'text-red-600'}>Balance Due</span>
+                      <span className={isPaid ? 'text-green-600' : 'text-red-600'}>₹{Math.max(0, balanceDue).toFixed(2)}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -383,18 +433,21 @@ const OrderDetail = () => {
           {/* Payment History Section */}
           {orderData.paymentHistory && orderData.paymentHistory.length > 0 && (
             <div className="mb-8 print-break-inside-avoid">
-              <h3 className="text-gray-700 font-semibold mb-3 text-sm sm:text-base">Payment History</h3>
+              <h3 className="text-gray-700 font-semibold mb-3 text-sm sm:text-base border-b pb-2">Payment History</h3>
               <div className="overflow-x-auto rounded-xl border border-gray-100 shadow-sm">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead>
-                    <tr>
-                      <th scope="col" className="px-3 sm:px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Date</th>
-                      <th scope="col" className="px-3 sm:px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Amount</th>
+                    <tr className="bg-gradient-to-r from-gray-50 to-gray-100">
+                      <th scope="col" className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">#</th>
+                      <th scope="col" className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Date</th>
+                      <th scope="col" className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Amount</th>
+                      <th scope="col" className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Status</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {orderData.paymentHistory.map((payment, index) => (
-                      <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                      <tr key={index} className={index % 2 === 0 ? 'bg-white hover:bg-gray-50' : 'bg-gray-50 hover:bg-gray-100'}>
+                        <td className="px-3 sm:px-6 py-3 text-left text-xs text-gray-500">{index + 1}</td>
                         <td className="px-3 sm:px-6 py-3 text-left text-xs sm:text-sm text-gray-500">
                           {new Date(payment.date).toLocaleString('en-IN', {
                             year: 'numeric',
@@ -408,6 +461,11 @@ const OrderDetail = () => {
                         <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-xs sm:text-sm font-medium text-green-600 text-right">
                           ₹{parseFloat(payment.amount).toFixed(2)}
                         </td>
+                        <td className="px-3 sm:px-6 py-3 text-right">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Received
+                          </span>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -417,8 +475,14 @@ const OrderDetail = () => {
           )}
           
           {/* Thank you note */}
-          <div className="text-center my-6 print-break-inside-avoid">
-            <p className="text-xs sm:text-sm text-gray-500">Thank you for your business!</p>
+          <div className="text-center my-6 print-break-inside-avoid border-t border-gray-100 pt-6">
+            <div className="flex items-center justify-center mb-2">
+              <svg className="h-5 w-5 text-indigo-500 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <p className="text-sm font-medium text-gray-700">Thank you for your business!</p>
+            </div>
+            <p className="text-xs text-gray-500">If you have any questions about this invoice, please contact us.</p>
           </div>
         </div>
       </div>

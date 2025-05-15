@@ -1281,17 +1281,17 @@ const ClientList = () => {
                             <thead className={`${isDarkMode ? 'bg-white/10' : 'bg-gray-100'}`}>
                               <tr>
                                 <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Product</th>
-                                <th scope="col" className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Qty</th>
+                                <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Qty</th>
                                 <th scope="col" className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Price</th>
                               </tr>
                             </thead>
                             <tbody className={`${isDarkMode ? 'divide-y divide-white/5' : 'divide-y divide-gray-200'}`}>
                               {client.products.map((product, index) => (
                                 <tr key={index} className={`${isDarkMode ? 'hover:bg-white/5' : 'hover:bg-gray-50'} transition-colors`}>
-                                  <td className={`px-3 py-2 whitespace-nowrap text-sm ${isDarkMode ? 'text-slate-300' : 'text-gray-700'} truncate max-w-[100px] sm:max-w-[140px]`}>
+                                  <td className={`px-3 py-2 whitespace-nowrap text-sm text-left ${isDarkMode ? 'text-slate-300' : 'text-gray-700'} truncate max-w-[100px] sm:max-w-[140px]`}>
                                     {product.name || 'Unnamed Product'}
                                   </td>
-                                  <td className={`px-3 py-2 whitespace-nowrap text-xs text-right ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                                  <td className={`px-3 py-2 whitespace-nowrap text-xs text-left ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
                                     {product.count}
                                   </td>
                                   <td className={`px-3 py-2 whitespace-nowrap text-xs text-right font-medium ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>

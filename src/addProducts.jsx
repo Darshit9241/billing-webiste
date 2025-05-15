@@ -869,7 +869,7 @@ const AddProducts = () => {
               </button>
 
               <button
-                className={`flex items-center justify-center p-3.5 ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'} text-white rounded-xl transition-all duration-300 shadow-md`}
+                className={`flex cursor-pointer items-center justify-center p-3.5 ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'} text-white rounded-xl transition-all duration-300 shadow-md`}
                 onClick={saveOrder}
                 disabled={products.every(p => p.total === 0) || isLoading}
               >

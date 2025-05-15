@@ -116,6 +116,11 @@ export const updateClient = async (client) => {
 // Create client
 export const createClient = async (client) => {
   try {
+    // Generate a random 4-digit ID
+    const generateRandomId = () => {
+      return Math.floor(1000 + Math.random() * 9000).toString();
+    };
+
     // Ensure timestamp exists
     const clientWithTimestamp = {
       ...client,
@@ -123,7 +128,7 @@ export const createClient = async (client) => {
     };
     
     const clientsRef = ref(database, CLIENTS_COLLECTION);
-    const newClientRef = push(clientsRef);
+    const newClientRef = ref(database, `${CLIENTS_COLLECTION}/${generateRandomId()}`);
     
     await set(newClientRef, clientWithTimestamp);
     console.log("Client created with ID:", newClientRef.key);

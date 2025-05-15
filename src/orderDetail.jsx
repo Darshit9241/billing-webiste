@@ -290,7 +290,7 @@ const OrderDetail = () => {
           <div className="w-full mb-6 bg-gray-50 border border-gray-100 rounded-lg p-4 print:bg-gray-100">
             <div className="flex flex-wrap justify-between items-center">
               <div>
-                <span className="block text-xs text-gray-500 uppercase font-medium">Invoice</span>
+                <span className="block text-xs text-gray-500 uppercase font-medium">Order Number</span>
                 <span className="block text-lg font-bold text-gray-900">#{id}</span>
               </div>
               <div className="text-right">
@@ -310,18 +310,18 @@ const OrderDetail = () => {
           {/* Bill To & Invoice Info */}
           <div className="flex flex-col md:flex-row justify-between mb-8 gap-6 print-break-inside-avoid">
             <div className="bg-gray-50 rounded-lg p-4 sm:p-6 border border-gray-100 md:w-1/2 print:bg-white print:border print-full-width">
-              <h3 className="text-gray-500 font-medium mb-3 text-xs sm:text-sm uppercase tracking-wider">Client Information</h3>
+              <h3 className="text-gray-500 font-medium mb-3 text-xs sm:text-sm uppercase tracking-wider text-left">Client Information</h3>
               <div className="space-y-2">
                 <div className="flex flex-col">
-                  <span className="text-gray-500 text-xs uppercase mb-1">Bill To:</span>
-                  <span className="text-gray-900 font-semibold text-sm sm:text-base">{orderData.clientName || 'N/A'}</span>
+                  <span className="text-gray-500 text-xs uppercase mb-1 text-left">Bill To:</span>
+                  <span className="text-gray-900 font-semibold text-sm sm:text-base text-left">{orderData.clientName || 'N/A'}</span>
                   
                   {orderData.clientAddress && (
-                    <span className="text-gray-700 text-xs sm:text-sm mt-1 leading-tight">{orderData.clientAddress}</span>
+                    <span className="text-gray-700 text-xs sm:text-sm mt-1 leading-tight text-left">{orderData.clientAddress}</span>
                   )}
                   
                   {orderData.clientPhone && (
-                    <span className="text-gray-700 text-xs sm:text-sm mt-1">
+                    <span className="text-gray-700 text-xs sm:text-sm mt-1 text-left">
                       <span className="inline-block mr-1">
                         <svg className="h-3 w-3 inline-block -mt-0.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -333,7 +333,7 @@ const OrderDetail = () => {
                 </div>
                 
                 {orderData.clientGst && (
-                  <div className="border-t border-gray-200 pt-2 mt-3">
+                  <div className="border-t border-gray-200 pt-2 mt-3 text-left">
                     <span className="text-gray-500 font-medium text-xs sm:text-sm">GST No:</span>
                     <span className="text-gray-800 font-semibold text-xs sm:text-sm ml-2">{orderData.clientGst}</span>
                   </div>

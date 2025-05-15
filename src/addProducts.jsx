@@ -384,58 +384,58 @@ const AddProducts = () => {
     <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50'}`}>
       <div className={`max-w-5xl mx-auto ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-xl overflow-hidden transition-all duration-300`}>
         {/* Enhanced Header with modern glass morphism effect */}
-        <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 px-6 py-8 relative overflow-hidden">
+        <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 px-4 sm:px-6 py-5 sm:py-8 relative overflow-hidden">
           <div className="absolute inset-0 bg-white opacity-10 backdrop-blur-xl"></div>
           <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-gradient-to-br from-white to-transparent opacity-10"></div>
           <div className="absolute -left-10 -bottom-16 w-40 h-40 rounded-full bg-indigo-300 opacity-10"></div>
 
-          <div className="relative flex flex-col sm:flex-row justify-between items-center gap-6">
-            <div className="flex items-center space-x-4">
-              <div className="bg-white bg-opacity-20 p-3 rounded-xl backdrop-blur-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" viewBox="0 0 20 20" fill="currentColor">
+          <div className="relative flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-6">
+            <div className="flex items-center space-x-3 sm:space-x-4 mb-4 sm:mb-0">
+              <div className="bg-white bg-opacity-20 p-2 sm:p-3 rounded-xl backdrop-blur-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 sm:h-8 sm:w-8 text-white" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 100-12 6 6 0 000 12zm.75-6a.75.75 0 000-1.5h-1.5a.75.75 0 000 1.5h1.5z" clipRule="evenodd" />
                 </svg>
               </div>
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Siyaram Lace</h1>
-                <p className="text-indigo-100 text-sm mt-1">Billing System</p>
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight">Siyaram Lace</h1>
+                <p className="text-indigo-100 text-xs sm:text-sm mt-0.5 sm:mt-1">Billing System</p>
               </div>
             </div>
-            <div className="flex flex-wrap gap-3">
+            <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-3 w-full sm:w-auto">
               {/* Dark mode toggle button */}
               <button
                 onClick={toggleDarkMode}
-                className="flex items-center px-4 py-2.5 bg-white bg-opacity-20 text-white rounded-xl hover:bg-opacity-30 transition-all duration-300 text-sm font-medium backdrop-blur-sm shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+                className="flex items-center justify-center px-2 sm:px-4 py-2 sm:py-2.5 bg-white bg-opacity-20 text-white text-xs sm:text-sm rounded-xl hover:bg-opacity-30 transition-all duration-300 font-medium backdrop-blur-sm shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
               >
                 {darkMode ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
                   </svg>
                 ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
                   </svg>
                 )}
-                {darkMode ? 'Light Mode' : 'Dark Mode'}
+                <span className="hidden sm:inline">{darkMode ? 'Light' : 'Dark'}</span>
               </button>
               <button
                 onClick={() => navigate('/clients')}
-                className="flex items-center px-4 py-2.5 bg-white bg-opacity-20 text-white rounded-xl hover:bg-opacity-30 transition-all duration-300 text-sm font-medium backdrop-blur-sm shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+                className="flex items-center justify-center px-2 sm:px-4 py-2 sm:py-2.5 bg-white bg-opacity-20 text-white text-xs sm:text-sm rounded-xl hover:bg-opacity-30 transition-all duration-300 font-medium backdrop-blur-sm shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
                 </svg>
-                View Clients
+                <span className="hidden sm:inline">Clients</span>
               </button>
               <button
                 onClick={handleLogout}
-                className="flex items-center px-4 py-2.5 bg-red-500 bg-opacity-90 text-white rounded-xl hover:bg-opacity-100 transition-all duration-300 text-sm font-medium shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+                className="flex items-center justify-center px-2 sm:px-4 py-2 sm:py-2.5 bg-red-500 bg-opacity-90 text-white text-xs sm:text-sm rounded-xl hover:bg-opacity-100 transition-all duration-300 font-medium shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V4a1 1 0 00-1-1H3zm11 4a1 1 0 10-2 0v4a1 1 0 102 0V7z" clipRule="evenodd" />
                   <path d="M4 9h8v2H4V9z" />
                 </svg>
-                Logout
+                <span className="hidden sm:inline">Logout</span>
               </button>
             </div>
           </div>

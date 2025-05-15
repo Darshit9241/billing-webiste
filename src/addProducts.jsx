@@ -392,9 +392,14 @@ const AddProducts = () => {
           <div className="relative flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-6">
             <div className="flex items-center space-x-3 sm:space-x-4 mb-4 sm:mb-0">
               <div className="bg-white bg-opacity-20 p-2 sm:p-3 rounded-xl backdrop-blur-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 sm:h-8 sm:w-8 text-white" viewBox="0 0 20 20" fill="currentColor">
+                {/* <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 sm:h-8 sm:w-8 text-white" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 100-12 6 6 0 000 12zm.75-6a.75.75 0 000-1.5h-1.5a.75.75 0 000 1.5h1.5z" clipRule="evenodd" />
-                </svg>
+                </svg> */}
+                <img
+                  src="/siyaramlogo.png"
+                  alt="icon"
+                  className="h-14 w-14 sm:h-8 sm:w-8 object-contain text-white"
+                />
               </div>
               <div>
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight">Siyaram Lace</h1>

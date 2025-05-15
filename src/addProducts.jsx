@@ -347,6 +347,9 @@ const AddProducts = () => {
       setSaveStatus('Order saved successfully!');
       setShowSuccessModal(true);
 
+      // Clear all input fields after successful save
+      clearForm();
+
       // Clear status message after 3 seconds
       setTimeout(() => {
         setSaveStatus('');
@@ -367,6 +370,18 @@ const AddProducts = () => {
         setSaveStatus('');
       }, 3000);
     }
+  };
+
+  // Function to clear all input fields
+  const clearForm = () => {
+    setClientName('');
+    setClientAddress('');
+    setClientPhone('');
+    setClientGst('');
+    setProducts([{ id: 1, name: '', count: '', price: '', total: 0 }]);
+    setAmountPaid('');
+    setPaymentStatus('pending');
+    // Keep the current bill mode
   };
 
   const handleLogout = () => {

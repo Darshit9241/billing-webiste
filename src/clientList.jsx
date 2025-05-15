@@ -41,7 +41,6 @@ const ClientList = () => {
   const [showModalDelete, setShowDeleteModal] = useState(false);
   const [selectedDeleteClientId, setSelectedDeleteClientId] = useState(null);
 
-
   const [editFormData, setEditFormData] = useState({
     clientName: '',
     clientAddress: '',
@@ -70,6 +69,10 @@ const ClientList = () => {
   const [editingPayment, setEditingPayment] = useState(null);
   const [showDeletePaymentModal, setShowDeletePaymentModal] = useState(false);
   const [selectedPaymentIndex, setSelectedPaymentIndex] = useState(null);
+
+  // Add these new state variables for product deletion confirmation
+  const [showDeleteProductModal, setShowDeleteProductModal] = useState(false);
+  const [selectedProductIndex, setSelectedProductIndex] = useState(null);
 
   useEffect(() => {
     // Fetch clients from API when component mounts
@@ -363,10 +366,7 @@ const ClientList = () => {
   };
 
   const deleteProduct = (index) => {
-    if (!window.confirm('Are you sure you want to delete this product?')) {
-      return;
-    }
-
+    // Remove the window.confirm dialog and update with modal approach
     const updatedProducts = [...editFormData.products];
     updatedProducts.splice(index, 1);
 
@@ -379,6 +379,10 @@ const ClientList = () => {
       products: updatedProducts,
       grandTotal: grandTotal
     });
+    
+    // Close the modal after deletion
+    setShowDeleteProductModal(false);
+    setSelectedProductIndex(null);
   };
 
   const addNewProduct = () => {
@@ -1338,7 +1342,10 @@ const ClientList = () => {
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={() => deleteProduct(index)}
+                                  onClick={() => {
+                                    setSelectedProductIndex(index);
+                                    setShowDeleteProductModal(true);
+                                  }}
                                   className="p-1.5 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                                 >
                                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1682,6 +1689,44 @@ const ClientList = () => {
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors"
               >
                 Delete Payment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Product Confirmation Modal */}
+      {showDeleteProductModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 border border-slate-700">
+            <div className="flex items-center mb-5">
+              <svg className="w-6 h-6 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h3 className="text-lg font-bold text-white">Delete Product</h3>
+            </div>
+
+            <p className="text-slate-300 mb-6">
+              Are you sure you want to delete this product? This cannot be undone.
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteProductModal(false);
+                  setSelectedProductIndex(null);
+                }}
+                className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => deleteProduct(selectedProductIndex)}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors"
+              >
+                Delete Product
               </button>
             </div>
           </div>

@@ -265,13 +265,26 @@ const OrderDetail = () => {
           </div>
 
           {/* INVOICE STAMP */}
-          {/* <div className="absolute top-4 right-4 print:top-8 print:right-8">
+          <div className="hidden sm:block absolute top-4 right-4 print:top-8 print:right-8">
             <div className={`rounded-full w-20 h-20 flex items-center justify-center border-2 rotate-12 ${isPaid ? 'border-green-500' : 'border-orange-500'} opacity-90 print:opacity-100`}>
               <span className={`text-sm font-bold uppercase ${isPaid ? 'text-green-600' : 'text-orange-600'}`}>
                 {isPaid ? 'PAID' : 'PENDING'}
               </span>
             </div>
-          </div> */}
+          </div>
+
+          {/* Mobile View PAID/PENDING Badge */}
+          <div className="sm:hidden flex justify-center -mt-4 mb-4">
+            <div className={`rounded-full px-4 py-1 ${
+              isPaid 
+                ? 'bg-green-100 text-green-700 border border-green-200' 
+                : 'bg-orange-100 text-orange-700 border border-orange-200'
+            }`}>
+              <span className="text-xs font-bold uppercase">
+                {isPaid ? 'PAID' : 'PENDING'}
+              </span>
+            </div>
+          </div>
 
           {/* Invoice Number and Date Header */}
           <div className="w-full mb-6 bg-gray-50 border border-gray-100 rounded-lg p-4 print:bg-gray-100">

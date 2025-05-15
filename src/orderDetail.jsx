@@ -211,7 +211,6 @@ const OrderDetail = () => {
       </div>
     );
   }
-
   // Calculate payment status details
   const balanceDue = (typeof orderData.grandTotal === 'number' ? orderData.grandTotal : 0) - 
                     (typeof orderData.amountPaid === 'number' ? orderData.amountPaid : 0);

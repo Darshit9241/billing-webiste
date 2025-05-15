@@ -66,6 +66,7 @@ const ClientList = () => {
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [newPayment, setNewPayment] = useState('');
+  const [showPaymentStatusDropdown, setShowPaymentStatusDropdown] = useState(false);
 
   useEffect(() => {
     // Fetch clients from API when component mounts
@@ -907,9 +908,9 @@ const ClientList = () => {
 
         {/* Edit Client Modal */}
         {editingClient && (
-          <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-700 overflow-hidden hide-scrollbar animate-fadeIn">
-              <div className="p-5 bg-gradient-to-r from-slate-700 to-slate-800 border-b border-slate-600/30">
+          <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+            <div className="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-700 overflow-hidden my-4">
+              <div className="p-5 bg-gradient-to-r from-slate-700 to-slate-800 border-b border-slate-600/30 sticky top-0 z-10">
                 <div className="flex justify-between items-center">
                   <h3 className="font-semibold text-lg text-white">Edit Client Order</h3>
                   <button
@@ -924,7 +925,7 @@ const ClientList = () => {
               </div>
 
               {/* Tabs for General Info and Products */}
-              <div className="flex border-b border-slate-700">
+              <div className="flex border-b border-slate-700 sticky top-[73px] z-10 bg-slate-800">
                 <button
                   className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${activeTab === 'general'
                     ? 'bg-white/5 text-white border-b-2 border-emerald-500'
@@ -958,7 +959,7 @@ const ClientList = () => {
                 </button>
               </div>
 
-              <form onSubmit={saveClientChanges}>
+              <form onSubmit={saveClientChanges} className="overflow-y-auto max-h-[calc(100vh-200px)]">
                 {activeTab === 'general' ? (
                   <div className="p-5 space-y-4">
                     <div>
@@ -1079,15 +1080,54 @@ const ClientList = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-slate-300 mb-1">Payment Status</label>
-                      <select
-                        name="paymentStatus"
-                        value={editFormData.paymentStatus}
-                        onChange={handleEditInputChange}
-                        className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="cleared">Cleared</option>
-                      </select>
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setShowPaymentStatusDropdown(!showPaymentStatusDropdown)}
+                          className={`w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 flex items-center justify-between`}
+                        >
+                          <span className="flex items-center">
+                            <span className={`w-2 h-2 rounded-full mr-2 ${editFormData.paymentStatus === 'cleared' ? 'bg-sky-500' : 'bg-amber-500'}`}></span>
+                            {editFormData.paymentStatus === 'cleared' ? 'Cleared' : 'Pending'}
+                          </span>
+                          <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transform transition-transform duration-200 ${showPaymentStatusDropdown ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                        
+                        {showPaymentStatusDropdown && (
+                          <div className="absolute z-10 w-full mt-1 bg-slate-700 rounded-xl shadow-lg border border-slate-600 overflow-hidden">
+                            <div className="py-1">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditFormData({ ...editFormData, paymentStatus: 'pending' });
+                                  setShowPaymentStatusDropdown(false);
+                                }}
+                                className={`w-full px-4 py-2 text-left text-sm flex items-center hover:bg-white/5 transition-colors ${
+                                  editFormData.paymentStatus === 'pending' ? 'text-white bg-white/10' : 'text-slate-300'
+                                }`}
+                              >
+                                <span className="w-2 h-2 rounded-full bg-amber-500 mr-2"></span>
+                                Pending
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditFormData({ ...editFormData, paymentStatus: 'cleared' });
+                                  setShowPaymentStatusDropdown(false);
+                                }}
+                                className={`w-full px-4 py-2 text-left text-sm flex items-center hover:bg-white/5 transition-colors ${
+                                  editFormData.paymentStatus === 'cleared' ? 'text-white bg-white/10' : 'text-slate-300'
+                                }`}
+                              >
+                                <span className="w-2 h-2 rounded-full bg-sky-500 mr-2"></span>
+                                Cleared
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ) : (

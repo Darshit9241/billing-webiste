@@ -17,6 +17,8 @@ const AddProducts = () => {
   const [amountPaid, setAmountPaid] = useState('');
   const [billMode, setBillMode] = useState('full');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [existingClients, setExistingClients] = useState([]);
   const [clientSuggestions, setClientSuggestions] = useState([]);
   const [gstSuggestions, setGstSuggestions] = useState([]);
@@ -232,6 +234,46 @@ const AddProducts = () => {
   };
 
   const saveOrder = async () => {
+    // Validate client details
+    // if (!clientName.trim()) {
+    //   setErrorMessage('Please enter client name');
+    //   setShowErrorModal(true);
+    //   return;
+    // }
+
+    // if (!clientAddress.trim()) {
+    //   setErrorMessage('Please enter client address');
+    //   setShowErrorModal(true);
+    //   return;
+    // }
+
+    // if (!clientPhone.trim()) {
+    //   setErrorMessage('Please enter client phone number');
+    //   setShowErrorModal(true);
+    //   return;
+    // }
+
+    // if (!clientGst.trim()) {
+    //   setErrorMessage('Please enter client GST number');
+    //   setShowErrorModal(true);
+    //   return;
+    // }
+
+    // Validate product details
+    const hasEmptyProducts = products.some(product => {
+      if (billMode === 'full') {
+        return !product.name || !product.count || !product.price;
+      } else {
+        return !product.count || !product.price;
+      }
+    });
+
+    if (hasEmptyProducts) {
+      setErrorMessage('Please fill in all product details before saving');
+      setShowErrorModal(true);
+      return;
+    }
+
     // Create payment history if there's an amount paid
     const initialPaymentAmount = billMode === 'half' ? 0 : (amountPaid === '' ? 0 : parseFloat(amountPaid));
     let paymentHistory = [];
@@ -994,6 +1036,30 @@ const AddProducts = () => {
               <button
                 onClick={() => setShowSuccessModal(false)}
                 className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:text-sm transition-colors duration-200"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error Modal Popup */}
+      {showErrorModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"></div>
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 relative z-10 transform transition-all duration-300 scale-100 opacity-100">
+            <div className="text-center relative z-10">
+              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
+                <svg className="h-10 w-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-medium text-gray-900 mb-2">Validation Error</h3>
+              <p className="text-gray-500 mb-5">{errorMessage}</p>
+              <button
+                onClick={() => setShowErrorModal(false)}
+                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm transition-colors duration-200"
               >
                 OK
               </button>

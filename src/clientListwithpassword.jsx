@@ -53,10 +53,6 @@ const ClientList = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [isDateFilterActive, setIsDateFilterActive] = useState(false);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [password, setPassword] = useState('');
-  const [isStatsUnlocked, setIsStatsUnlocked] = useState(false);
-  const [passwordError, setPasswordError] = useState('');
 
   const [showModalDelete, setShowDeleteModal] = useState(false);
   const [selectedDeleteClientId, setSelectedDeleteClientId] = useState(null);
@@ -81,6 +77,11 @@ const ClientList = () => {
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isStatsOpen, setIsStatsOpen] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [statsPassword, setStatsPassword] = useState('');
+  const [showStatsPasswordModal, setShowStatsPasswordModal] = useState(false);
+  const [isStatsUnlocked, setIsStatsUnlocked] = useState(false);
+  const [showOrdersPasswordModal, setShowOrdersPasswordModal] = useState(false);
+  const [ordersPassword, setOrdersPassword] = useState('');
   const navigate = useNavigate();
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -569,33 +570,6 @@ const ClientList = () => {
     }
   };
 
-  const handleStatsClick = () => {
-    if (!isStatsUnlocked) {
-      setShowPasswordModal(true);
-    } else {
-      setIsStatsOpen(!isStatsOpen);
-    }
-  };
-
-  const handlePasswordChange = (e) => {
-    const newPassword = e.target.value;
-    setPassword(newPassword);
-    
-    // Automatically submit when correct password is entered
-    if (newPassword === '1278') {
-      setIsStatsUnlocked(true);
-      setIsStatsOpen(true);
-      setShowPasswordModal(false);
-      setPassword('');
-      setPasswordError('');
-    } else if (newPassword.length === 4) {
-      // Show error only when 4 digits are entered and they're wrong
-      setPasswordError('Incorrect password');
-    } else {
-      setPasswordError('');
-    }
-  };
-
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-gray-100 to-white'} py-8 px-4 sm:px-6 lg:px-8 transition-colors duration-200`}>
       {/* Inject custom styles */}
@@ -691,6 +665,14 @@ const ClientList = () => {
               </h1>
               <div className="flex items-center gap-2 pl-5">
                 <button
+                  onClick={() => setShowOrdersPasswordModal(true)}
+                  className={`p-2 rounded-lg ${isDarkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'} transition-colors`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 ${isDarkMode ? 'text-white' : 'text-gray-700'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6M9 8h6m2-6H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2V4a2 2 0 00-2-2z" />
+                  </svg>
+                </button>
+                <button
                   onClick={() => setIsInfoOpen(!isInfoOpen)}
                   className={`p-2 rounded-lg ${isDarkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'} transition-colors`}
                 >
@@ -749,7 +731,13 @@ const ClientList = () => {
             <div className="mb-6 animate-fadeIn">
               {/* Stats Dropdown Button */}
               <button
-                onClick={handleStatsClick}
+                onClick={() => {
+                  if (!isStatsUnlocked) {
+                    setShowStatsPasswordModal(true);
+                  } else {
+                    setIsStatsOpen(!isStatsOpen);
+                  }
+                }}
                 className={`w-full flex items-center justify-between p-4 rounded-t-lg ${isStatsOpen ? `${isDarkMode ? 'bg-emerald-500/80' : 'bg-emerald-500'} text-white` : `${isDarkMode ? 'bg-white/5' : 'bg-white'} ${isDarkMode ? 'text-white' : 'text-gray-900'}`} ${!isStatsOpen ? 'rounded-b-lg' : ''} border ${isStatsOpen ? (isDarkMode ? 'border-emerald-600' : 'border-emerald-600') : (isDarkMode ? 'border-white/10' : 'border-gray-200')} mb-3 transition-all duration-200 shadow-sm`}
               >
                 <div className="flex items-center">
@@ -769,8 +757,8 @@ const ClientList = () => {
                 </svg>
               </button>
 
-              {/* Password Modal */}
-              {showPasswordModal && (
+              {/* Stats Password Modal */}
+              {showStatsPasswordModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
                   <div className="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 border border-slate-700">
                     <div className="flex items-center mb-5">
@@ -783,29 +771,63 @@ const ClientList = () => {
                     <div className="mb-5">
                       <input
                         type="password"
-                        value={password}
-                        onChange={handlePasswordChange}
+                        value={statsPassword}
+                        onChange={(e) => {
+                          setStatsPassword(e.target.value);
+                          // Check password as user types
+                          if (e.target.value === '1278') {
+                            setIsStatsUnlocked(true);
+                            setIsStatsOpen(true);
+                            setShowStatsPasswordModal(false);
+                            setStatsPassword('');
+                          }
+                        }}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            if (statsPassword === '1278') {
+                              setIsStatsUnlocked(true);
+                              setIsStatsOpen(true);
+                              setShowStatsPasswordModal(false);
+                              setStatsPassword('');
+                            } else {
+                              alert('Incorrect password');
+                              setStatsPassword('');
+                            }
+                          }
+                        }}
                         placeholder="Enter password"
                         className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
                         autoFocus
-                        maxLength={4}
                       />
-                      {passwordError && (
-                        <p className="mt-2 text-sm text-red-400">{passwordError}</p>
-                      )}
                     </div>
 
                     <div className="flex justify-end gap-3">
                       <button
                         type="button"
                         onClick={() => {
-                          setShowPasswordModal(false);
-                          setPassword('');
-                          setPasswordError('');
+                          setShowStatsPasswordModal(false);
+                          setStatsPassword('');
                         }}
                         className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors"
                       >
                         Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (statsPassword === '1278') {
+                            setIsStatsUnlocked(true);
+                            setIsStatsOpen(true);
+                            setShowStatsPasswordModal(false);
+                            setStatsPassword('');
+                          } else {
+                            alert('Incorrect password');
+                            setStatsPassword('');
+                          }
+                        }}
+                        className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl transition-colors"
+                      >
+                        Unlock
                       </button>
                     </div>
                   </div>
@@ -1624,39 +1646,52 @@ const ClientList = () => {
 
                     {client.products && client.products.length > 0 ? (
                       <div className="relative">
-                        <div className={`${isDarkMode ? 'bg-white/10' : 'bg-gray-100'} sticky top-0 z-10`}>
-                          <table className="min-w-full">
-                            <thead>
-                              <tr>
-                                <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Product</th>
-                                <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Qty</th>
-                                <th scope="col" className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Price</th>
-                                {/* <th scope="col" className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th> */}
-                              </tr>
-                            </thead>
-                          </table>
+                        <div className={`${isDarkMode ? 'bg-white/10' : 'bg-gray-100'} sticky top-0 z-10 rounded-t-lg`}>
+                          <div className="grid grid-cols-12 gap-2 px-3 py-2">
+                            <div className="col-span-6 text-left">
+                              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase text-left tracking-wider">Product</span>
+                            </div>
+                            <div className="col-span-3 text-left">
+                              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase text-left tracking-wider">Qty</span>
+                            </div>
+                            <div className="col-span-3 text-right">
+                              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase text-right tracking-wider">Price</span>
+                            </div>
+                            {/* <div className="col-span-3 text-right">
+                              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase text-right tracking-wider">Date</span>
+                            </div> */}
+                          </div>
                         </div>
                         <div className="max-h-36 overflow-y-auto custom-scrollbar">
-                          <table className="min-w-full">
-                            <tbody className={`${isDarkMode ? 'divide-y divide-white/5' : 'divide-y divide-gray-200'}`}>
-                              {client.products.map((product, index) => (
-                                <tr key={index} className={`${isDarkMode ? 'hover:bg-white/5' : 'hover:bg-gray-50'} transition-colors`}>
-                                  <td className={`px-3 py-2 whitespace-nowrap text-sm text-left ${isDarkMode ? 'text-slate-300' : 'text-gray-700'} truncate max-w-[100px] sm:max-w-[140px]`}>
+                          <div className="divide-y divide-gray-200 dark:divide-white/5">
+                            {client.products.map((product, index) => (
+                              <div
+                                key={index}
+                                className={`grid grid-cols-12 gap-2 px-3 py-2 ${isDarkMode ? 'hover:bg-white/5' : 'hover:bg-gray-50'} transition-colors`}
+                              >
+                                <div className="col-span-6 text-left">
+                                  <span className={`text-sm ${isDarkMode ? 'text-slate-300' : 'text-gray-700'} truncate block`}>
                                     {product.name || 'Unnamed Product'}
-                                  </td>
-                                  <td className={`px-3 py-2 whitespace-nowrap text-xs text-left ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                                  </span>
+                                </div>
+                                <div className="col-span-3 text-left">
+                                  <span className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
                                     {product.count}
-                                  </td>
-                                  <td className={`px-3 py-2 whitespace-nowrap text-xs text-right font-medium ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
+                                  </span>
+                                </div>
+                                <div className="col-span-3 text-right">
+                                  <span className={`text-xs font-medium ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
                                     ₹{typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(product.price || 0).toFixed(2)}
-                                  </td>
-                                  {/* <td className={`px-3 py-2 whitespace-nowrap text-xs text-right ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
-                                    {product.timestamp ? formatDate(product.timestamp) : 'N/A'}
-                                  </td> */}
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                                  </span>
+                                </div>
+                                {/* <div className="col-span-3 text-left">
+                                  <span className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                                  {product.timestamp ? formatDate(product.timestamp) : 'N/A'}
+                                  </span>
+                                </div> */}
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     ) : (
@@ -1919,6 +1954,80 @@ const ClientList = () => {
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors"
               >
                 Delete Product
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Orders Password Modal */}
+      {showOrdersPasswordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 border border-slate-700">
+            <div className="flex items-center mb-5">
+              <svg className="w-6 h-6 text-emerald-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <h3 className="text-lg font-bold text-white">Enter Password</h3>
+            </div>
+
+            <div className="mb-5">
+              <input
+                type="password"
+                value={ordersPassword}
+                onChange={(e) => {
+                  setOrdersPassword(e.target.value);
+                  // Check password as user types
+                  if (e.target.value === '1278') {
+                    setShowOrdersPasswordModal(false);
+                    setOrdersPassword('');
+                    navigate(`/clientorders`);
+                  }
+                }}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    if (ordersPassword === '1278') {
+                      setShowOrdersPasswordModal(false);
+                      setOrdersPassword('');
+                      navigate(`/clientorders`);
+                    } else {
+                      alert('Incorrect password');
+                      setOrdersPassword('');
+                    }
+                  }
+                }}
+                placeholder="Enter password"
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
+                autoFocus
+              />
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowOrdersPasswordModal(false);
+                  setOrdersPassword('');
+                }}
+                className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (ordersPassword === '1278') {
+                    setShowOrdersPasswordModal(false);
+                    setOrdersPassword('');
+                    navigate(`/clientorders`);
+                  } else {
+                    alert('Incorrect password');
+                    setOrdersPassword('');
+                  }
+                }}
+                className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl transition-colors"
+              >
+                Unlock
               </button>
             </div>
           </div>

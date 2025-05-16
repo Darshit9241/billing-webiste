@@ -186,6 +186,21 @@ const ClientList = () => {
       setTimeout(() => setError(''), 3000);
     }
   };
+  const clearDateFilter = () => {
+    setStartDate('');
+    setEndDate('');
+    setIsDateFilterActive(false);
+  };
+
+  const applyDateFilter = () => {
+    if (startDate && endDate) {
+      setIsDateFilterActive(true);
+      applyFilters(); // Add this line to trigger filter application
+    } else {
+      setError('Please select both start and end dates');
+      setTimeout(() => setError(''), 3000);
+    }
+  };
 
   const clearOrderPayment = async (id) => {
     try {
@@ -698,6 +713,229 @@ const ClientList = () => {
               </Link>
             </div>
           </div>
+
+          {isInfoOpen && (
+            <div className="mb-6 animate-fadeIn">
+              {/* Stats Dropdown Button */}
+              <button
+                onClick={() => setIsStatsOpen(!isStatsOpen)}
+                className={`w-full flex items-center justify-between p-4 rounded-t-lg ${isStatsOpen ? `${isDarkMode ? 'bg-emerald-500/80' : 'bg-emerald-500'} text-white` : `${isDarkMode ? 'bg-white/5' : 'bg-white'} ${isDarkMode ? 'text-white' : 'text-gray-900'}`} ${!isStatsOpen ? 'rounded-b-lg' : ''} border ${isStatsOpen ? (isDarkMode ? 'border-emerald-600' : 'border-emerald-600') : (isDarkMode ? 'border-white/10' : 'border-gray-200')} mb-3 transition-all duration-200 shadow-sm`}
+              >
+                <div className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                  </svg>
+                  <span className="font-medium">Statistics Overview</span>
+                </div>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className={`h-5 w-5 transform transition-transform duration-200 ${isStatsOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Stats Content */}
+              {isStatsOpen && (
+                <div className={`backdrop-blur-md ${isDarkMode ? 'bg-black/40' : 'bg-white/95'} rounded-b-xl shadow-lg p-4 mb-4 border ${isDarkMode ? 'border-emerald-600/40' : 'border-emerald-100'} border-t-0 animate-fadeIn`}>
+                  {/* Date Range Filter */}
+                  <div className={`mb-4 p-3 ${isDarkMode ? 'bg-white/5' : 'bg-emerald-50'} rounded-lg border ${isDarkMode ? 'border-white/10' : 'border-emerald-100'}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Date Range Filter</h3>
+                      <div className="flex items-center">
+                        <button
+                          onClick={() => {
+                            setIsDateFilterActive(!isDateFilterActive);
+                            if (!isDateFilterActive && (!startDate || !endDate)) {
+                              // Set default dates if none selected
+                              const today = new Date();
+                              const thirtyDaysAgo = new Date();
+                              thirtyDaysAgo.setDate(today.getDate() - 30);
+
+                              setStartDate(thirtyDaysAgo.toISOString().split('T')[0]);
+                              setEndDate(today.toISOString().split('T')[0]);
+                            }
+                          }}
+                          className={`relative inline-flex flex-shrink-0 h-5 w-10 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none ${isDateFilterActive ? 'bg-emerald-500' : isDarkMode ? 'bg-slate-600' : 'bg-gray-200'}`}
+                        >
+                          <span className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200 ${isDateFilterActive ? 'translate-x-5' : 'translate-x-0'}`}></span>
+                        </button>
+                        <span className={`ml-2 text-xs ${isDarkMode ? 'text-slate-300' : 'text-gray-600'}`}>
+                          {isDateFilterActive ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className={`block text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-600'} mb-1`}>Start Date</label>
+                        <input
+                          type="date"
+                          value={startDate}
+                          onChange={(e) => setStartDate(e.target.value)}
+                          className={`w-full rounded-lg ${isDarkMode ? 'bg-white/10 border-white/10 text-white' : 'bg-white border-gray-200 text-gray-900'} border text-sm focus:ring-emerald-500 focus:border-emerald-500 p-2`}
+                        />
+                      </div>
+                      <div>
+                        <label className={`block text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-600'} mb-1`}>End Date</label>
+                        <input
+                          type="date"
+                          value={endDate}
+                          onChange={(e) => setEndDate(e.target.value)}
+                          className={`w-full rounded-lg ${isDarkMode ? 'bg-white/10 border-white/10 text-white' : 'bg-white border-gray-200 text-gray-900'} border text-sm focus:ring-emerald-500 focus:border-emerald-500 p-2`}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-2 mt-3">
+                      <button
+                        onClick={() => {
+                          setStartDate('');
+                          setEndDate('');
+                          setIsDateFilterActive(false);
+                        }}
+                        className={`px-3 py-1 text-xs rounded-lg ${isDarkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} transition-colors`}
+                      >
+                        Reset
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (startDate && endDate) {
+                            setIsDateFilterActive(true);
+                            applyFilters();
+                          }
+                        }}
+                        disabled={!startDate || !endDate}
+                        className={`px-3 py-1 text-xs rounded-lg ${startDate && endDate ? 'bg-emerald-500 text-white hover:bg-emerald-600' : isDarkMode ? 'bg-slate-700 text-slate-300' : 'bg-gray-200 text-gray-500'} transition-colors`}
+                      >
+                        Apply Filter
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Update Statistics to reflect filtered data */}
+                  <div className="space-y-3 md:space-y-0 md:grid md:grid-cols-4 md:gap-3">
+                    <div className={`${isDarkMode ? 'bg-white/5' : 'bg-white'} backdrop-blur-md rounded-xl p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} shadow-sm flex items-center`}>
+                      <div className="flex-1">
+                        <p className={`text-[11px] sm:text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Total Orders</p>
+                        <p className={`text-lg sm:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mt-0.5 sm:mt-1`}>{filteredClients.length}</p>
+                        <p className={`text-[9px] sm:text-xs ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>
+                          {isDateFilterActive ? `From ${new Date(startDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()}` : 'All time'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className={`${isDarkMode ? 'bg-white/5' : 'bg-white'} backdrop-blur-md rounded-xl p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} shadow-sm flex items-center`}>
+                      <div className="flex-1">
+                        <p className={`text-[11px] sm:text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Total Amount</p>
+                        <p className={`text-lg sm:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mt-0.5 sm:mt-1 truncate`}>₹{filteredClients.reduce((total, client) => total + (client.grandTotal || 0), 0).toFixed(2)}</p>
+                        <p className={`text-[9px] sm:text-xs ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>Order value</p>
+                      </div>
+                    </div>
+
+                    <div className={`${isDarkMode ? 'bg-white/5' : 'bg-white'} backdrop-blur-md rounded-xl p-2.5 sm:p-4 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} shadow-sm transform transition-all hover:scale-105`}>
+                      <p className="text-lg sm:text-2xl font-bold text-emerald-500 mt-0.5 sm:mt-1 truncate">₹{filteredClients.reduce((total, client) => total + (client.amountPaid || 0), 0).toFixed(2)}</p>
+                      <p className={`text-[9px] sm:text-xs ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>Total Received Payments</p>
+                    </div>
+
+                    <div className={`${isDarkMode ? 'bg-white/5' : 'bg-white'} backdrop-blur-md rounded-xl p-2.5 sm:p-4 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} shadow-sm`}>
+                      <p className={`text-[11px] sm:text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Pending</p>
+                      <p className="text-lg sm:text-2xl font-bold text-amber-500 mt-0.5 sm:mt-1 truncate">₹{filteredClients.reduce((total, client) => {
+                        const grandTotal = typeof client.grandTotal === 'number' ? client.grandTotal : 0;
+                        const amountPaid = typeof client.amountPaid === 'number' ? client.amountPaid : 0;
+                        const pendingAmount = grandTotal - amountPaid;
+                        return total + (pendingAmount > 0 ? pendingAmount : 0);
+                      }, 0).toFixed(2)}</p>
+                      <p className={`text-[9px] sm:text-xs ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>To collect</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Filters Dropdown Button */}
+              <button
+                onClick={() => setIsFiltersOpen(!isFiltersOpen)}
+                className={`w-full flex items-center justify-between p-4 rounded-t-lg ${isFiltersOpen ? `${isDarkMode ? 'bg-amber-500/80' : 'bg-amber-500'} text-white` : `${isDarkMode ? 'bg-white/5' : 'bg-white'} ${isDarkMode ? 'text-white' : 'text-gray-900'}`} ${!isFiltersOpen ? 'rounded-b-lg' : ''} border ${isFiltersOpen ? (isDarkMode ? 'border-amber-600' : 'border-amber-600') : (isDarkMode ? 'border-white/10' : 'border-gray-200')} mb-3 transition-all duration-200 shadow-sm`}
+              >
+                <div className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
+                  </svg>
+                  <span className="font-medium">
+                    {activeFilter === 'all' ? 'All Orders' : activeFilter === 'pending' ? 'Pending Orders' : 'Cleared Orders'}
+                  </span>
+                </div>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className={`h-5 w-5 transform transition-transform duration-200 ${isFiltersOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Filters Content */}
+              {isFiltersOpen && (
+                <div className={`backdrop-blur-md ${isDarkMode ? 'bg-black/40' : 'bg-white/95'} rounded-b-xl shadow-lg p-4 mb-4 border ${isDarkMode ? 'border-amber-600/40' : 'border-amber-100'} border-t-0 animate-fadeIn`}>
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => {
+                        setActiveFilter('all');
+                        setIsInfoOpen(false);
+                      }}
+                      className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all flex items-center justify-between ${activeFilter === 'all'
+                        ? `${isDarkMode ? 'bg-emerald-500' : 'bg-emerald-600'} text-white shadow-md shadow-emerald-500/20`
+                        : `${isDarkMode ? 'bg-white/5' : 'bg-white'} ${isDarkMode ? 'text-slate-300' : 'text-gray-700'} border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} hover:${isDarkMode ? 'bg-white/10' : 'bg-gray-50'}`
+                        }`}
+                    >
+                      <div className="flex items-center">
+                        <div className={`w-3 h-3 rounded-full ${activeFilter === 'all' ? 'bg-white' : 'bg-emerald-500'} mr-2`}></div>
+                        <span className={`text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>All Orders</span>
+                      </div>
+                      <span className={`text-sm ${isDarkMode ? 'text-white/80' : 'text-gray-600'} bg-black/10 px-2 py-0.5 rounded-full`}>{savedClients.length}</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActiveFilter('pending');
+                        setIsInfoOpen(false);
+                      }}
+                      className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all flex items-center justify-between ${activeFilter === 'pending'
+                        ? `${isDarkMode ? 'bg-amber-500' : 'bg-amber-600'} text-white shadow-md shadow-amber-500/20`
+                        : `${isDarkMode ? 'bg-white/5' : 'bg-white'} ${isDarkMode ? 'text-slate-300' : 'text-gray-700'} border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} hover:${isDarkMode ? 'bg-white/10' : 'bg-gray-50'}`
+                        }`}
+                    >
+                      <div className="flex items-center">
+                        <div className={`w-3 h-3 rounded-full ${activeFilter === 'pending' ? 'bg-white' : 'bg-amber-500'} mr-2`}></div>
+                        <span className={`text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Pending</span>
+                      </div>
+                      <span className={`text-sm ${isDarkMode ? 'text-white/80' : 'text-gray-600'} bg-black/10 px-2 py-0.5 rounded-full`}>{savedClients.filter(client => client.paymentStatus !== 'cleared').length}</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActiveFilter('cleared');
+                        setIsInfoOpen(false);
+                      }}
+                      className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all flex items-center justify-between ${activeFilter === 'cleared'
+                        ? `${isDarkMode ? 'bg-sky-500' : 'bg-sky-600'} text-white shadow-md shadow-sky-500/20`
+                        : `${isDarkMode ? 'bg-white/5' : 'bg-white'} ${isDarkMode ? 'text-slate-300' : 'text-gray-700'} border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} hover:${isDarkMode ? 'bg-white/10' : 'bg-gray-50'}`
+                        }`}
+                    >
+                      <div className="flex items-center">
+                        <div className={`w-3 h-3 rounded-full ${activeFilter === 'cleared' ? 'bg-white' : 'bg-sky-500'} mr-2`}></div>
+                        <span className={`text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Cleared</span>
+                      </div>
+                      <span className={`text-sm ${isDarkMode ? 'text-white/80' : 'text-gray-600'} bg-black/10 px-2 py-0.5 rounded-full`}>{savedClients.filter(client => client.paymentStatus === 'cleared').length}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {isDateFilterActive && isSmallScreen && (
             <div className={`px-3 my-2 py-1.5 ${isDarkMode ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-100 text-amber-700'} rounded-lg text-xs flex items-center`}>
@@ -1571,6 +1809,9 @@ const ClientList = () => {
           </div>
         </div>
       )}
+
+
+
 
       {/* Delete Product Confirmation Modal */}
       {showDeleteProductModal && (

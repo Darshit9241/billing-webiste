@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { fetchAllClients } from './firebase/clientsFirebase';
 import { useTheme } from './context/ThemeContext';
+import { useNavigate } from 'react-router-dom';
 
 const ClientOrders = () => {
   const { isDarkMode } = useTheme();
+  const navigate = useNavigate();
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -13,7 +15,9 @@ const ClientOrders = () => {
   const [paymentStatusFilter, setPaymentStatusFilter] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
+  const [displayCount, setDisplayCount] = useState(10);
   const dropdownRef = useRef(null);
+  const tableRef = useRef(null);
 
   const paymentStatuses = [
     { value: '', label: 'All Payment Status' },
@@ -34,6 +38,29 @@ const ClientOrders = () => {
 
   useEffect(() => {
     fetchClients();
+  }, []);
+
+  // Add scroll handler
+  useEffect(() => {
+    const handleScroll = () => {
+      if (tableRef.current) {
+        const { scrollTop, scrollHeight, clientHeight } = tableRef.current;
+        if (scrollTop + clientHeight >= scrollHeight - 20) {
+          setDisplayCount(prev => prev + 10);
+        }
+      }
+    };
+
+    const tableElement = tableRef.current;
+    if (tableElement) {
+      tableElement.addEventListener('scroll', handleScroll);
+    }
+
+    return () => {
+      if (tableElement) {
+        tableElement.removeEventListener('scroll', handleScroll);
+      }
+    };
   }, []);
 
   const fetchClients = async () => {
@@ -82,16 +109,51 @@ const ClientOrders = () => {
     setToDate('');
   };
 
+  const handleBack = () => {
+    navigate("/clients");
+  };
+
+  const handleOrderClick = (orderId) => {
+    navigate(`/order/${orderId}`);
+  };
+
   if (loading) {
     return (
       <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Header Section */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Client Orders</h1>
-            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Manage and track all your client orders in one place
-            </p>
+          {/* Header Section with Back Button and Info Button */}
+          <div className="mb-8 flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleBack}
+                className={`p-2 rounded-lg ${
+                  isDarkMode 
+                    ? 'bg-gray-800 hover:bg-gray-700 text-white' 
+                    : 'bg-white hover:bg-gray-50 text-gray-900'
+                } shadow-sm border ${
+                  isDarkMode ? 'border-gray-700' : 'border-gray-200'
+                } transition-all`}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+              </button>
+              <h1 className="text-3xl font-bold">Client Orders</h1>
+            </div>
+            <button
+              onClick={() => setIsSummaryModalOpen(true)}
+              className={`p-2 rounded-lg ${
+                isDarkMode 
+                  ? 'bg-gray-800 hover:bg-gray-700 text-white' 
+                  : 'bg-white hover:bg-gray-50 text-gray-900'
+              } shadow-sm border ${
+                isDarkMode ? 'border-gray-700' : 'border-gray-200'
+              } transition-all`}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
           </div>
 
           {/* Filters Section */}
@@ -212,9 +274,12 @@ const ClientOrders = () => {
 
           {/* Table Section */}
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
+            <div 
+              ref={tableRef}
+              className="overflow-y-auto max-h-[600px] hide-scrollbar"
+            >
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className={`${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
+                <thead className={`${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'} sticky top-0 z-10`}>
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                       Order ID
@@ -237,28 +302,36 @@ const ClientOrders = () => {
                   </tr>
                 </thead>
                 <tbody className={`divide-y divide-gray-200 dark:divide-gray-700 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
-                  {filteredClients.map((client) => (
+                  {filteredClients.slice(0, displayCount).map((client) => (
                     <tr key={client.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {client.id}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-left">
+                        <button
+                          onClick={() => handleOrderClick(client.id)}
+                          className={`text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors`}
+                        >
+                          {client.id}
+                        </button>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-left">
                         {client.clientName}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-left">
                         {client.clientGst}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-left">
                         {new Date(client.timestamp).toLocaleDateString('en-IN')}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
-                        ₹{client.grandTotal}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600  text-left">
+                        {client.grandTotal} ₹
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${client.paymentStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                            client.paymentStatus === 'cleared' ? 'bg-green-100 text-green-800' :
-                              'bg-gray-100 text-gray-800'
-                          }`}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-left">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          client.paymentStatus === 'pending' 
+                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' 
+                            : client.paymentStatus === 'cleared' 
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                              : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                        }`}>
                           {client.paymentStatus}
                         </span>
                       </td>
@@ -266,6 +339,11 @@ const ClientOrders = () => {
                   ))}
                 </tbody>
               </table>
+              {displayCount < filteredClients.length && (
+                <div className="text-center py-4">
+                  <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -309,10 +387,24 @@ const ClientOrders = () => {
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header Section with Info Button */}
+        {/* Header Section with Back Button and Info Button */}
         <div className="mb-8 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Client Orders</h1>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleBack}
+              className={`p-2 rounded-lg ${
+                isDarkMode 
+                  ? 'bg-gray-800 hover:bg-gray-700 text-white' 
+                  : 'bg-white hover:bg-gray-50 text-gray-900'
+              } shadow-sm border ${
+                isDarkMode ? 'border-gray-700' : 'border-gray-200'
+              } transition-all`}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </button>
+            <h1 className="text-3xl font-bold">Client Orders</h1>
           </div>
           <button
             onClick={() => setIsSummaryModalOpen(true)}
@@ -439,9 +531,12 @@ const ClientOrders = () => {
 
         {/* Table Section */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
+          <div 
+            ref={tableRef}
+            className="overflow-y-auto max-h-[600px] hide-scrollbar"
+          >
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className={`${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
+              <thead className={`${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'} sticky top-0 z-10`}>
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Order ID
@@ -464,10 +559,15 @@ const ClientOrders = () => {
                 </tr>
               </thead>
               <tbody className={`divide-y divide-gray-200 dark:divide-gray-700 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
-                {filteredClients.map((client) => (
+                {filteredClients.slice(0, displayCount).map((client) => (
                   <tr key={client.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-left">
-                      {client.id}
+                      <button
+                        onClick={() => handleOrderClick(client.id)}
+                        className={`text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors`}
+                      >
+                        {client.id}
+                      </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-left">
                       {client.clientName}
@@ -478,14 +578,17 @@ const ClientOrders = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-left">
                       {new Date(client.timestamp).toLocaleDateString('en-IN')}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
-                      ₹{client.grandTotal}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600  text-left">
+                      {client.grandTotal} ₹
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-left">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${client.paymentStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          client.paymentStatus === 'cleared' ? 'bg-green-100 text-green-800' :
-                            'bg-gray-100 text-gray-800'
-                        }`}>
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        client.paymentStatus === 'pending' 
+                          ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' 
+                          : client.paymentStatus === 'cleared' 
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                            : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                      }`}>
                         {client.paymentStatus}
                       </span>
                     </td>
@@ -493,6 +596,11 @@ const ClientOrders = () => {
                 ))}
               </tbody>
             </table>
+            {displayCount < filteredClients.length && (
+              <div className="text-center py-4">
+                <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
+              </div>
+            )}
           </div>
         </div>
 

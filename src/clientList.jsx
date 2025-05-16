@@ -1550,39 +1550,52 @@ const ClientList = () => {
 
                     {client.products && client.products.length > 0 ? (
                       <div className="relative">
-                        <div className={`${isDarkMode ? 'bg-white/10' : 'bg-gray-100'} sticky top-0 z-10`}>
-                          <table className="min-w-full">
-                            <thead>
-                              <tr>
-                                <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Product</th>
-                                <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Qty</th>
-                                <th scope="col" className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Price</th>
-                                {/* <th scope="col" className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th> */}
-                              </tr>
-                            </thead>
-                          </table>
+                        <div className={`${isDarkMode ? 'bg-white/10' : 'bg-gray-100'} sticky top-0 z-10 rounded-t-lg`}>
+                          <div className="grid grid-cols-12 gap-2 px-3 py-2">
+                            <div className="col-span-6 text-left">
+                              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase text-left tracking-wider">Product</span>
+                            </div>
+                            <div className="col-span-3 text-left">
+                              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase text-left tracking-wider">Qty</span>
+                            </div>
+                            <div className="col-span-3 text-right">
+                              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase text-right tracking-wider">Price</span>
+                            </div>
+                            {/* <div className="col-span-3 text-right">
+                              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase text-right tracking-wider">Date</span>
+                            </div> */}
+                          </div>
                         </div>
                         <div className="max-h-36 overflow-y-auto custom-scrollbar">
-                          <table className="min-w-full">
-                            <tbody className={`${isDarkMode ? 'divide-y divide-white/5' : 'divide-y divide-gray-200'}`}>
-                              {client.products.map((product, index) => (
-                                <tr key={index} className={`${isDarkMode ? 'hover:bg-white/5' : 'hover:bg-gray-50'} transition-colors`}>
-                                  <td className={`px-3 py-2 whitespace-nowrap text-sm text-left ${isDarkMode ? 'text-slate-300' : 'text-gray-700'} truncate max-w-[100px] sm:max-w-[140px]`}>
+                          <div className="divide-y divide-gray-200 dark:divide-white/5">
+                            {client.products.map((product, index) => (
+                              <div 
+                                key={index} 
+                                className={`grid grid-cols-12 gap-2 px-3 py-2 ${isDarkMode ? 'hover:bg-white/5' : 'hover:bg-gray-50'} transition-colors`}
+                              >
+                                <div className="col-span-6 text-left">
+                                  <span className={`text-sm ${isDarkMode ? 'text-slate-300' : 'text-gray-700'} truncate block`}>
                                     {product.name || 'Unnamed Product'}
-                                  </td>
-                                  <td className={`px-3 py-2 whitespace-nowrap text-xs text-left ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                                  </span>
+                                </div>
+                                <div className="col-span-3 text-left">
+                                  <span className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
                                     {product.count}
-                                  </td>
-                                  <td className={`px-3 py-2 whitespace-nowrap text-xs text-right font-medium ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
+                                  </span>
+                                </div>
+                                <div className="col-span-3 text-right">
+                                  <span className={`text-xs font-medium ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
                                     ₹{typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(product.price || 0).toFixed(2)}
-                                  </td>
-                                  {/* <td className={`px-3 py-2 whitespace-nowrap text-xs text-right ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
-                                    {product.timestamp ? formatDate(product.timestamp) : 'N/A'}
-                                  </td> */}
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                                  </span>
+                                </div>
+                                {/* <div className="col-span-3 text-left">
+                                  <span className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                                  {product.timestamp ? formatDate(product.timestamp) : 'N/A'}
+                                  </span>
+                                </div> */}
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     ) : (

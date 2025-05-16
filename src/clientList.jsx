@@ -1517,15 +1517,16 @@ const ClientList = () => {
                 <div className={`p-5 ${isDarkMode ? 'bg-gradient-to-r from-slate-800/80 to-slate-700/80' : 'bg-gradient-to-r from-gray-50 to-gray-100'} border-b ${isDarkMode ? 'border-slate-600/30' : 'border-gray-200'}`}>
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className={`font-semibold text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{client.clientName || 'Unnamed Client'}</h3>
-                      <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mt-1`}>Order ID: {client.id}</p>
+                      <h3 className={`font-semibold text-left text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{client.clientName || 'Unnamed Client'}</h3>
+                      <p className={`text-xs text-left ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mt-1`}>Order ID: {client.id}</p>
                       {client.clientGst && (
-                        <p className={`text-xs ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'} mt-1 flex items-center`}>
+                        <p className={`text-xs text-left ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'} mt-1 flex items-center`}>
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
                           GST: {client.clientGst}
                         </p>
+                        
                       )}
                     </div>
                     <span className={`text-xs px-3 py-1 rounded-full font-medium ${client.paymentStatus === 'cleared'

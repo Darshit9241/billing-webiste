@@ -228,7 +228,7 @@ const ClientOrders = () => {
                     </svg>
                   </button>
                   {isDropdownOpen && (
-                    <div className={`absolute z-10 w-full mt-1 rounded-lg shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'
+                    <div className={`absolute z-50 w-full mt-1 rounded-lg shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'
                       } border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
                       {paymentStatuses.map((status) => (
                         <button
@@ -273,7 +273,7 @@ const ClientOrders = () => {
           </div>
 
           {/* Table Section */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden relative z-10">
             <div 
               ref={tableRef}
               className="overflow-y-auto max-h-[600px] hide-scrollbar"
@@ -494,7 +494,7 @@ const ClientOrders = () => {
                   </svg>
                 </button>
                 {isDropdownOpen && (
-                  <div className={`absolute z-10 w-full mt-1 rounded-lg shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'
+                  <div className={`absolute z-50 w-full mt-1 rounded-lg shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'
                     } border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
                     {paymentStatuses.map((status) => (
                       <button
@@ -530,7 +530,7 @@ const ClientOrders = () => {
         </div>
 
         {/* Table Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden relative z-10">
           <div 
             ref={tableRef}
             className="overflow-y-auto max-h-[600px] hide-scrollbar"

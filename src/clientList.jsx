@@ -1523,18 +1523,18 @@ const ClientList = () => {
                 {/* Card content */}
                 <div className="p-5 space-y-4">
                   {/* Financial summary */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} backdrop-blur-md rounded-lg p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} transform transition-all hover:scale-105`}>
-                      <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Total:</p>
-                      <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'} text-sm sm:text-base`}>₹{typeof client.grandTotal === 'number' ? client.grandTotal.toFixed(2) : '0.00'}</p>
+                  <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                    <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} backdrop-blur-md rounded-lg p-2.5 sm:p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} transform transition-all hover:scale-105`}>
+                      <p className={`text-[10px] sm:text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Total:</p>
+                      <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'} text-xs sm:text-sm md:text-base truncate`}>₹{typeof client.grandTotal === 'number' ? client.grandTotal.toFixed(2) : '0.00'}</p>
                     </div>
-                    <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} backdrop-blur-md rounded-lg p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} transform transition-all hover:scale-105`}>
-                      <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Amount Paid:</p>
-                      <p className="font-medium text-emerald-500 text-sm sm:text-base">₹{typeof client.amountPaid === 'number' ? client.amountPaid.toFixed(2) : '0.00'}</p>
+                    <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} backdrop-blur-md rounded-lg p-2.5 sm:p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} transform transition-all hover:scale-105`}>
+                      <p className={`text-[10px] sm:text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Amount Paid:</p>
+                      <p className="font-medium text-emerald-500 text-xs sm:text-sm md:text-base truncate">₹{typeof client.amountPaid === 'number' ? client.amountPaid.toFixed(2) : '0.00'}</p>
                     </div>
-                    <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} backdrop-blur-md rounded-lg p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} transform transition-all hover:scale-105`}>
-                      <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Balance Due:</p>
-                      <p className={`font-medium text-sm sm:text-base ${((typeof client.grandTotal === 'number' ? client.grandTotal : 0) -
+                    <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} backdrop-blur-md rounded-lg p-2.5 sm:p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} transform transition-all hover:scale-105 xs:col-span-2 sm:col-span-1`}>
+                      <p className={`text-[10px] sm:text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Balance Due:</p>
+                      <p className={`font-medium text-xs sm:text-sm md:text-base truncate ${((typeof client.grandTotal === 'number' ? client.grandTotal : 0) -
                         (typeof client.amountPaid === 'number' ? client.amountPaid : 0)) <= 0 ? 'text-sky-500' : 'text-amber-500'
                         }`}>
                         ₹{((typeof client.grandTotal === 'number' ? client.grandTotal : 0) -

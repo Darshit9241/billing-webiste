@@ -132,11 +132,31 @@ const ClientList = () => {
     // Then apply search query if it exists
     if (searchQuery.trim() !== '') {
       const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(client =>
-        (client.id && client.id.toLowerCase().includes(query)) ||
-        (client.clientName && client.clientName.toLowerCase().includes(query)) ||
-        (client.clientGst && client.clientGst.toLowerCase().includes(query))
-      );
+      
+      // Check if the query matches a date in DD/MM/YYYY or DD/MM format
+      const dateRegex = /^(\d{2})\/(\d{2})(?:\/(\d{4}))?$/;
+      const dateMatch = query.match(dateRegex);
+      
+      if (dateMatch) {
+        const [_, day, month, year] = dateMatch;
+        const currentYear = new Date().getFullYear();
+        const searchYear = year || currentYear;
+        const searchDate = new Date(`${searchYear}-${month}-${day}`);
+        const searchDateStart = searchDate.setHours(0, 0, 0, 0);
+        const searchDateEnd = searchDate.setHours(23, 59, 59, 999);
+        
+        filtered = filtered.filter(client => {
+          const clientDate = new Date(client.timestamp).getTime();
+          return clientDate >= searchDateStart && clientDate <= searchDateEnd;
+        });
+      } else {
+        // Regular search for other fields
+        filtered = filtered.filter(client =>
+          (client.id && client.id.toLowerCase().includes(query)) ||
+          (client.clientName && client.clientName.toLowerCase().includes(query)) ||
+          (client.clientGst && client.clientGst.toLowerCase().includes(query))
+        );
+      }
     }
 
     setFilteredClients(filtered);

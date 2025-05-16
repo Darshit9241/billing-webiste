@@ -248,6 +248,11 @@ const AddProducts = () => {
           updatedProduct.total = count * price;
         }
 
+        // If this is a new product being edited for the first time, add a timestamp
+        if (!updatedProduct.timestamp && (field === 'name' || field === 'count' || field === 'price')) {
+          updatedProduct.timestamp = Date.now();
+        }
+
         return updatedProduct;
       }
       return product;
@@ -258,7 +263,15 @@ const AddProducts = () => {
 
   const addProduct = () => {
     const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
-    setProducts([...products, { id: newId, name: '', count: '', price: '', total: 0 }]);
+    // Add timestamp when creating a new product
+    setProducts([...products, { 
+      id: newId, 
+      name: '', 
+      count: '', 
+      price: '', 
+      total: 0,
+      timestamp: Date.now() // Add timestamp for the new product
+    }]);
   };
 
   const removeProduct = (id) => {

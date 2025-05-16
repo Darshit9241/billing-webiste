@@ -360,11 +360,14 @@ const ClientList = () => {
     if (!editingProduct) return;
 
     const updatedProducts = [...editFormData.products];
+    const currentTime = Date.now();
+
     updatedProducts[editingProduct.index] = {
       ...editingProduct,
       name: productFormData.name,
       price: productFormData.price,
-      count: productFormData.count
+      count: productFormData.count,
+      timestamp: editingProduct.timestamp || currentTime // Keep existing timestamp if it exists, otherwise create new one
     };
 
     // Recalculate the grand total
@@ -402,7 +405,13 @@ const ClientList = () => {
   };
 
   const addNewProduct = () => {
-    setEditingProduct({ name: '', price: 0, count: 1, index: editFormData.products.length });
+    setEditingProduct({ 
+      name: '', 
+      price: 0, 
+      count: 1, 
+      index: editFormData.products.length,
+      timestamp: Date.now() // Add timestamp for new products
+    });
     setProductFormData({
       name: '',
       price: '',
@@ -1124,6 +1133,11 @@ const ClientList = () => {
                                     ₹{(product.count * (typeof product.price === 'number' ? product.price : parseFloat(product.price || 0))).toFixed(2)}
                                   </span>
                                 </div>
+                                {product.timestamp && (
+                                  <div className="mt-1 text-xs text-slate-500">
+                                    Added: {formatDate(product.timestamp)}
+                                  </div>
+                                )}
                               </div>
                               <div className="flex ml-4">
                                 <button
@@ -1305,6 +1319,7 @@ const ClientList = () => {
                                 <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Product</th>
                                 <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Qty</th>
                                 <th scope="col" className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Price</th>
+                                {/* <th scope="col" className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th> */}
                               </tr>
                             </thead>
                           </table>
@@ -1323,6 +1338,9 @@ const ClientList = () => {
                                   <td className={`px-3 py-2 whitespace-nowrap text-xs text-right font-medium ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
                                     ₹{typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(product.price || 0).toFixed(2)}
                                   </td>
+                                  {/* <td className={`px-3 py-2 whitespace-nowrap text-xs text-right ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                                    {product.timestamp ? formatDate(product.timestamp) : 'N/A'}
+                                  </td> */}
                                 </tr>
                               ))}
                             </tbody>

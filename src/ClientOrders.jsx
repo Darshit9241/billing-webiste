@@ -76,6 +76,12 @@ const ClientOrders = () => {
     return sum + (parseFloat(client.grandTotal) || 0);
   }, 0);
 
+  // Add clear date range function
+  const clearDateRange = () => {
+    setFromDate('');
+    setToDate('');
+  };
+
   if (loading) {
     return (
       <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
@@ -119,6 +125,21 @@ const ClientOrders = () => {
                     />
                   </div>
                 </div>
+                {(fromDate || toDate) && (
+                  <button
+                    onClick={clearDateRange}
+                    className={`mt-2 px-3 py-1.5 text-sm rounded-lg flex items-center gap-1 ${
+                      isDarkMode
+                        ? 'bg-gray-700 hover:bg-gray-600 text-white'
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                    } transition-colors`}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Clear Dates
+                  </button>
+                )}
               </div>
 
               {/* Payment Status Dropdown */}
@@ -312,21 +333,6 @@ const ClientOrders = () => {
         {/* Filters Section */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 mb-6">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-            {/* Search Input */}
-            {/* <div className="lg:col-span-1">
-              <label className="block text-sm font-medium mb-2">Search</label>
-              <input
-                type="text"
-                placeholder="Search by name, ID, or GST..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className={`w-full px-4 py-2.5 rounded-lg border ${
-                  isDarkMode
-                    ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400'
-                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                } focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
-              />
-            </div> */}
 
             {/* Date Range */}
             <div className="lg:col-span-2">
@@ -355,6 +361,21 @@ const ClientOrders = () => {
                   />
                 </div>
               </div>
+              {(fromDate || toDate) && (
+                <button
+                  onClick={clearDateRange}
+                  className={`mt-2 px-3 py-1.5 text-sm rounded-lg flex items-center gap-1 ${
+                    isDarkMode
+                      ? 'bg-gray-700 hover:bg-gray-600 text-white'
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                  } transition-colors`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  Clear Dates
+                </button>
+              )}
             </div>
 
             {/* Payment Status Dropdown */}

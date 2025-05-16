@@ -20,6 +20,22 @@ const customStyles = `
 .animate-pulse-custom {
   animation: pulse 2s ease-in-out infinite;
 }
+
+/* Custom scrollbar styles */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
 `;
 
 const ClientList = () => {
@@ -789,7 +805,7 @@ const ClientList = () => {
                 </button>
               </div>
 
-              <form onSubmit={saveClientChanges} className="overflow-y-auto max-h-[calc(100vh-200px)] hide-scrollbar">
+              <form onSubmit={saveClientChanges} className="overflow-y-auto max-h-[calc(100vh-200px)] custom-scrollbar">
                 {activeTab === 'general' ? (
                   <div className="p-5 space-y-4">
                     <div>
@@ -888,58 +904,64 @@ const ClientList = () => {
                           </span>
                         </div>
                         <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
-                          <div className="max-h-48 overflow-y-auto hide-scrollbar">
-                            <table className="w-full">
-                              <thead className="bg-white/10 sticky top-0 z-10">
-                                <tr>
-                                  <th className="px-4 py-2.5 text-left text-xs font-medium text-slate-300">Date</th>
-                                  <th className="px-4 py-2.5 text-right text-xs font-medium text-slate-300">Amount</th>
-                                  <th className="px-4 py-2.5 text-right text-xs font-medium text-slate-300">Actions</th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-white/5">
-                                {editFormData.paymentHistory.map((payment, index) => (
-                                  <tr key={index} className="text-white text-left hover:bg-white/5 transition-colors">
-                                    <td className="px-4 py-3 text-xs text-slate-300">
-                                      {new Date(payment.date).toLocaleString('en-IN', {
-                                        dateStyle: 'medium',
-                                        timeStyle: 'short',
-                                        timeZone: 'Asia/Kolkata',
-                                        hour12: true
-                                      })}
-                                    </td>
-                                    <td className="px-4 py-3 text-right text-xs font-medium text-emerald-500">
-                                      ₹{parseFloat(payment.amount).toFixed(2)}
-                                    </td>
-                                    <td className="px-4 py-3 text-right">
-                                      <div className="flex justify-end items-center space-x-3">
-                                        <button
-                                          type="button"
-                                          onClick={() => editPaymentEntry(index)}
-                                          className="p-1.5 text-xs text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/20 rounded-lg transition-colors"
-                                        >
-                                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                          </svg>
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            setSelectedPaymentIndex(index);
-                                            setShowDeletePaymentModal(true);
-                                          }}
-                                          className="p-1.5 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-colors"
-                                        >
-                                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                          </svg>
-                                        </button>
-                                      </div>
-                                    </td>
+                          <div className="relative">
+                            <div className="bg-white/10 sticky top-0 z-10">
+                              <table className="w-full">
+                                <thead>
+                                  <tr>
+                                    <th className="px-4 py-2.5 text-left text-xs font-medium text-slate-300">Date</th>
+                                    <th className="px-4 py-2.5 text-right text-xs font-medium text-slate-300">Amount</th>
+                                    <th className="px-4 py-2.5 text-right text-xs font-medium text-slate-300">Actions</th>
                                   </tr>
-                                ))}
-                              </tbody>
-                            </table>
+                                </thead>
+                              </table>
+                            </div>
+                            <div className="max-h-48 overflow-y-auto custom-scrollbar">
+                              <table className="w-full">
+                                <tbody className="divide-y divide-white/5">
+                                  {editFormData.paymentHistory.map((payment, index) => (
+                                    <tr key={index} className="text-white text-left hover:bg-white/5 transition-colors">
+                                      <td className="px-4 py-3 text-xs text-slate-300">
+                                        {new Date(payment.date).toLocaleString('en-IN', {
+                                          dateStyle: 'medium',
+                                          timeStyle: 'short',
+                                          timeZone: 'Asia/Kolkata',
+                                          hour12: true
+                                        })}
+                                      </td>
+                                      <td className="px-4 py-3 text-right text-xs font-medium text-emerald-500">
+                                        ₹{parseFloat(payment.amount).toFixed(2)}
+                                      </td>
+                                      <td className="px-4 py-3 text-right">
+                                        <div className="flex justify-end items-center space-x-3">
+                                          <button
+                                            type="button"
+                                            onClick={() => editPaymentEntry(index)}
+                                            className="p-1.5 text-xs text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/20 rounded-lg transition-colors"
+                                          >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setSelectedPaymentIndex(index);
+                                              setShowDeletePaymentModal(true);
+                                            }}
+                                            className="p-1.5 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-colors"
+                                          >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                          </button>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1087,7 +1109,7 @@ const ClientList = () => {
                     )}
 
                     {/* Products list */}
-                    <div className="max-h-60 overflow-y-auto pr-1 hide-scrollbar">
+                    <div className="max-h-60 overflow-y-auto pr-1 custom-scrollbar">
                       {editFormData.products.length > 0 ? (
                         <ul className="space-y-2">
                           {editFormData.products.map((product, index) => (
@@ -1275,16 +1297,20 @@ const ClientList = () => {
                     </div>
 
                     {client.products && client.products.length > 0 ? (
-                      <div className="max-h-36 overflow-y-auto pr-2 hide-scrollbar">
-                        <div className={`rounded-t-lg overflow-hidden ${isDarkMode ? 'bg-white/5' : 'bg-white'}`}>
-                          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                            <thead className={`${isDarkMode ? 'bg-white/10' : 'bg-gray-100'}`}>
+                      <div className="relative">
+                        <div className={`${isDarkMode ? 'bg-white/10' : 'bg-gray-100'} sticky top-0 z-10`}>
+                          <table className="min-w-full">
+                            <thead>
                               <tr>
                                 <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Product</th>
                                 <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Qty</th>
                                 <th scope="col" className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Price</th>
                               </tr>
                             </thead>
+                          </table>
+                        </div>
+                        <div className="max-h-36 overflow-y-auto custom-scrollbar">
+                          <table className="min-w-full">
                             <tbody className={`${isDarkMode ? 'divide-y divide-white/5' : 'divide-y divide-gray-200'}`}>
                               {client.products.map((product, index) => (
                                 <tr key={index} className={`${isDarkMode ? 'hover:bg-white/5' : 'hover:bg-gray-50'} transition-colors`}>

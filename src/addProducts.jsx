@@ -408,6 +408,18 @@ const AddProducts = () => {
 
   const grandTotal = products.reduce((sum, product) => sum + product.total, 0);
 
+  const handleAmountPaidChange = (e) => {
+    const value = e.target.value;
+    setAmountPaid(value);
+    
+    // Automatically set payment status based on amount paid
+    if (parseFloat(value) === grandTotal) {
+      setPaymentStatus('cleared');
+    } else {
+      setPaymentStatus('pending');
+    }
+  };
+
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50'} relative overflow-hidden`}>
       {/* Animated Background */}
@@ -1061,7 +1073,7 @@ const AddProducts = () => {
                   id="amountPaid"
                   className={`block w-full px-4 py-4 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400 placeholder-gray-400' : 'border-gray-300 bg-white text-gray-800 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200 peer placeholder-transparent`}
                   value={amountPaid}
-                  onChange={(e) => setAmountPaid(e.target.value)}
+                  onChange={handleAmountPaidChange}
                   placeholder="0.00"
                   min="0"
                   step="0.01"

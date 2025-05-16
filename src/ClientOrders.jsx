@@ -77,11 +77,39 @@ const ClientOrders = () => {
   };
 
   const filteredClients = clients.filter(client => {
+    // Helper function to check if a date matches the search query
+    const isDateMatch = (timestamp, searchQuery) => {
+      if (!timestamp || !searchQuery) return false;
+      
+      const date = new Date(timestamp);
+      if (isNaN(date.getTime())) return false; // Invalid date
+
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear().toString();
+
+      // Format date in different patterns
+      const ddmm = `${day}/${month}`;
+      const ddmmyyyy = `${day}/${month}/${year}`;
+      const mmdd = `${month}/${day}`;
+      const mmddyyyy = `${month}/${day}/${year}`;
+
+      // Convert timestamp to string format for includes check
+      const dateStr = date.toISOString();
+
+      // Check if search query matches any of the date formats
+      return searchQuery === ddmm || 
+             searchQuery === ddmmyyyy ||
+             searchQuery === mmdd ||
+             searchQuery === mmddyyyy ||
+             dateStr.includes(searchQuery);
+    };
+
     const matchesSearch =
       client.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       client.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       client.clientGst.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (client.orderDate && client.orderDate.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      isDateMatch(client.timestamp, searchQuery) ||
       (client.totalAmount && client.totalAmount.toString().includes(searchQuery));
 
     const clientDate = new Date(client.timestamp);
@@ -102,6 +130,19 @@ const ClientOrders = () => {
   const totalFilteredAmount = filteredClients.reduce((sum, client) => {
     return sum + (parseFloat(client.grandTotal) || 0);
   }, 0);
+
+  const getPendingOrders = () => {
+    return filteredClients.filter(client =>
+      client.paymentStatus?.toLowerCase() === 'pending'
+    );
+  };
+
+  // Calculate total pending amount
+  const calculateTotalPendingAmount = () => {
+    return getPendingOrders().reduce((sum, client) => {
+      return sum + (parseFloat(client.grandTotal) || 0);
+    }, 0);
+  };
 
   // Add clear date range function
   const clearDateRange = () => {
@@ -126,13 +167,11 @@ const ClientOrders = () => {
             <div className="flex items-center gap-4">
               <button
                 onClick={handleBack}
-                className={`p-2 rounded-lg ${
-                  isDarkMode 
-                    ? 'bg-gray-800 hover:bg-gray-700 text-white' 
+                className={`p-2 rounded-lg ${isDarkMode
+                    ? 'bg-gray-800 hover:bg-gray-700 text-white'
                     : 'bg-white hover:bg-gray-50 text-gray-900'
-                } shadow-sm border ${
-                  isDarkMode ? 'border-gray-700' : 'border-gray-200'
-                } transition-all`}
+                  } shadow-sm border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'
+                  } transition-all`}
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -142,13 +181,11 @@ const ClientOrders = () => {
             </div>
             <button
               onClick={() => setIsSummaryModalOpen(true)}
-              className={`p-2 rounded-lg ${
-                isDarkMode 
-                  ? 'bg-gray-800 hover:bg-gray-700 text-white' 
+              className={`p-2 rounded-lg ${isDarkMode
+                  ? 'bg-gray-800 hover:bg-gray-700 text-white'
                   : 'bg-white hover:bg-gray-50 text-gray-900'
-              } shadow-sm border ${
-                isDarkMode ? 'border-gray-700' : 'border-gray-200'
-              } transition-all`}
+                } shadow-sm border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'
+                } transition-all`}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -170,8 +207,8 @@ const ClientOrders = () => {
                       value={fromDate}
                       onChange={(e) => setFromDate(e.target.value)}
                       className={`w-full px-4 py-2.5 rounded-lg border ${isDarkMode
-                          ? 'bg-gray-800 border-gray-700 text-white'
-                          : 'bg-white border-gray-300 text-gray-900'
+                        ? 'bg-gray-800 border-gray-700 text-white'
+                        : 'bg-white border-gray-300 text-gray-900'
                         } focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
                     />
                   </div>
@@ -181,8 +218,8 @@ const ClientOrders = () => {
                       value={toDate}
                       onChange={(e) => setToDate(e.target.value)}
                       className={`w-full px-4 py-2.5 rounded-lg border ${isDarkMode
-                          ? 'bg-gray-800 border-gray-700 text-white'
-                          : 'bg-white border-gray-300 text-gray-900'
+                        ? 'bg-gray-800 border-gray-700 text-white'
+                        : 'bg-white border-gray-300 text-gray-900'
                         } focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
                     />
                   </div>
@@ -190,11 +227,10 @@ const ClientOrders = () => {
                 {(fromDate || toDate) && (
                   <button
                     onClick={clearDateRange}
-                    className={`mt-2 px-3 py-1.5 text-sm rounded-lg flex items-center gap-1 ${
-                      isDarkMode
+                    className={`mt-2 px-3 py-1.5 text-sm rounded-lg flex items-center gap-1 ${isDarkMode
                         ? 'bg-gray-700 hover:bg-gray-600 text-white'
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                    } transition-colors`}
+                      } transition-colors`}
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -211,8 +247,8 @@ const ClientOrders = () => {
                   <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                     className={`w-full px-4 py-2.5 rounded-lg border flex justify-between items-center ${isDarkMode
-                        ? 'bg-gray-800 border-gray-700 text-white'
-                        : 'bg-white border-gray-300 text-gray-900'
+                      ? 'bg-gray-800 border-gray-700 text-white'
+                      : 'bg-white border-gray-300 text-gray-900'
                       } focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
                   >
                     <span className="truncate">
@@ -274,7 +310,7 @@ const ClientOrders = () => {
 
           {/* Table Section */}
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden relative z-10">
-            <div 
+            <div
               ref={tableRef}
               className="overflow-y-auto max-h-[600px] hide-scrollbar"
             >
@@ -325,13 +361,12 @@ const ClientOrders = () => {
                         {client.grandTotal} ₹
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-left">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          client.paymentStatus === 'pending' 
-                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' 
-                            : client.paymentStatus === 'cleared' 
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${client.paymentStatus === 'pending'
+                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+                            : client.paymentStatus === 'cleared'
                               ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
                               : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                        }`}>
+                          }`}>
                           {client.paymentStatus}
                         </span>
                       </td>
@@ -392,13 +427,11 @@ const ClientOrders = () => {
           <div className="flex items-center gap-4">
             <button
               onClick={handleBack}
-              className={`p-2 rounded-lg ${
-                isDarkMode 
-                  ? 'bg-gray-800 hover:bg-gray-700 text-white' 
+              className={`p-2 rounded-lg ${isDarkMode
+                  ? 'bg-gray-800 hover:bg-gray-700 text-white'
                   : 'bg-white hover:bg-gray-50 text-gray-900'
-              } shadow-sm border ${
-                isDarkMode ? 'border-gray-700' : 'border-gray-200'
-              } transition-all`}
+                } shadow-sm border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'
+                } transition-all`}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -408,13 +441,11 @@ const ClientOrders = () => {
           </div>
           <button
             onClick={() => setIsSummaryModalOpen(true)}
-            className={`p-2 rounded-lg ${
-              isDarkMode 
-                ? 'bg-gray-800 hover:bg-gray-700 text-white' 
+            className={`p-2 rounded-lg ${isDarkMode
+                ? 'bg-gray-800 hover:bg-gray-700 text-white'
                 : 'bg-white hover:bg-gray-50 text-gray-900'
-            } shadow-sm border ${
-              isDarkMode ? 'border-gray-700' : 'border-gray-200'
-            } transition-all`}
+              } shadow-sm border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'
+              } transition-all`}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -436,8 +467,8 @@ const ClientOrders = () => {
                     value={fromDate}
                     onChange={(e) => setFromDate(e.target.value)}
                     className={`w-full px-4 py-2.5 rounded-lg border ${isDarkMode
-                        ? 'bg-gray-800 border-gray-700 text-white'
-                        : 'bg-white border-gray-300 text-gray-900'
+                      ? 'bg-gray-800 border-gray-700 text-white'
+                      : 'bg-white border-gray-300 text-gray-900'
                       } focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
                   />
                 </div>
@@ -447,8 +478,8 @@ const ClientOrders = () => {
                     value={toDate}
                     onChange={(e) => setToDate(e.target.value)}
                     className={`w-full px-4 py-2.5 rounded-lg border ${isDarkMode
-                        ? 'bg-gray-800 border-gray-700 text-white'
-                        : 'bg-white border-gray-300 text-gray-900'
+                      ? 'bg-gray-800 border-gray-700 text-white'
+                      : 'bg-white border-gray-300 text-gray-900'
                       } focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
                   />
                 </div>
@@ -456,11 +487,10 @@ const ClientOrders = () => {
               {(fromDate || toDate) && (
                 <button
                   onClick={clearDateRange}
-                  className={`mt-2 px-3 py-1.5 text-sm rounded-lg flex items-center gap-1 ${
-                    isDarkMode
+                  className={`mt-2 px-3 py-1.5 text-sm rounded-lg flex items-center gap-1 ${isDarkMode
                       ? 'bg-gray-700 hover:bg-gray-600 text-white'
                       : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                  } transition-colors`}
+                    } transition-colors`}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -477,8 +507,8 @@ const ClientOrders = () => {
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className={`w-full px-4 py-2.5 rounded-lg border flex justify-between items-center ${isDarkMode
-                      ? 'bg-gray-800 border-gray-700 text-white'
-                      : 'bg-white border-gray-300 text-gray-900'
+                    ? 'bg-gray-800 border-gray-700 text-white'
+                    : 'bg-white border-gray-300 text-gray-900'
                     } focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
                 >
                   <span className="truncate">
@@ -519,19 +549,19 @@ const ClientOrders = () => {
         <div className="lg:col-span-1 mb-5">
           <input
             type="text"
-            placeholder="Search by name, ID, or GST..."
+            placeholder="Search by name, ID, GST, or date..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className={`w-full px-4 py-2.5 rounded-lg border ${isDarkMode
-                ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400'
-                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+              ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400'
+              : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
               } focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
           />
         </div>
 
         {/* Table Section */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden relative z-10">
-          <div 
+          <div
             ref={tableRef}
             className="overflow-y-auto max-h-[600px] hide-scrollbar"
           >
@@ -582,13 +612,12 @@ const ClientOrders = () => {
                       {client.grandTotal} ₹
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-left">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        client.paymentStatus === 'pending' 
-                          ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' 
-                          : client.paymentStatus === 'cleared' 
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${client.paymentStatus === 'pending'
+                          ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+                          : client.paymentStatus === 'cleared'
                             ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
                             : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                      }`}>
+                        }`}>
                         {client.paymentStatus}
                       </span>
                     </td>
@@ -607,9 +636,8 @@ const ClientOrders = () => {
         {/* Summary Modal */}
         {isSummaryModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg max-w-2xl w-full mx-4 p-6 relative ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>
+            <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg max-w-2xl w-full mx-4 p-6 relative ${isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}>
               {/* Close Button */}
               <button
                 onClick={() => setIsSummaryModalOpen(false)}
@@ -635,10 +663,10 @@ const ClientOrders = () => {
                     ₹{totalFilteredAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                   </div>
                 </div>
-                <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-4">
-                  <div className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-1">Average Order Value</div>
-                  <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">
-                    ₹{(totalFilteredAmount / (filteredClients.length || 1)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                <div className="bg-yellow-50 dark:bg-yellow-900/30 rounded-lg p-4">
+                  <div className="text-sm font-medium text-yellow-600 dark:text-yellow-400 mb-1">Total Pending Amount</div>
+                  <div className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">
+                    ₹{calculateTotalPendingAmount().toFixed(2)}
                   </div>
                 </div>
               </div>

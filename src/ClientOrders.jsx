@@ -568,22 +568,22 @@ const ClientOrders = () => {
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className={`${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'} sticky top-0 z-10`}>
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Order ID
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Client Name
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     GST Number
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Order Date
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Total Amount
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Payment Status
                   </th>
                 </tr>
@@ -591,7 +591,7 @@ const ClientOrders = () => {
               <tbody className={`divide-y divide-gray-200 dark:divide-gray-700 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
                 {filteredClients.slice(0, displayCount).map((client) => (
                   <tr key={client.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-left">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                       <button
                         onClick={() => handleOrderClick(client.id)}
                         className={`text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors`}
@@ -599,19 +599,19 @@ const ClientOrders = () => {
                         {client.id}
                       </button>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-left">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                       {client.clientName}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-left">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                       {client.clientGst}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-left">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                       {new Date(client.timestamp).toLocaleDateString('en-IN')}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600  text-left">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600  text-center">
                       {client.grandTotal} ₹
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-left">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${client.paymentStatus === 'pending'
                           ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
                           : client.paymentStatus === 'cleared'

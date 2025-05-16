@@ -12,6 +12,7 @@ const ClientOrders = () => {
   const [toDate, setToDate] = useState('');
   const [paymentStatusFilter, setPaymentStatusFilter] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
   const dropdownRef = useRef(null);
 
   const paymentStatuses = [
@@ -287,12 +288,28 @@ const ClientOrders = () => {
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header Section */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Client Orders</h1>
-          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            Manage and track all your client orders in one place
-          </p>
+        {/* Header Section with Info Button */}
+        <div className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Client Orders</h1>
+            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              Manage and track all your client orders in one place
+            </p>
+          </div>
+          <button
+            onClick={() => setIsSummaryModalOpen(true)}
+            className={`p-2 rounded-lg ${
+              isDarkMode 
+                ? 'bg-gray-800 hover:bg-gray-700 text-white' 
+                : 'bg-white hover:bg-gray-50 text-gray-900'
+            } shadow-sm border ${
+              isDarkMode ? 'border-gray-700' : 'border-gray-200'
+            } transition-all`}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </button>
         </div>
 
         {/* Filters Section */}
@@ -389,29 +406,6 @@ const ClientOrders = () => {
           </div>
         </div>
 
-        {/* Summary Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4">
-              <div className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">Total Orders</div>
-              <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">{filteredClients.length}</div>
-            </div>
-            <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-4">
-              <div className="text-sm font-medium text-green-600 dark:text-green-400 mb-1">Total Amount</div>
-              <div className="text-2xl font-bold text-green-700 dark:text-green-300">
-                ₹{totalFilteredAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-              </div>
-            </div>
-            <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-4">
-              <div className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-1">Average Order Value</div>
-              <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">
-                ₹{(totalFilteredAmount / (filteredClients.length || 1)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-              </div>
-            </div>
-          </div>
-        </div>
-
-
         <div className="lg:col-span-1 mb-5">
           <input
             type="text"
@@ -483,6 +477,69 @@ const ClientOrders = () => {
             </table>
           </div>
         </div>
+
+        {/* Summary Modal */}
+        {isSummaryModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg max-w-2xl w-full mx-4 p-6 relative ${
+              isDarkMode ? 'text-white' : 'text-gray-900'
+            }`}>
+              {/* Close Button */}
+              <button
+                onClick={() => setIsSummaryModalOpen(false)}
+                className="absolute top-4 right-4 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+
+              {/* Modal Title */}
+              <h2 className="text-2xl font-bold mb-6">Order Summary</h2>
+
+              {/* Summary Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4">
+                  <div className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">Total Orders</div>
+                  <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">{filteredClients.length}</div>
+                </div>
+                <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-4">
+                  <div className="text-sm font-medium text-green-600 dark:text-green-400 mb-1">Total Amount</div>
+                  <div className="text-2xl font-bold text-green-700 dark:text-green-300">
+                    ₹{totalFilteredAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                  </div>
+                </div>
+                <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-4">
+                  <div className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-1">Average Order Value</div>
+                  <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">
+                    ₹{(totalFilteredAmount / (filteredClients.length || 1)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Statistics */}
+              <div className="space-y-4">
+                <div className="border-t dark:border-gray-700 pt-4">
+                  <h3 className="text-lg font-semibold mb-3">Payment Status Distribution</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-yellow-50 dark:bg-yellow-900/30 rounded-lg p-3">
+                      <div className="text-sm font-medium text-yellow-600 dark:text-yellow-400">Pending Orders</div>
+                      <div className="text-xl font-bold text-yellow-700 dark:text-yellow-300">
+                        {filteredClients.filter(client => client.paymentStatus === 'pending').length}
+                      </div>
+                    </div>
+                    <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-3">
+                      <div className="text-sm font-medium text-green-600 dark:text-green-400">Cleared Orders</div>
+                      <div className="text-xl font-bold text-green-700 dark:text-green-300">
+                        {filteredClients.filter(client => client.paymentStatus === 'cleared').length}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Loading State */}
         {loading && (

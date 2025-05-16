@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { fetchAllClients } from './firebase/clientsFirebase';
 import { useTheme } from './context/ThemeContext';
 
@@ -7,6 +7,29 @@ const ClientOrders = () => {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  const paymentStatuses = [
+    { value: '', label: 'All Payment Status' },
+    { value: 'pending', label: 'Pending', color: 'text-yellow-600' },
+    { value: 'cleared', label: 'Cleared', color: 'text-green-600' },
+  ];
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     fetchClients();
@@ -15,6 +38,7 @@ const ClientOrders = () => {
   const fetchClients = async () => {
     try {
       const data = await fetchAllClients();
+      console.log("sasasasa", data)
       setClients(data);
     } catch (err) {
       setError('Error loading client orders. Please try again.');
@@ -24,11 +48,229 @@ const ClientOrders = () => {
     }
   };
 
+  const filteredClients = clients.filter(client => {
+    const matchesSearch =
+      client.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      client.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      client.clientGst.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (client.orderDate && client.orderDate.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (client.totalAmount && client.totalAmount.toString().includes(searchQuery));
+
+    const clientDate = new Date(client.timestamp);
+    const fromDateObj = fromDate ? new Date(fromDate) : null;
+    const toDateObj = toDate ? new Date(toDate) : null;
+
+    const matchesDateRange =
+      (!fromDateObj || clientDate >= fromDateObj) &&
+      (!toDateObj || clientDate <= toDateObj);
+
+    const matchesPaymentStatus = !paymentStatusFilter ||
+      client.paymentStatus?.toLowerCase() === paymentStatusFilter.toLowerCase();
+
+    return matchesSearch && matchesDateRange && matchesPaymentStatus;
+  });
+
+  // Calculate total amount of filtered products
+  const totalFilteredAmount = filteredClients.reduce((sum, client) => {
+    return sum + (parseFloat(client.grandTotal) || 0);
+  }, 0);
+
   if (loading) {
     return (
-      <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'} p-4`}>
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Header Section */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2">Client Orders</h1>
+            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              Manage and track all your client orders in one place
+            </p>
+          </div>
+
+          {/* Filters Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 mb-6">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+
+              {/* Date Range */}
+              <div className="lg:col-span-2">
+                <label className="block text-sm font-medium mb-2">Date Range</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <input
+                      type="date"
+                      value={fromDate}
+                      onChange={(e) => setFromDate(e.target.value)}
+                      className={`w-full px-4 py-2.5 rounded-lg border ${isDarkMode
+                          ? 'bg-gray-800 border-gray-700 text-white'
+                          : 'bg-white border-gray-300 text-gray-900'
+                        } focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="date"
+                      value={toDate}
+                      onChange={(e) => setToDate(e.target.value)}
+                      className={`w-full px-4 py-2.5 rounded-lg border ${isDarkMode
+                          ? 'bg-gray-800 border-gray-700 text-white'
+                          : 'bg-white border-gray-300 text-gray-900'
+                        } focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Status Dropdown */}
+              <div className="lg:col-span-1">
+                <label className="block text-sm font-medium mb-2">Payment Status</label>
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className={`w-full px-4 py-2.5 rounded-lg border flex justify-between items-center ${isDarkMode
+                        ? 'bg-gray-800 border-gray-700 text-white'
+                        : 'bg-white border-gray-300 text-gray-900'
+                      } focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
+                  >
+                    <span className="truncate">
+                      {paymentStatuses.find(status => status.value === paymentStatusFilter)?.label || 'All Payment Status'}
+                    </span>
+                    <svg
+                      className={`w-5 h-5 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {isDropdownOpen && (
+                    <div className={`absolute z-10 w-full mt-1 rounded-lg shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'
+                      } border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                      {paymentStatuses.map((status) => (
+                        <button
+                          key={status.value}
+                          onClick={() => {
+                            setPaymentStatusFilter(status.value);
+                            setIsDropdownOpen(false);
+                          }}
+                          className={`w-full px-4 py-2.5 text-left hover:bg-gray-100 dark:hover:bg-gray-700 ${status.value === paymentStatusFilter ? 'bg-blue-50 dark:bg-blue-900' : ''
+                            } ${status.color || ''} transition-colors`}
+                        >
+                          {status.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Summary Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4">
+                <div className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">Total Orders</div>
+                <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">{filteredClients.length}</div>
+              </div>
+              <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-4">
+                <div className="text-sm font-medium text-green-600 dark:text-green-400 mb-1">Total Amount</div>
+                <div className="text-2xl font-bold text-green-700 dark:text-green-300">
+                  ₹{totalFilteredAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                </div>
+              </div>
+              <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-4">
+                <div className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-1">Average Order Value</div>
+                <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">
+                  ₹{(totalFilteredAmount / (filteredClients.length || 1)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Table Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className={`${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Order ID
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Client Name
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      GST Number
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Order Date
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Total Amount
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Payment Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className={`divide-y divide-gray-200 dark:divide-gray-700 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
+                  {filteredClients.map((client) => (
+                    <tr key={client.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {client.id}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {client.clientName}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {client.clientGst}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {new Date(client.timestamp).toLocaleDateString('en-IN')}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
+                        ₹{client.grandTotal}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${client.paymentStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            client.paymentStatus === 'cleared' ? 'bg-green-100 text-green-800' :
+                              'bg-gray-100 text-gray-800'
+                          }`}>
+                          {client.paymentStatus}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Loading State */}
+          {loading && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 flex flex-col items-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+                <p className={`text-sm ${isDarkMode ? 'text-white' : 'text-gray-600'}`}>Loading orders...</p>
+              </div>
+            </div>
+          )}
+
+          {/* Error State */}
+          {error && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+                <div className="text-red-500 text-center">
+                  <svg className="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p className="text-lg font-medium mb-2">Error</p>
+                  <p className="text-sm">{error}</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -43,28 +285,175 @@ const ClientOrders = () => {
   }
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'} p-4`}>
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Client Orders</h1>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+    <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header Section */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Client Orders</h1>
+          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            Manage and track all your client orders in one place
+          </p>
+        </div>
+
+        {/* Filters Section */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+            {/* Search Input */}
+            {/* <div className="lg:col-span-1">
+              <label className="block text-sm font-medium mb-2">Search</label>
+              <input
+                type="text"
+                placeholder="Search by name, ID, or GST..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={`w-full px-4 py-2.5 rounded-lg border ${
+                  isDarkMode
+                    ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400'
+                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                } focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
+              />
+            </div> */}
+
+            {/* Date Range */}
+            <div className="lg:col-span-2">
+              <label className="block text-sm font-medium mb-2">Date Range</label>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <input
+                    type="date"
+                    value={fromDate}
+                    onChange={(e) => setFromDate(e.target.value)}
+                    className={`w-full px-4 py-2.5 rounded-lg border ${isDarkMode
+                        ? 'bg-gray-800 border-gray-700 text-white'
+                        : 'bg-white border-gray-300 text-gray-900'
+                      } focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
+                  />
+                </div>
+                <div>
+                  <input
+                    type="date"
+                    value={toDate}
+                    onChange={(e) => setToDate(e.target.value)}
+                    className={`w-full px-4 py-2.5 rounded-lg border ${isDarkMode
+                        ? 'bg-gray-800 border-gray-700 text-white'
+                        : 'bg-white border-gray-300 text-gray-900'
+                      } focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Status Dropdown */}
+            <div className="lg:col-span-1">
+              <label className="block text-sm font-medium mb-2">Payment Status</label>
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className={`w-full px-4 py-2.5 rounded-lg border flex justify-between items-center ${isDarkMode
+                      ? 'bg-gray-800 border-gray-700 text-white'
+                      : 'bg-white border-gray-300 text-gray-900'
+                    } focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
+                >
+                  <span className="truncate">
+                    {paymentStatuses.find(status => status.value === paymentStatusFilter)?.label || 'All Payment Status'}
+                  </span>
+                  <svg
+                    className={`w-5 h-5 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {isDropdownOpen && (
+                  <div className={`absolute z-10 w-full mt-1 rounded-lg shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'
+                    } border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                    {paymentStatuses.map((status) => (
+                      <button
+                        key={status.value}
+                        onClick={() => {
+                          setPaymentStatusFilter(status.value);
+                          setIsDropdownOpen(false);
+                        }}
+                        className={`w-full px-4 py-2.5 text-left hover:bg-gray-100 dark:hover:bg-gray-700 ${status.value === paymentStatusFilter ? 'bg-blue-50 dark:bg-blue-900' : ''
+                          } ${status.color || ''} transition-colors`}
+                      >
+                        {status.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Summary Section */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4">
+              <div className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">Total Orders</div>
+              <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">{filteredClients.length}</div>
+            </div>
+            <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-4">
+              <div className="text-sm font-medium text-green-600 dark:text-green-400 mb-1">Total Amount</div>
+              <div className="text-2xl font-bold text-green-700 dark:text-green-300">
+                ₹{totalFilteredAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+              </div>
+            </div>
+            <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-4">
+              <div className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-1">Average Order Value</div>
+              <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">
+                ₹{(totalFilteredAmount / (filteredClients.length || 1)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <div className="lg:col-span-1 mb-5">
+          <input
+            type="text"
+            placeholder="Search by name, ID, or GST..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className={`w-full px-4 py-2.5 rounded-lg border ${isDarkMode
+                ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400'
+                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+              } focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
+          />
+        </div>
+
+        {/* Table Section */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className={`${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Order ID
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Client Name
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     GST Number
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Order Date
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Total Amount
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Payment Status
                   </th>
                 </tr>
               </thead>
               <tbody className={`divide-y divide-gray-200 dark:divide-gray-700 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
-                {clients.map((client) => (
-                  <tr key={client.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                {filteredClients.map((client) => (
+                  <tr key={client.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {client.id}
                     </td>
@@ -74,12 +463,51 @@ const ClientOrders = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {client.clientGst}
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      {new Date(client.timestamp).toLocaleDateString('en-IN')}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
+                      ₹{client.grandTotal}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${client.paymentStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          client.paymentStatus === 'cleared' ? 'bg-green-100 text-green-800' :
+                            'bg-gray-100 text-gray-800'
+                        }`}>
+                        {client.paymentStatus}
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </div>
+
+        {/* Loading State */}
+        {loading && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 flex flex-col items-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+              <p className={`text-sm ${isDarkMode ? 'text-white' : 'text-gray-600'}`}>Loading orders...</p>
+            </div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+              <div className="text-red-500 text-center">
+                <svg className="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-lg font-medium mb-2">Error</p>
+                <p className="text-sm">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

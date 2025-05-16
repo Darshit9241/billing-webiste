@@ -711,6 +711,16 @@ const ClientList = () => {
                 </svg>
                 New Order
               </Link>
+              <button
+                onClick={() => navigate(`/clientorders`)}
+                className="flex items-center justify-center px-4 py-2.5 bg-blue-500/90 hover:blue-red-600 text-white rounded-xl shadow-lg hover:shadow-red-500/30 transition-all duration-200 font-medium"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+                </svg>
+
+                Order List
+              </button>
             </div>
           </div>
 
@@ -1569,8 +1579,8 @@ const ClientList = () => {
                         <div className="max-h-36 overflow-y-auto custom-scrollbar">
                           <div className="divide-y divide-gray-200 dark:divide-white/5">
                             {client.products.map((product, index) => (
-                              <div 
-                                key={index} 
+                              <div
+                                key={index}
                                 className={`grid grid-cols-12 gap-2 px-3 py-2 ${isDarkMode ? 'hover:bg-white/5' : 'hover:bg-gray-50'} transition-colors`}
                               >
                                 <div className="col-span-6 text-left">

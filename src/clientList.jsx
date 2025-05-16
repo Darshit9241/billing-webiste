@@ -1754,8 +1754,19 @@ const ClientList = () => {
                   <input
                     type="number"
                     value={newPayment}
-                    onChange={(e) => setNewPayment(e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      const remainingBalance = (editingClient?.grandTotal || 0) - (parseFloat(editFormData.amountPaid) || 0);
+                      
+                      if (parseFloat(value) > remainingBalance) {
+                        setError(`Payment amount cannot exceed remaining balance of ₹${remainingBalance.toFixed(2)}`);
+                        setTimeout(() => setError(''), 3000);
+                        return;
+                      }
+                      setNewPayment(value);
+                    }}
                     min="0.01"
+                    max={((editingClient?.grandTotal || 0) - (parseFloat(editFormData.amountPaid) || 0)).toFixed(2)}
                     step="0.01"
                     placeholder="0.00"
                     className="w-full pl-8 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"

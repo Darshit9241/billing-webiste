@@ -292,9 +292,6 @@ const ClientOrders = () => {
         <div className="mb-8 flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold mb-2">Client Orders</h1>
-            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Manage and track all your client orders in one place
-            </p>
           </div>
           <button
             onClick={() => setIsSummaryModalOpen(true)}

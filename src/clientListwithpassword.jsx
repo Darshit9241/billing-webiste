@@ -53,6 +53,10 @@ const ClientList = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [isDateFilterActive, setIsDateFilterActive] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [password, setPassword] = useState('');
+  const [isStatsUnlocked, setIsStatsUnlocked] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
 
   const [showModalDelete, setShowDeleteModal] = useState(false);
   const [selectedDeleteClientId, setSelectedDeleteClientId] = useState(null);
@@ -565,6 +569,33 @@ const ClientList = () => {
     }
   };
 
+  const handleStatsClick = () => {
+    if (!isStatsUnlocked) {
+      setShowPasswordModal(true);
+    } else {
+      setIsStatsOpen(!isStatsOpen);
+    }
+  };
+
+  const handlePasswordChange = (e) => {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+    
+    // Automatically submit when correct password is entered
+    if (newPassword === '1278') {
+      setIsStatsUnlocked(true);
+      setIsStatsOpen(true);
+      setShowPasswordModal(false);
+      setPassword('');
+      setPasswordError('');
+    } else if (newPassword.length === 4) {
+      // Show error only when 4 digits are entered and they're wrong
+      setPasswordError('Incorrect password');
+    } else {
+      setPasswordError('');
+    }
+  };
+
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-gray-100 to-white'} py-8 px-4 sm:px-6 lg:px-8 transition-colors duration-200`}>
       {/* Inject custom styles */}
@@ -718,7 +749,7 @@ const ClientList = () => {
             <div className="mb-6 animate-fadeIn">
               {/* Stats Dropdown Button */}
               <button
-                onClick={() => setIsStatsOpen(!isStatsOpen)}
+                onClick={handleStatsClick}
                 className={`w-full flex items-center justify-between p-4 rounded-t-lg ${isStatsOpen ? `${isDarkMode ? 'bg-emerald-500/80' : 'bg-emerald-500'} text-white` : `${isDarkMode ? 'bg-white/5' : 'bg-white'} ${isDarkMode ? 'text-white' : 'text-gray-900'}`} ${!isStatsOpen ? 'rounded-b-lg' : ''} border ${isStatsOpen ? (isDarkMode ? 'border-emerald-600' : 'border-emerald-600') : (isDarkMode ? 'border-white/10' : 'border-gray-200')} mb-3 transition-all duration-200 shadow-sm`}
               >
                 <div className="flex items-center">
@@ -738,8 +769,51 @@ const ClientList = () => {
                 </svg>
               </button>
 
+              {/* Password Modal */}
+              {showPasswordModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+                  <div className="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 border border-slate-700">
+                    <div className="flex items-center mb-5">
+                      <svg className="w-6 h-6 text-emerald-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                      <h3 className="text-lg font-bold text-white">Enter Password</h3>
+                    </div>
+
+                    <div className="mb-5">
+                      <input
+                        type="password"
+                        value={password}
+                        onChange={handlePasswordChange}
+                        placeholder="Enter password"
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
+                        autoFocus
+                        maxLength={4}
+                      />
+                      {passwordError && (
+                        <p className="mt-2 text-sm text-red-400">{passwordError}</p>
+                      )}
+                    </div>
+
+                    <div className="flex justify-end gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowPasswordModal(false);
+                          setPassword('');
+                          setPasswordError('');
+                        }}
+                        className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Stats Content */}
-              {isStatsOpen && (
+              {isStatsOpen && isStatsUnlocked && (
                 <div className={`backdrop-blur-md ${isDarkMode ? 'bg-black/40' : 'bg-white/95'} rounded-b-xl shadow-lg p-4 mb-4 border ${isDarkMode ? 'border-emerald-600/40' : 'border-emerald-100'} border-t-0 animate-fadeIn`}>
                   {/* Date Range Filter */}
                   <div className={`mb-4 p-3 ${isDarkMode ? 'bg-white/5' : 'bg-emerald-50'} rounded-lg border ${isDarkMode ? 'border-white/10' : 'border-emerald-100'}`}>

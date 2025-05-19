@@ -421,10 +421,32 @@ const ClientList = () => {
       return total + (productPrice * productCount);
     }, 0).toFixed(2));
 
+    // Handle amount paid and payment status consistency
+    let amountPaid = parseFloat(editFormData.amountPaid) || 0;
+    let paymentStatus = editFormData.paymentStatus;
+    
+    if (grandTotal < amountPaid) {
+      // If there are no products or grandTotal is 0, reset amount paid
+      if (updatedProducts.length === 0 || grandTotal === 0) {
+        amountPaid = 0;
+        paymentStatus = 'pending';
+      } else {
+        // Otherwise, cap the amount paid at the grand total
+        amountPaid = grandTotal;
+        paymentStatus = 'cleared';
+      }
+    } else if (grandTotal === amountPaid && grandTotal > 0) {
+      paymentStatus = 'cleared';
+    } else {
+      paymentStatus = 'pending';
+    }
+
     setEditFormData({
       ...editFormData,
       products: updatedProducts,
-      grandTotal: grandTotal
+      grandTotal: grandTotal,
+      amountPaid: amountPaid,
+      paymentStatus: paymentStatus
     });
 
     // Reset product form
@@ -432,7 +454,6 @@ const ClientList = () => {
   };
 
   const deleteProduct = (index) => {
-    // Remove the window.confirm dialog and update with modal approach
     const updatedProducts = [...editFormData.products];
     updatedProducts.splice(index, 1);
 
@@ -443,10 +464,32 @@ const ClientList = () => {
       return total + (productPrice * productCount);
     }, 0).toFixed(2));
 
+    // If the grand total is now less than the amount paid, adjust the amount paid
+    let amountPaid = parseFloat(editFormData.amountPaid) || 0;
+    let paymentStatus = editFormData.paymentStatus;
+    
+    if (grandTotal < amountPaid) {
+      // If there are no products or grandTotal is 0, reset amount paid
+      if (updatedProducts.length === 0 || grandTotal === 0) {
+        amountPaid = 0;
+        paymentStatus = 'pending';
+      } else {
+        // Otherwise, cap the amount paid at the grand total
+        amountPaid = grandTotal;
+        paymentStatus = 'cleared';
+      }
+    } else if (grandTotal === amountPaid && grandTotal > 0) {
+      paymentStatus = 'cleared';
+    } else {
+      paymentStatus = 'pending';
+    }
+
     setEditFormData({
       ...editFormData,
       products: updatedProducts,
-      grandTotal: grandTotal
+      grandTotal: grandTotal,
+      amountPaid: amountPaid,
+      paymentStatus: paymentStatus
     });
 
     // Close the modal after deletion

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createClient, fetchAllClients } from './firebase/clientsFirebase';
+import { createClient, fetchAllClients, updateClient } from './firebase/clientsFirebase';
+import { ref, get } from 'firebase/database';
+import { database } from './firebase/config';
 
 const AddProducts = () => {
   const navigate = useNavigate();
@@ -25,6 +27,11 @@ const AddProducts = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showGstSuggestions, setShowGstSuggestions] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  
+  // New state for order ID functionality
+  const [orderId, setOrderId] = useState('');
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [currentOrderId, setCurrentOrderId] = useState(null);
 
   // Create refs for input fields
   const clientNameRef = useRef(null);
@@ -33,6 +40,7 @@ const AddProducts = () => {
   const clientGstRef = useRef(null);
   const amountPaidRef = useRef(null);
   const productRefs = useRef({});
+  const orderIdRef = useRef(null);
 
   // Initialize product refs
   useEffect(() => {
@@ -116,6 +124,70 @@ const AddProducts = () => {
     setShowGstSuggestions(matchingClients.length > 0);
   };
 
+  // Handle order ID input and search for existing order
+  const handleOrderIdChange = (e) => {
+    const value = e.target.value;
+    setOrderId(value);
+  };
+
+  // Fetch order details by ID
+  const fetchOrderById = async () => {
+    if (!orderId.trim()) {
+      setErrorMessage('Please enter an order ID');
+      setShowErrorModal(true);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const orderRef = ref(database, `clients/${orderId}`);
+      const snapshot = await get(orderRef);
+      
+      if (!snapshot.exists()) {
+        setErrorMessage('Order not found. Please check the ID and try again.');
+        setShowErrorModal(true);
+        setIsLoading(false);
+        return;
+      }
+
+      const orderData = snapshot.val();
+      
+      // Populate form with order data but keep it hidden from UI
+      setClientName(orderData.clientName || '');
+      setClientAddress(orderData.clientAddress || '');
+      setClientPhone(orderData.clientPhone || '');
+      setClientGst(orderData.clientGst || '');
+      setPaymentStatus(orderData.paymentStatus || 'pending');
+      setAmountPaid(orderData.amountPaid || '');
+      setBillMode(orderData.billMode || 'full');
+      
+      // Initialize with an empty product template so the user can add new products
+      // We don't load the existing products as we're adding to the order
+      setProducts([{ 
+        id: Date.now(), // Use timestamp as ID to avoid conflicts with existing products
+        name: '', 
+        count: '', 
+        price: '', 
+        total: 0 
+      }]);
+      
+      // Set edit mode to update existing order
+      setIsEditMode(true);
+      setCurrentOrderId(orderId);
+      
+      // Set success message
+      setSaveStatus('Order found! You can now add products to this order.');
+      setTimeout(() => setSaveStatus(''), 3000);
+      
+    } catch (error) {
+      console.error("Error fetching order:", error);
+      setErrorMessage(`Error loading order: ${error.message}`);
+      setShowErrorModal(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Select a client from suggestions
   const selectClient = (client) => {
     setClientName(client.clientName);
@@ -190,6 +262,12 @@ const AddProducts = () => {
         return;
       }
 
+      // Order ID field handling
+      if (field === 'orderId' && e.key === 'Enter') {
+        fetchOrderById();
+        return;
+      }
+
       // Product fields handling
       if (id) {
         const currentIndex = products.findIndex(p => p.id === id);
@@ -237,15 +315,49 @@ const AddProducts = () => {
   }, [products.length, billMode]);
 
   const handleChange = (id, field, value) => {
+    // Validation for count and price fields
+    if (field === 'count') {
+      // Remove any non-numeric characters except decimal point
+      value = value.replace(/[^0-9]/g, '');
+      
+      // Convert to number if possible
+      if (value !== '') {
+        const numValue = parseInt(value, 10);
+        // Ensure value is not negative
+        value = Math.max(0, numValue).toString();
+      }
+    } else if (field === 'price') {
+      // Remove any non-numeric characters except decimal point
+      value = value.replace(/[^0-9.]/g, '');
+      
+      // Ensure only one decimal point
+      const parts = value.split('.');
+      if (parts.length > 2) {
+        value = parts[0] + '.' + parts.slice(1).join('');
+      }
+      
+      // Convert to number if possible
+      if (value !== '') {
+        const numValue = parseFloat(value);
+        // Ensure value is not negative
+        if (!isNaN(numValue)) {
+          value = Math.max(0, numValue).toString();
+        }
+      }
+    }
+
     const updatedProducts = products.map(product => {
       if (product.id === id) {
         const updatedProduct = { ...product, [field]: value };
 
         // Recalculate total when count or price changes
         if (field === 'count' || field === 'price') {
+          // Convert empty strings to 0
           const count = updatedProduct.count === '' ? 0 : parseFloat(updatedProduct.count);
           const price = updatedProduct.price === '' ? 0 : parseFloat(updatedProduct.price);
-          updatedProduct.total = count * price;
+          
+          // Calculate total with two decimal places
+          updatedProduct.total = parseFloat((count * price).toFixed(2));
         }
 
         // If this is a new product being edited for the first time, add a timestamp
@@ -280,34 +392,9 @@ const AddProducts = () => {
     }
   };
 
-  const saveOrder = async () => {
-    // Validate client details
-    // if (!clientName.trim()) {
-    //   setErrorMessage('Please enter client name');
-    //   setShowErrorModal(true);
-    //   return;
-    // }
-
-    // if (!clientAddress.trim()) {
-    //   setErrorMessage('Please enter client address');
-    //   setShowErrorModal(true);
-    //   return;
-    // }
-
-    // if (!clientPhone.trim()) {
-    //   setErrorMessage('Please enter client phone number');
-    //   setShowErrorModal(true);
-    //   return;
-    // }
-
-    // if (!clientGst.trim()) {
-    //   setErrorMessage('Please enter client GST number');
-    //   setShowErrorModal(true);
-    //   return;
-    // }
-
-    // Validate product details
-    const hasEmptyProducts = products.some(product => {
+  const validateProducts = () => {
+    // Check for empty required fields
+    const invalidProducts = products.filter(product => {
       if (billMode === 'full') {
         return !product.name || !product.count || !product.price;
       } else {
@@ -315,49 +402,205 @@ const AddProducts = () => {
       }
     });
 
-    if (hasEmptyProducts) {
-      setErrorMessage('Please fill in all product details before saving');
+    if (invalidProducts.length > 0) {
+      let errorMsg = 'Please fill in all required fields:';
+      
+      invalidProducts.forEach((product, index) => {
+        const missingFields = [];
+        
+        if (billMode === 'full' && !product.name) missingFields.push('Product Name');
+        if (!product.count) missingFields.push('Quantity');
+        if (!product.price) missingFields.push('Price');
+        
+        errorMsg += `\nProduct ${index + 1}: ${missingFields.join(', ')}`;
+      });
+      
+      setErrorMessage(errorMsg);
       setShowErrorModal(true);
+      
+      // Focus on the first invalid field
+      const firstInvalidProduct = invalidProducts[0];
+      setTimeout(() => {
+        // Try to focus on the first missing field
+        if (billMode === 'full' && !firstInvalidProduct.name) {
+          productRefs.current[`${firstInvalidProduct.id}_name`]?.focus();
+        } else if (!firstInvalidProduct.count) {
+          productRefs.current[`${firstInvalidProduct.id}_count`]?.focus();
+        } else if (!firstInvalidProduct.price) {
+          productRefs.current[`${firstInvalidProduct.id}_price`]?.focus();
+        }
+        
+        // Scroll the product into view
+        const element = productRefs.current[`${firstInvalidProduct.id}_${billMode === 'full' ? 'name' : 'count'}`];
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 500); // Delay to allow the error modal to be shown first
+      
+      return false;
+    }
+
+    // Check for invalid numeric values (zero quantity)
+    const zeroQuantityProducts = products.filter(product => 
+      parseFloat(product.count) === 0 || parseFloat(product.price) === 0
+    );
+
+    if (zeroQuantityProducts.length > 0) {
+      setErrorMessage('Quantity and price must be greater than zero');
+      setShowErrorModal(true);
+      
+      // Focus on the first zero-value field
+      const firstZeroProduct = zeroQuantityProducts[0];
+      setTimeout(() => {
+        if (parseFloat(firstZeroProduct.count) === 0) {
+          productRefs.current[`${firstZeroProduct.id}_count`]?.focus();
+        } else if (parseFloat(firstZeroProduct.price) === 0) {
+          productRefs.current[`${firstZeroProduct.id}_price`]?.focus();
+        }
+        
+        // Scroll the product into view
+        const element = productRefs.current[`${firstZeroProduct.id}_${parseFloat(firstZeroProduct.count) === 0 ? 'count' : 'price'}`];
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 500);
+      
+      return false;
+    }
+
+    return true;
+  };
+
+  const saveOrder = async () => {
+    // Validate all product fields first
+    if (!validateProducts()) {
       return;
     }
 
-    // Create payment history if there's an amount paid
-    const initialPaymentAmount = billMode === 'half' ? 0 : (amountPaid === '' ? 0 : parseFloat(amountPaid));
-    let paymentHistory = [];
-    
-    if (initialPaymentAmount > 0) {
-      paymentHistory.push({
-        amount: initialPaymentAmount,
-        date: Date.now()
-      });
+    // For existing order mode, make sure we have an order ID
+    if (billMode === 'existing' && !currentOrderId) {
+      setErrorMessage('Please search for and select an existing order first');
+      setShowErrorModal(true);
+      return;
     }
-    
-    // Create order data object
-    const orderData = {
-      clientName,
-      clientAddress,
-      clientPhone,
-      clientGst,
-      products,
-      grandTotal,
-      // Always include payment information regardless of bill mode
-      paymentStatus: billMode === 'half' ? 'pending' : paymentStatus,
-      amountPaid: initialPaymentAmount,
-      timestamp: new Date().getTime(),
-      billMode,
-      paymentHistory
-    };
 
     // Show loading status
     setSaveStatus('Saving order...');
     setIsLoading(true);
 
     try {
-      // Save to Firebase instead of mockAPI
-      await createClient(orderData);
+      if (isEditMode || (billMode === 'existing' && currentOrderId)) {
+        // Get the order ID to use - either from edit mode or from the searched order
+        const orderIdToUse = currentOrderId || orderId;
+        
+        // For editing existing order, we need to fetch current data first
+        const orderRef = ref(database, `clients/${orderIdToUse}`);
+        const snapshot = await get(orderRef);
+        
+        if (!snapshot.exists()) {
+          throw new Error('Order not found');
+        }
 
-      // Show success message and popup
-      setSaveStatus('Order saved successfully!');
+        const existingOrder = snapshot.val();
+        
+        // Prepare the updated order with existing payment history
+        const existingPaymentHistory = existingOrder.paymentHistory || [];
+        
+        // Only add a new payment entry if amount paid has changed
+        let updatedPaymentHistory = [...existingPaymentHistory];
+        
+        const existingAmountPaid = parseFloat(existingOrder.amountPaid || 0);
+        const newAmountPaid = parseFloat(amountPaid || 0);
+        
+        if (newAmountPaid > existingAmountPaid) {
+          // Add a new payment entry for the difference
+          updatedPaymentHistory.push({
+            amount: newAmountPaid - existingAmountPaid,
+            date: Date.now()
+          });
+        }
+        
+        // Merge existing products with new ones, avoiding duplicates by ID
+        const existingProducts = existingOrder.products || [];
+        const productIds = new Set(existingProducts.map(p => p.id));
+        
+        // Only add products that aren't empty
+        const validNewProducts = products.filter(product => {
+          if (billMode === 'full') {
+            return product.name && product.count && product.price;
+          } else {
+            return product.count && product.price;
+          }
+        });
+        
+        // Combine products (keeping existing products and adding new ones)
+        const combinedProducts = [
+          ...existingProducts,
+          ...validNewProducts.filter(p => !productIds.has(p.id))
+        ];
+        
+        // Calculate new grand total based on all products
+        const updatedGrandTotal = combinedProducts.reduce(
+          (sum, product) => sum + (typeof product.total === 'number' ? product.total : 0), 
+          0
+        );
+        
+        // Create updated order data
+        const updatedOrderData = {
+          ...existingOrder,
+          clientName,
+          clientAddress,
+          clientPhone,
+          clientGst,
+          products: combinedProducts,
+          grandTotal: updatedGrandTotal,
+          paymentStatus: newAmountPaid >= updatedGrandTotal ? 'cleared' : 'pending',
+          amountPaid: newAmountPaid,
+          paymentHistory: updatedPaymentHistory,
+          billMode,
+          lastUpdated: Date.now()
+        };
+        
+        // Update the order
+        await updateClient({
+          id: orderIdToUse,
+          ...updatedOrderData
+        });
+        
+        setSaveStatus('Order updated successfully!');
+      } else {
+        // Create a new order
+        // Create initial payment history if there's an amount paid
+        const initialPaymentAmount = parseFloat(amountPaid || 0);
+        let paymentHistory = [];
+        
+        if (initialPaymentAmount > 0) {
+          paymentHistory.push({
+            amount: initialPaymentAmount,
+            date: Date.now()
+          });
+        }
+        
+        // Create order data object
+        const orderData = {
+          clientName,
+          clientAddress,
+          clientPhone,
+          clientGst,
+          products,
+          grandTotal,
+          paymentStatus: initialPaymentAmount >= grandTotal ? 'cleared' : 'pending',
+          amountPaid: initialPaymentAmount,
+          timestamp: Date.now(),
+          billMode,
+          paymentHistory
+        };
+        
+        await createClient(orderData);
+        setSaveStatus('Order saved successfully!');
+      }
+
+      // Show success popup
       setShowSuccessModal(true);
 
       // Clear all input fields after successful save
@@ -367,8 +610,6 @@ const AddProducts = () => {
       setTimeout(() => {
         setSaveStatus('');
         setIsLoading(false);
-        // Navigate to the client list page
-        // navigate('/clients');
       }, 3000);
 
       // Auto-hide the success modal after 3 seconds
@@ -394,7 +635,15 @@ const AddProducts = () => {
     setProducts([{ id: 1, name: '', count: '', price: '', total: 0 }]);
     setAmountPaid('');
     setPaymentStatus('pending');
-    // Keep the current bill mode
+    setOrderId('');
+    setIsEditMode(false);
+    setCurrentOrderId(null);
+    
+    // When in "existing" mode, stay in that mode but reset the order ID search
+    // In other cases, keep the current bill mode
+    if (billMode !== 'existing') {
+      // Keep the current bill mode
+    }
   };
 
   const handleLogout = () => {
@@ -409,11 +658,29 @@ const AddProducts = () => {
   const grandTotal = products.reduce((sum, product) => sum + product.total, 0);
 
   const handleAmountPaidChange = (e) => {
-    const value = e.target.value;
+    let value = e.target.value;
+    
+    // Remove any non-numeric characters except decimal point
+    value = value.replace(/[^0-9.]/g, '');
+    
+    // Ensure only one decimal point
+    const parts = value.split('.');
+    if (parts.length > 2) {
+      value = parts[0] + '.' + parts.slice(1).join('');
+    }
+    
+    // Convert to number if possible and ensure non-negative
+    if (value !== '') {
+      const numValue = parseFloat(value);
+      if (!isNaN(numValue) && numValue < 0) {
+        value = '0';
+      }
+    }
+    
     setAmountPaid(value);
     
     // Automatically set payment status based on amount paid
-    if (parseFloat(value) === grandTotal) {
+    if (value && parseFloat(value) >= grandTotal) {
       setPaymentStatus('cleared');
     } else {
       setPaymentStatus('pending');
@@ -607,6 +874,19 @@ const AddProducts = () => {
                 background-position: 0% 50%;
               }
             }
+            @keyframes pulseHighlight {
+              0%, 100% {
+                box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
+                transform: scale(1);
+              }
+              50% {
+                box-shadow: 0 0 20px 5px rgba(99, 102, 241, 0.5);
+                transform: scale(1.02);
+              }
+            }
+            .animate-pulse-highlight {
+              animation: pulseHighlight 1.5s cubic-bezier(0.4, 0, 0.6, 1);
+            }
           `}
         </style>
       </div>
@@ -677,369 +957,589 @@ const AddProducts = () => {
         </div>
 
         <div className="p-6 sm:p-8">
-          {/* Enhanced Bill Mode Toggle */}
-          <div className="mb-8">
-            <div className="flex justify-center">
-              <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} p-1 rounded-2xl inline-flex shadow-inner`}>
-                <button
-                  onClick={() => setBillMode('full')}
-                  className={`px-8 py-3 rounded-xl transition-all duration-300 flex items-center space-x-2 ${
-                    billMode === 'full'
-                      ? `${darkMode ? 'bg-gray-800 text-indigo-400' : 'bg-white text-indigo-600'} shadow-md transform scale-105`
-                      : `${darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-800'}`
-                  }`}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
-                  </svg>
-                  <span>Full Bill</span>
-                </button>
-                <button
-                  onClick={() => setBillMode('half')}
-                  className={`px-8 py-3 rounded-xl transition-all duration-300 flex items-center space-x-2 ${
-                    billMode === 'half'
-                      ? `${darkMode ? 'bg-gray-800 text-indigo-400' : 'bg-white text-indigo-600'} shadow-md transform scale-105`
-                      : `${darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-800'}`
-                  }`}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-                    <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
-                  </svg>
-                  <span>Half Bill</span>
-                </button>
+          {/* Add Order ID Search field - only show when in 'existing' mode */}
+          {billMode === 'existing' && (
+            <div className="mb-6">
+              <div className={`p-4 rounded-xl ${
+                billMode === 'existing'
+                  ? darkMode 
+                    ? 'bg-indigo-900 border-indigo-700 shadow-lg transform scale-105 transition-all duration-300' 
+                    : 'bg-indigo-100 border-indigo-300 shadow-lg transform scale-105 transition-all duration-300'
+                  : darkMode 
+                    ? 'bg-gray-700 border-gray-600' 
+                    : 'bg-indigo-50 border-indigo-100'
+              } border`}>
+                <h3 className={`text-sm sm:text-base font-medium mb-3 ${
+                  billMode === 'existing'
+                    ? darkMode ? 'text-indigo-300' : 'text-indigo-800'
+                    : darkMode ? 'text-white' : 'text-gray-700'
+                }`}>
+                  {billMode === 'existing' 
+                    ? 'Search for Existing Order to Add Products'
+                    : 'Search & Add Products to Existing Order'}
+                </h3>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <div className="flex-1 relative">
+                    <input
+                      type="text"
+                      id="orderId"
+                      className={`block w-full px-4 py-3 border ${
+                        billMode === 'existing'
+                          ? darkMode 
+                            ? 'border-indigo-500 bg-gray-800 text-white focus:ring-indigo-300 focus:border-indigo-300 border-2' 
+                            : 'border-indigo-400 bg-white text-gray-800 focus:ring-indigo-500 focus:border-indigo-500 border-2'
+                          : darkMode 
+                            ? 'border-gray-600 bg-gray-800 text-white focus:ring-indigo-400 focus:border-indigo-400' 
+                            : 'border-gray-300 bg-white text-gray-800 focus:ring-indigo-500 focus:border-indigo-500'
+                      } rounded-xl transition-all duration-200`}
+                      value={orderId}
+                      onChange={handleOrderIdChange}
+                      placeholder={billMode === 'existing' ? "Enter Order ID" : "Enter Order ID"}
+                      ref={orderIdRef}
+                      onKeyDown={(e) => handleKeyPress(e, null, 'orderId')}
+                    />
+                  </div>
+                  <button
+                    onClick={fetchOrderById}
+                    className={`px-4 py-3 min-h-[48px] w-full sm:w-auto ${
+                      isLoading 
+                        ? 'bg-gray-400 cursor-not-allowed' 
+                        : billMode === 'existing'
+                          ? 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 transform hover:scale-105'
+                          : 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700'
+                    } text-white rounded-xl transition-all duration-300 shadow-md flex items-center justify-center`}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Searching...</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                        </svg>
+                        <span className="whitespace-nowrap">{billMode === 'existing' ? 'Find & Add to Order' : 'Find Order'}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+                {isEditMode && currentOrderId && (
+                  <div className={`mt-2 p-2 rounded-lg ${darkMode ? 'bg-indigo-900 text-indigo-300' : 'bg-indigo-100 text-indigo-800'} text-xs sm:text-sm flex items-start sm:items-center flex-wrap sm:flex-nowrap`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <span>Editing Order: <strong>{currentOrderId}</strong> - Fill in product details and click "Save Order" to update</span>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-          {/* Enhanced Client information section */}
-          <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Client name input with enhanced floating label and suggestions */}
-            <div className="relative group">
-              <input
-                type="text"
-                id="clientName"
-                className={`block w-full px-4 py-4 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400 placeholder-gray-400' : 'border-gray-300 bg-white text-gray-800 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200 peer placeholder-transparent group-hover:border-indigo-300`}
-                value={clientName}
-                onChange={handleClientNameChange}
-                placeholder="Client Name"
-                ref={clientNameRef}
-                onKeyDown={(e) => handleKeyPress(e, null, 'clientName')}
-                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-              />
-              <label
-                htmlFor="clientName"
-                className={`absolute text-sm ${darkMode ? 'text-gray-400 bg-gray-700 peer-focus:text-indigo-400 group-hover:text-indigo-400' : 'text-gray-500 bg-white peer-focus:text-indigo-600 group-hover:text-indigo-500'} duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 px-1`}
-              >
-                Client Name
-              </label>
-              
-              {/* Enhanced client name suggestions dropdown */}
-              {showSuggestions && clientSuggestions.length > 0 && (
-                <div className={`absolute z-20 w-full mt-1 ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'} border rounded-xl shadow-lg max-h-60 overflow-y-auto divide-y ${darkMode ? 'divide-gray-600' : 'divide-gray-100'} transform transition-all duration-200 origin-top`}>
-                  {clientSuggestions.map((client, index) => (
-                    <div 
-                      key={client.id || index}
-                      className={`px-4 py-3 cursor-pointer ${darkMode ? 'hover:bg-gray-600' : 'hover:bg-indigo-50'} transition-colors duration-150 flex flex-col group/item`}
-                      onClick={() => selectClient(client)}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className={`${darkMode ? 'bg-gray-600 group-hover/item:bg-gray-500' : 'bg-indigo-100 group-hover/item:bg-indigo-200'} rounded-full p-2 transition-colors duration-200`}>
-                          <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${darkMode ? 'text-indigo-300' : 'text-indigo-600'}`} viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                        <span className={`font-medium ${darkMode ? 'text-white group-hover/item:text-indigo-300' : 'text-gray-800 group-hover/item:text-indigo-600'} transition-colors duration-200`}>{client.clientName}</span>
-                      </div>
-                      <div className="ml-11 mt-2 flex flex-col space-y-1">
-                        {client.clientPhone && (
-                          <div className="flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${darkMode ? 'text-gray-400' : 'text-gray-400'} mr-1`} viewBox="0 0 20 20" fill="currentColor">
-                              <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+          )}
+
+          {/* Enhanced Bill Mode Toggle - only show when not in edit mode */}
+          {!isEditMode && (
+            <div className="mb-8">
+              <div className="flex justify-center">
+                <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} p-1 rounded-2xl inline-flex flex-wrap sm:flex-nowrap shadow-inner w-full max-w-md mx-auto`}>
+                  <button
+                    onClick={() => setBillMode('full')}
+                    className={`flex-1 min-w-0 px-3 sm:px-8 py-3 rounded-xl transition-all duration-300 flex items-center justify-center space-x-1 sm:space-x-2 m-1 ${
+                      billMode === 'full'
+                        ? `${darkMode ? 'bg-gray-800 text-indigo-400 shadow-lg' : 'bg-white text-indigo-600 shadow-md'} transform scale-105`
+                        : `${darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-800'}`
+                    }`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 sm:h-5 sm:w-5 ${billMode === 'full' ? 'text-indigo-500' : ''}`} viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-xs sm:text-base whitespace-nowrap">Full Bill</span>
+                  </button>
+                  <button
+                    onClick={() => setBillMode('half')}
+                    className={`flex-1 min-w-0 px-3 sm:px-8 py-3 rounded-xl transition-all duration-300 flex items-center justify-center space-x-1 sm:space-x-2 m-1 ${
+                      billMode === 'half'
+                        ? `${darkMode ? 'bg-gray-800 text-indigo-400 shadow-lg' : 'bg-white text-indigo-600 shadow-md'} transform scale-105`
+                        : `${darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-800'}`
+                    }`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 sm:h-5 sm:w-5 ${billMode === 'half' ? 'text-indigo-500' : ''}`} viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                      <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-xs sm:text-base whitespace-nowrap">Half Bill</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      // Set bill mode to existing and focus on the order ID input
+                      setBillMode('existing');
+                      setTimeout(() => {
+                        if (orderIdRef.current) {
+                          orderIdRef.current.focus();
+                          orderIdRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          
+                          // Add a pulse animation to highlight the search section
+                          const searchSection = orderIdRef.current.closest('div.rounded-xl');
+                          if (searchSection) {
+                            searchSection.classList.add('animate-pulse-highlight');
+                            // Remove the animation class after animation completes
+                            setTimeout(() => {
+                              searchSection.classList.remove('animate-pulse-highlight');
+                            }, 1500);
+                          }
+                        }
+                      }, 100);
+                    }}
+                    className={`flex-1 min-w-0 px-3 sm:px-8 py-3 rounded-xl transition-all duration-300 flex items-center justify-center space-x-1 sm:space-x-2 m-1 ${
+                      billMode === 'existing'
+                        ? `${darkMode ? 'bg-gray-800 text-indigo-400 shadow-lg' : 'bg-white text-indigo-600 shadow-md'} transform scale-105`
+                        : `${darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-800'}`
+                    }`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 sm:h-5 sm:w-5 ${billMode === 'existing' ? 'text-indigo-500' : ''}`} viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-xs sm:text-base whitespace-nowrap">Existing</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Client information section - only show when not in edit mode and not in existing order mode */}
+          {!isEditMode && billMode !== 'existing' && (
+            <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Client name input with enhanced floating label and suggestions */}
+              <div className="relative group">
+                <input
+                  type="text"
+                  id="clientName"
+                  className={`block w-full px-4 py-4 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400 placeholder-gray-400' : 'border-gray-300 bg-white text-gray-800 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200 peer placeholder-transparent group-hover:border-indigo-300`}
+                  value={clientName}
+                  onChange={handleClientNameChange}
+                  placeholder="Client Name"
+                  ref={clientNameRef}
+                  onKeyDown={(e) => handleKeyPress(e, null, 'clientName')}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                />
+                <label
+                  htmlFor="clientName"
+                  className={`absolute text-sm ${darkMode ? 'text-gray-400 bg-gray-700 peer-focus:text-indigo-400 group-hover:text-indigo-400' : 'text-gray-500 bg-white peer-focus:text-indigo-600 group-hover:text-indigo-500'} duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 px-1`}
+                >
+                  Client Name
+                </label>
+                
+                {/* Enhanced client name suggestions dropdown */}
+                {showSuggestions && clientSuggestions.length > 0 && (
+                  <div className={`absolute z-20 w-full mt-1 ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'} border rounded-xl shadow-lg max-h-60 overflow-y-auto divide-y ${darkMode ? 'divide-gray-600' : 'divide-gray-100'} transform transition-all duration-200 origin-top`}>
+                    {clientSuggestions.map((client, index) => (
+                      <div 
+                        key={client.id || index}
+                        className={`px-4 py-3 cursor-pointer ${darkMode ? 'hover:bg-gray-600' : 'hover:bg-indigo-50'} transition-colors duration-150 flex flex-col group/item`}
+                        onClick={() => selectClient(client)}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className={`${darkMode ? 'bg-gray-600 group-hover/item:bg-gray-500' : 'bg-indigo-100 group-hover/item:bg-indigo-200'} rounded-full p-2 transition-colors duration-200`}>
+                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${darkMode ? 'text-indigo-300' : 'text-indigo-600'}`} viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                             </svg>
-                            <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>{client.clientPhone}</span>
                           </div>
-                        )}
-                        {client.clientGst && (
-                          <div className="flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${darkMode ? 'text-indigo-300' : 'text-indigo-400'} mr-1`} viewBox="0 0 20 20" fill="currentColor">
+                          <span className={`font-medium ${darkMode ? 'text-white group-hover/item:text-indigo-300' : 'text-gray-800 group-hover/item:text-indigo-600'} transition-colors duration-200`}>{client.clientName}</span>
+                        </div>
+                        <div className="ml-11 mt-2 flex flex-col space-y-1">
+                          {client.clientPhone && (
+                            <div className="flex items-center">
+                              <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${darkMode ? 'text-gray-400' : 'text-gray-400'} mr-1`} viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                              </svg>
+                              <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>{client.clientPhone}</span>
+                            </div>
+                          )}
+                          {client.clientGst && (
+                            <div className="flex items-center">
+                              <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${darkMode ? 'text-indigo-300' : 'text-indigo-400'} mr-1`} viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                              </svg>
+                              <span className={`text-xs ${darkMode ? 'text-indigo-300 font-medium' : 'text-indigo-600 font-medium'}`}>GST: {client.clientGst}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Client address input with enhanced floating label */}
+              <div className="relative group">
+                <input
+                  type="text"
+                  id="clientAddress"
+                  className={`block w-full px-4 py-4 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400 placeholder-gray-400' : 'border-gray-300 bg-white text-gray-800 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200 peer placeholder-transparent group-hover:border-indigo-300`}
+                  value={clientAddress}
+                  onChange={(e) => setClientAddress(e.target.value)}
+                  placeholder="Client Address"
+                  ref={clientAddressRef}
+                  onKeyDown={(e) => handleKeyPress(e, null, 'clientAddress')}
+                />
+                <label
+                  htmlFor="clientAddress"
+                  className={`absolute text-sm ${darkMode ? 'text-gray-400 bg-gray-700 peer-focus:text-indigo-400 group-hover:text-indigo-400' : 'text-gray-500 bg-white peer-focus:text-indigo-600 group-hover:text-indigo-500'} duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 px-1`}
+                >
+                  Client Address
+                </label>
+              </div>
+
+              {/* Client phone input with enhanced floating label */}
+              <div className="relative group">
+                <input
+                  type="text"
+                  id="clientPhone"
+                  className={`block w-full px-4 py-4 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400 placeholder-gray-400' : 'border-gray-300 bg-white text-gray-800 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200 peer placeholder-transparent group-hover:border-indigo-300`}
+                  value={clientPhone}
+                  onChange={(e) => setClientPhone(e.target.value)}
+                  placeholder="Client Phone"
+                  ref={clientPhoneRef}
+                  onKeyDown={(e) => handleKeyPress(e, null, 'clientPhone')}
+                />
+                <label
+                  htmlFor="clientPhone"
+                  className={`absolute text-sm ${darkMode ? 'text-gray-400 bg-gray-700 peer-focus:text-indigo-400 group-hover:text-indigo-400' : 'text-gray-500 bg-white peer-focus:text-indigo-600 group-hover:text-indigo-500'} duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 px-1`}
+                >
+                  Client Phone
+                </label>
+              </div>
+
+              {/* Client GST input with enhanced floating label */}
+              <div className="relative group">
+                <input
+                  type="text"
+                  id="clientGst"
+                  className={`block w-full px-4 py-4 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400 placeholder-gray-400' : 'border-gray-300 bg-white text-gray-800 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200 peer placeholder-transparent group-hover:border-indigo-300`}
+                  value={clientGst}
+                  onChange={(e) => {
+                    setClientGst(e.target.value);
+                    handleGstChange(e);
+                  }}
+                  placeholder="GST Number"
+                  ref={clientGstRef}
+                  onKeyDown={(e) => handleKeyPress(e, null, 'clientGst')}
+                  onBlur={() => setTimeout(() => setShowGstSuggestions(false), 200)}
+                />
+                <label
+                  htmlFor="clientGst"
+                  className={`absolute text-sm ${darkMode ? 'text-gray-400 bg-gray-700 peer-focus:text-indigo-400 group-hover:text-indigo-400' : 'text-gray-500 bg-white peer-focus:text-indigo-600 group-hover:text-indigo-500'} duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 px-1`}
+                >
+                  GST Number
+                </label>
+                
+                {/* Enhanced GST-specific suggestions dropdown */}
+                {showGstSuggestions && gstSuggestions.length > 0 && (
+                  <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-y-auto divide-y divide-gray-100 transform transition-all duration-200 origin-top">
+                    {gstSuggestions.map((client, index) => (
+                      <div 
+                        key={client.id || index}
+                        className="px-4 py-3 cursor-pointer hover:bg-indigo-50 transition-colors duration-150 flex flex-col group/item"
+                        onClick={() => selectClient(client)}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="bg-indigo-100 rounded-full p-2 group-hover/item:bg-indigo-200 transition-colors duration-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-indigo-600" viewBox="0 0 20 20" fill="currentColor">
                               <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
                             </svg>
-                            <span className={`text-xs ${darkMode ? 'text-indigo-300 font-medium' : 'text-indigo-600 font-medium'}`}>GST: {client.clientGst}</span>
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Client address input with enhanced floating label */}
-            <div className="relative group">
-              <input
-                type="text"
-                id="clientAddress"
-                className={`block w-full px-4 py-4 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400 placeholder-gray-400' : 'border-gray-300 bg-white text-gray-800 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200 peer placeholder-transparent group-hover:border-indigo-300`}
-                value={clientAddress}
-                onChange={(e) => setClientAddress(e.target.value)}
-                placeholder="Client Address"
-                ref={clientAddressRef}
-                onKeyDown={(e) => handleKeyPress(e, null, 'clientAddress')}
-              />
-              <label
-                htmlFor="clientAddress"
-                className={`absolute text-sm ${darkMode ? 'text-gray-400 bg-gray-700 peer-focus:text-indigo-400 group-hover:text-indigo-400' : 'text-gray-500 bg-white peer-focus:text-indigo-600 group-hover:text-indigo-500'} duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 px-1`}
-              >
-                Client Address
-              </label>
-            </div>
-
-            {/* Client phone input with enhanced floating label */}
-            <div className="relative group">
-              <input
-                type="text"
-                id="clientPhone"
-                className={`block w-full px-4 py-4 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400 placeholder-gray-400' : 'border-gray-300 bg-white text-gray-800 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200 peer placeholder-transparent group-hover:border-indigo-300`}
-                value={clientPhone}
-                onChange={(e) => setClientPhone(e.target.value)}
-                placeholder="Client Phone"
-                ref={clientPhoneRef}
-                onKeyDown={(e) => handleKeyPress(e, null, 'clientPhone')}
-              />
-              <label
-                htmlFor="clientPhone"
-                className={`absolute text-sm ${darkMode ? 'text-gray-400 bg-gray-700 peer-focus:text-indigo-400 group-hover:text-indigo-400' : 'text-gray-500 bg-white peer-focus:text-indigo-600 group-hover:text-indigo-500'} duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 px-1`}
-              >
-                Client Phone
-              </label>
-            </div>
-
-            {/* Client GST input with enhanced floating label */}
-            <div className="relative group">
-              <input
-                type="text"
-                id="clientGst"
-                className={`block w-full px-4 py-4 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400 placeholder-gray-400' : 'border-gray-300 bg-white text-gray-800 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200 peer placeholder-transparent group-hover:border-indigo-300`}
-                value={clientGst}
-                onChange={(e) => {
-                  setClientGst(e.target.value);
-                  handleGstChange(e);
-                }}
-                placeholder="GST Number"
-                ref={clientGstRef}
-                onKeyDown={(e) => handleKeyPress(e, null, 'clientGst')}
-                onBlur={() => setTimeout(() => setShowGstSuggestions(false), 200)}
-              />
-              <label
-                htmlFor="clientGst"
-                className={`absolute text-sm ${darkMode ? 'text-gray-400 bg-gray-700 peer-focus:text-indigo-400 group-hover:text-indigo-400' : 'text-gray-500 bg-white peer-focus:text-indigo-600 group-hover:text-indigo-500'} duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 px-1`}
-              >
-                GST Number
-              </label>
-              
-              {/* Enhanced GST-specific suggestions dropdown */}
-              {showGstSuggestions && gstSuggestions.length > 0 && (
-                <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-y-auto divide-y divide-gray-100 transform transition-all duration-200 origin-top">
-                  {gstSuggestions.map((client, index) => (
-                    <div 
-                      key={client.id || index}
-                      className="px-4 py-3 cursor-pointer hover:bg-indigo-50 transition-colors duration-150 flex flex-col group/item"
-                      onClick={() => selectClient(client)}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className="bg-indigo-100 rounded-full p-2 group-hover/item:bg-indigo-200 transition-colors duration-200">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-indigo-600" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
-                          </svg>
+                          <div>
+                            <div className="flex items-center">
+                              <span className="text-sm font-semibold text-indigo-600 group-hover/item:text-indigo-700 transition-colors duration-200">GST: {client.clientGst}</span>
+                            </div>
+                            <span className="font-medium text-gray-800 group-hover/item:text-indigo-600 transition-colors duration-200">{client.clientName}</span>
+                          </div>
                         </div>
-                        <div>
-                          <div className="flex items-center">
-                            <span className="text-sm font-semibold text-indigo-600 group-hover/item:text-indigo-700 transition-colors duration-200">GST: {client.clientGst}</span>
-                          </div>
-                          <span className="font-medium text-gray-800 group-hover/item:text-indigo-600 transition-colors duration-200">{client.clientName}</span>
+                        <div className="ml-11 mt-2 flex flex-col space-y-1">
+                          {client.clientPhone && (
+                            <div className="flex items-center">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-gray-400 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                              </svg>
+                              <span className="text-xs text-gray-500">{client.clientPhone}</span>
+                            </div>
+                          )}
+                          {client.clientAddress && (
+                            <div className="flex items-center">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-gray-400 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                              </svg>
+                              <span className="text-xs text-gray-500 truncate max-w-[15rem]">{client.clientAddress}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <div className="ml-11 mt-2 flex flex-col space-y-1">
-                        {client.clientPhone && (
-                          <div className="flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-gray-400 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                              <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                            </svg>
-                            <span className="text-xs text-gray-500">{client.clientPhone}</span>
-                          </div>
-                        )}
-                        {client.clientAddress && (
-                          <div className="flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-gray-400 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                            </svg>
-                            <span className="text-xs text-gray-500 truncate max-w-[15rem]">{client.clientAddress}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Display client info summary when in edit mode */}
+          {isEditMode && (
+            <div className="mb-6">
+              <div className={`p-4 rounded-xl ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-indigo-50 border-indigo-100'} border`}>
+                <h3 className={`text-sm font-medium mb-3 ${darkMode ? 'text-white' : 'text-gray-700'}`}>Order Summary</h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className={`block ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Client:</span>
+                    <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-800'}`}>{clientName}</span>
+                  </div>
+                  <div>
+                    <span className={`block ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>GST:</span>
+                    <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-800'}`}>{clientGst || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Products section with improved card design */}
           <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-xl shadow-lg mb-8 overflow-hidden`}>
-            <div className={`${darkMode ? 'from-gray-700 to-gray-800' : 'from-indigo-50 to-blue-50'} bg-gradient-to-r flex justify-between p-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+            <div className={`${darkMode ? 'from-gray-700 to-gray-800' : 'from-indigo-50 to-blue-50'} bg-gradient-to-r flex flex-wrap sm:flex-nowrap justify-between items-center p-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} gap-3`}>
               <div className='flex justify-center text-center'>
-                <h2 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-800'} flex items-center`}>Product Details</h2>
+                <h2 className={`text-base sm:text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-800'} flex items-center`}>
+                  {billMode === 'existing' && !isEditMode 
+                    ? 'Products to Add to Existing Order' 
+                    : 'Product Details'}
+                </h2>
               </div>
               <div>
                 <button
-                  className="flex items-center justify-center p-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-xl hover:from-indigo-700 hover:to-blue-700 transition-all duration-300 shadow-md"
+                  className={`flex items-center justify-center p-2 min-h-[40px] ${
+                    billMode === 'existing' && currentOrderId
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 px-3'
+                      : 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700'
+                  } text-white rounded-xl transition-all duration-300 shadow-md`}
                   onClick={addProduct}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
                   </svg>
+                  <span className="ml-2 text-sm sm:text-base">{billMode === 'existing' && currentOrderId ? 'Add New Product' : 'Add'}</span>
                 </button>
               </div>
             </div>
 
-            {/* Table header - Only visible on larger screens */}
-            <div className={`hidden md:grid md:grid-cols-12 md:gap-4 font-semibold ${darkMode ? 'text-gray-300 bg-gray-700 border-gray-600' : 'text-gray-700 bg-gray-50 border-gray-200'} border-b p-4`}>
-              {billMode === 'full' && <div className="col-span-3">Product Name</div>}
-              <div className={billMode === 'full' ? "col-span-2" : "col-span-4"}>Quantity</div>
-              <div className={billMode === 'full' ? "col-span-2" : "col-span-4"}>Price</div>
-              <div className={billMode === 'full' ? "col-span-3" : "col-span-2"}>Total</div>
-              <div className="col-span-2">Action</div>
-            </div>
+            {/* Show instruction message when in existing mode but no order found yet */}
+            {billMode === 'existing' && !isEditMode && !currentOrderId && (
+              <div className={`p-6 sm:p-8 text-center ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                <div className="flex flex-col items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-12 w-12 sm:h-16 sm:w-16 mb-4 ${darkMode ? 'text-indigo-400' : 'text-indigo-500'}`} viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                  </svg>
+                  <h3 className="text-lg sm:text-xl font-semibold mb-2">Search for an Order First</h3>
+                  <p className="mb-4 max-w-md text-sm sm:text-base">Enter an Order ID in the search box above and click "Find & Add to Order" to add products to an existing order.</p>
+                  <button
+                    onClick={() => {
+                      if (orderIdRef.current) {
+                        orderIdRef.current.focus();
+                        orderIdRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      }
+                    }}
+                    className={`px-5 sm:px-6 py-2 sm:py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 shadow-md text-sm sm:text-base`}
+                  >
+                    Go to Search
+                  </button>
+                </div>
+              </div>
+            )}
 
-            <div className={`divide-y ${darkMode ? 'divide-gray-700' : 'divide-gray-100'}`}>
-              {products.map(product => (
-                <div key={product.id} className={`p-4 md:grid md:grid-cols-12 md:gap-4 md:items-center transition-all duration-200 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}`}>
-                  {/* Mobile layout - stacked fields with labels */}
-                  <div className="md:hidden mb-3">
-                    {billMode === 'full' && (
-                      <div className="mb-3">
-                        <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Product Name</label>
+            {/* Only show the product table when not in existing mode or when an order is found */}
+            {(billMode !== 'existing' || isEditMode || currentOrderId) && (
+              <>
+                {/* Table header - Only visible on larger screens */}
+                <div className={`hidden md:grid md:grid-cols-12 md:gap-4 font-semibold ${darkMode ? 'text-gray-300 bg-gray-700 border-gray-600' : 'text-gray-700 bg-gray-50 border-gray-200'} border-b p-4`}>
+                  {billMode === 'full' && <div className="col-span-3">Product Name</div>}
+                  <div className={billMode === 'full' ? "col-span-2" : "col-span-4"}>Quantity</div>
+                  <div className={billMode === 'full' ? "col-span-2" : "col-span-4"}>Price</div>
+                  <div className={billMode === 'full' ? "col-span-3" : "col-span-2"}>Total</div>
+                  <div className="col-span-2">Action</div>
+                </div>
+
+                <div className={`divide-y ${darkMode ? 'divide-gray-700' : 'divide-gray-100'}`}>
+                  {products.map(product => (
+                    <div key={product.id} className={`p-4 md:grid md:grid-cols-12 md:gap-4 md:items-center transition-all duration-200 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}`}>
+                      {/* Mobile layout - stacked fields with labels */}
+                      <div className="md:hidden mb-3">
+                        {billMode === 'full' && (
+                          <div className="mb-3">
+                            <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Product Name</label>
+                            <input
+                              type="text"
+                              className={`w-full p-3 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200 text-base`}
+                              value={product.name}
+                              onChange={(e) => handleChange(product.id, 'name', e.target.value)}
+                              placeholder="Product name"
+                              ref={(el) => (productRefs.current[`${product.id}_name`] = el)}
+                              onKeyDown={(e) => handleKeyPress(e, product.id, 'name')}
+                            />
+                          </div>
+                        )}
+                        <div className="mb-3 grid grid-cols-2 gap-3">
+                          <div>
+                            <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Quantity</label>
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              className={`w-full p-3 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200 text-base`}
+                              value={product.count}
+                              onChange={(e) => handleChange(product.id, 'count', e.target.value)}
+                              placeholder="0"
+                              min="0"
+                              ref={(el) => (productRefs.current[`${product.id}_count`] = el)}
+                              onKeyDown={(e) => {
+                                // Prevent "-" and "_" characters
+                                if (e.key === "-" || e.key === "_") {
+                                  e.preventDefault();
+                                }
+                                handleKeyPress(e, product.id, 'count');
+                              }}
+                              title="Please enter a positive whole number"
+                            />
+                          </div>
+                          <div>
+                            <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Price</label>
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              className={`w-full p-3 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200 text-base`}
+                              value={product.price}
+                              onChange={(e) => handleChange(product.id, 'price', e.target.value)}
+                              placeholder="0.00"
+                              min="0"
+                              step="0.01"
+                              ref={(el) => (productRefs.current[`${product.id}_price`] = el)}
+                              onKeyDown={(e) => {
+                                // Prevent "-" and "_" characters
+                                if (e.key === "-" || e.key === "_") {
+                                  e.preventDefault();
+                                }
+                                handleKeyPress(e, product.id, 'price', product.id === products[products.length - 1].id)
+                              }}
+                              title="Please enter a positive number"
+                            />
+                          </div>
+                        </div>
+                        <div className="mb-3 flex flex-col sm:flex-row gap-3 justify-between">
+                          <div className="w-full sm:w-1/2">
+                            <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Total</label>
+                            <div className={`p-3 ${darkMode ? 'bg-gray-600 text-indigo-300 border-gray-700' : 'bg-indigo-50 text-indigo-800 border-indigo-100'} rounded-xl font-medium border text-base`}>
+                              ₹ {product.total.toFixed(2)}
+                            </div>
+                          </div>
+                          <div className="flex items-end">
+                            <button
+                              className="w-full sm:w-auto flex items-center justify-center p-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all duration-300"
+                              onClick={() => removeProduct(product.id)}
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                              </svg>
+                              Remove Product
+                            </button>
+                          </div>
+                        </div>
+                        <div className="border-t border-dashed my-2 pt-2 border-gray-300 dark:border-gray-600"></div>
+                      </div>
+
+                      {/* Desktop layout - grid layout */}
+                      {billMode === 'full' && (
+                        <div className="hidden md:block md:col-span-3">
+                          <input
+                            type="text"
+                            className={`w-full p-3 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200`}
+                            value={product.name}
+                            onChange={(e) => handleChange(product.id, 'name', e.target.value)}
+                            placeholder="Product name"
+                            ref={(el) => (productRefs.current[`${product.id}_name`] = el)}
+                            onKeyDown={(e) => handleKeyPress(e, product.id, 'name')}
+                          />
+                        </div>
+                      )}
+                      <div className={`hidden md:block ${billMode === 'full' ? "md:col-span-2" : "md:col-span-4"}`}>
                         <input
                           type="text"
-                          className={`w-full p-3 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200`}
-                          value={product.name}
-                          onChange={(e) => handleChange(product.id, 'name', e.target.value)}
-                          placeholder="Product name"
-                          ref={(el) => (productRefs.current[`${product.id}_name`] = el)}
-                          onKeyDown={(e) => handleKeyPress(e, product.id, 'name')}
-                        />
-                      </div>
-                    )}
-                    <div className="mb-3 grid grid-cols-2 gap-3">
-                      <div>
-                        <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Quantity</label>
-                        <input
-                          type="number"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
                           className={`w-full p-3 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200`}
                           value={product.count}
                           onChange={(e) => handleChange(product.id, 'count', e.target.value)}
+                          placeholder="0"
                           min="0"
                           ref={(el) => (productRefs.current[`${product.id}_count`] = el)}
-                          onKeyDown={(e) => handleKeyPress(e, product.id, 'count')}
+                          onKeyDown={(e) => {
+                            // Prevent "-" and "_" characters
+                            if (e.key === "-" || e.key === "_") {
+                              e.preventDefault();
+                            }
+                            handleKeyPress(e, product.id, 'count');
+                          }}
+                          title="Please enter a positive whole number"
                         />
                       </div>
-                      <div>
-                        <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Price</label>
+                      <div className={`hidden md:block ${billMode === 'full' ? "md:col-span-2" : "md:col-span-4"}`}>
                         <input
-                          type="number"
+                          type="text"
+                          inputMode="decimal"
                           className={`w-full p-3 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200`}
                           value={product.price}
                           onChange={(e) => handleChange(product.id, 'price', e.target.value)}
+                          placeholder="0.00"
                           min="0"
                           step="0.01"
                           ref={(el) => (productRefs.current[`${product.id}_price`] = el)}
-                          onKeyDown={(e) => handleKeyPress(e, product.id, 'price', product.id === products[products.length - 1].id)}
+                          onKeyDown={(e) => {
+                            // Prevent "-" and "_" characters
+                            if (e.key === "-" || e.key === "_") {
+                              e.preventDefault();
+                            }
+                            handleKeyPress(e, product.id, 'price', product.id === products[products.length - 1].id);
+                          }}
+                          title="Please enter a positive number"
                         />
                       </div>
-                    </div>
-                    <div className="mb-3 flex justify-between items-center">
-                      <div>
-                        <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Total</label>
-                        <div className={`p-3 ${darkMode ? 'bg-gray-600 text-indigo-300 border-gray-700' : 'bg-indigo-50 text-indigo-800 border-indigo-100'} rounded-xl font-medium border`}>
+                      <div className={`hidden md:block font-medium ${billMode === 'full' ? "md:col-span-3" : "md:col-span-2"}`}>
+                        <div className={`p-3 ${darkMode ? 'bg-gray-600 text-indigo-300 border-gray-700' : 'bg-indigo-50 text-indigo-800 border-indigo-100'} rounded-xl border`}>
                           ₹ {product.total.toFixed(2)}
                         </div>
                       </div>
-                      <button
-                        className="flex items-center p-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all duration-300"
-                        onClick={() => removeProduct(product.id)}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                        </svg>
-                        Remove
-                      </button>
+                      <div className="hidden md:block md:col-span-2">
+                        <button
+                          className="flex items-center p-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all duration-300"
+                          onClick={() => removeProduct(product.id)}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                          Remove
+                        </button>
+                      </div>
                     </div>
-                  </div>
-
-                  {/* Desktop layout - grid layout */}
-                  {billMode === 'full' && (
-                    <div className="hidden md:block md:col-span-3">
-                      <input
-                        type="text"
-                        className={`w-full p-3 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200`}
-                        value={product.name}
-                        onChange={(e) => handleChange(product.id, 'name', e.target.value)}
-                        placeholder="Product name"
-                        ref={(el) => (productRefs.current[`${product.id}_name`] = el)}
-                        onKeyDown={(e) => handleKeyPress(e, product.id, 'name')}
-                      />
-                    </div>
-                  )}
-                  <div className={`hidden md:block ${billMode === 'full' ? "md:col-span-2" : "md:col-span-4"}`}>
-                    <input
-                      type="number"
-                      className={`w-full p-3 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200`}
-                      value={product.count}
-                      onChange={(e) => handleChange(product.id, 'count', e.target.value)}
-                      min="0"
-                      ref={(el) => (productRefs.current[`${product.id}_count`] = el)}
-                      onKeyDown={(e) => handleKeyPress(e, product.id, 'count')}
-                    />
-                  </div>
-                  <div className={`hidden md:block ${billMode === 'full' ? "md:col-span-2" : "md:col-span-4"}`}>
-                    <input
-                      type="number"
-                      className={`w-full p-3 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200`}
-                      value={product.price}
-                      onChange={(e) => handleChange(product.id, 'price', e.target.value)}
-                      min="0"
-                      step="0.01"
-                      ref={(el) => (productRefs.current[`${product.id}_price`] = el)}
-                      onKeyDown={(e) => handleKeyPress(e, product.id, 'price', product.id === products[products.length - 1].id)}
-                    />
-                  </div>
-                  <div className={`hidden md:block font-medium ${billMode === 'full' ? "md:col-span-3" : "md:col-span-2"}`}>
-                    <div className={`p-3 ${darkMode ? 'bg-gray-600 text-indigo-300 border-gray-700' : 'bg-indigo-50 text-indigo-800 border-indigo-100'} rounded-xl border`}>
-                      ₹ {product.total.toFixed(2)}
-                    </div>
-                  </div>
-                  <div className="hidden md:block md:col-span-2">
-                    <button
-                      className="flex items-center p-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all duration-300"
-                      onClick={() => removeProduct(product.id)}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                      Remove
-                    </button>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </>
+            )}
           </div>
 
           {/* Payment status and amount section with improved design */}
-          {billMode === 'full' && (
+          {(isEditMode || (billMode === 'full' && !isEditMode) || (billMode === 'existing' && currentOrderId)) && (
             <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className={`${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-100'} rounded-xl p-4 shadow-sm border`}>
-                <label className={`block ${darkMode ? 'text-gray-300' : 'text-gray-700'} font-medium mb-3 text-sm`}>Payment Status</label>
-                <div className="flex gap-6">
+                <label className={`block ${darkMode ? 'text-gray-300' : 'text-gray-700'} font-medium mb-3 text-sm sm:text-base`}>
+                  {billMode === 'existing' ? 'Payment Status (Updated After Adding Products)' : 'Payment Status'}
+                </label>
+                <div className="flex flex-wrap gap-4 sm:gap-6">
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="radio"
@@ -1049,8 +1549,8 @@ const AddProducts = () => {
                       onChange={() => setPaymentStatus('pending')}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-500"></div>
-                    <span className={`ml-3 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Pending</span>
+                    <div className="w-10 sm:w-11 h-5 sm:h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 sm:after:h-5 after:w-4 sm:after:w-5 after:transition-all peer-checked:bg-yellow-500"></div>
+                    <span className={`ml-2 sm:ml-3 text-sm sm:text-base ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Pending</span>
                   </label>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
@@ -1061,32 +1561,43 @@ const AddProducts = () => {
                       onChange={() => setPaymentStatus('cleared')}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-                    <span className={`ml-3 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Cleared</span>
+                    <div className="w-10 sm:w-11 h-5 sm:h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 sm:after:h-5 after:w-4 sm:after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                    <span className={`ml-2 sm:ml-3 text-sm sm:text-base ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Cleared</span>
                   </label>
                 </div>
               </div>
 
-              <div className="relative">
-                <input
-                  type="number"
-                  id="amountPaid"
-                  className={`block w-full px-4 py-4 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400 placeholder-gray-400' : 'border-gray-300 bg-white text-gray-800 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200 peer placeholder-transparent`}
-                  value={amountPaid}
-                  onChange={handleAmountPaidChange}
-                  placeholder="0.00"
-                  min="0"
-                  step="0.01"
-                  ref={amountPaidRef}
-                  onKeyDown={(e) => handleKeyPress(e, null, 'amountPaid')}
-                />
-                <label
-                  htmlFor="amountPaid"
-                  className={`absolute text-sm ${darkMode ? 'text-gray-400 bg-gray-700 peer-focus:text-indigo-400' : 'text-gray-500 bg-white peer-focus:text-indigo-600'} duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 px-1`}
-                >
-                  Amount Paid
-                </label>
-              </div>
+              {/* Only show Amount Paid input when in full bill mode or when updating an existing order */}
+              {(billMode === 'full' || (billMode === 'existing' && currentOrderId)) && !isEditMode && (
+                <div className="relative">
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    id="amountPaid"
+                    className={`block w-full px-4 py-4 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400 placeholder-gray-400' : 'border-gray-300 bg-white text-gray-800 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200 peer placeholder-transparent text-base`}
+                    value={amountPaid}
+                    onChange={handleAmountPaidChange}
+                    placeholder="0.00"
+                    min="0"
+                    step="0.01"
+                    ref={amountPaidRef}
+                    onKeyDown={(e) => {
+                      // Prevent "-" and "_" characters
+                      if (e.key === "-" || e.key === "_") {
+                        e.preventDefault();
+                      }
+                      handleKeyPress(e, null, 'amountPaid');
+                    }}
+                    title="Please enter a positive number"
+                  />
+                  <label
+                    htmlFor="amountPaid"
+                    className={`absolute text-sm ${darkMode ? 'text-gray-400 bg-gray-700 peer-focus:text-indigo-400' : 'text-gray-500 bg-white peer-focus:text-indigo-600'} duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 px-1`}
+                  >
+                    {billMode === 'existing' ? 'Additional Amount Paid' : 'Amount Paid'}
+                  </label>
+                </div>
+              )}
             </div>
           )}
 
@@ -1094,7 +1605,7 @@ const AddProducts = () => {
           <div className="mt-6 md:mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
             <div className="flex flex-col sm:flex-row gap-3">
               <button
-                className="flex items-center justify-center p-3.5 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-xl hover:from-indigo-700 hover:to-blue-700 transition-all duration-300 shadow-md"
+                className="flex items-center justify-center p-3.5 min-h-[50px] bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-xl hover:from-indigo-700 hover:to-blue-700 transition-all duration-300 shadow-md text-base"
                 onClick={addProduct}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -1104,7 +1615,7 @@ const AddProducts = () => {
               </button>
 
               <button
-                className={`flex cursor-pointer items-center justify-center p-3.5 ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'} text-white rounded-xl transition-all duration-300 shadow-md`}
+                className={`flex cursor-pointer items-center justify-center p-3.5 min-h-[50px] ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'} text-white rounded-xl transition-all duration-300 shadow-md text-base`}
                 onClick={saveOrder}
                 disabled={products.every(p => p.total === 0) || isLoading}
               >
@@ -1127,10 +1638,10 @@ const AddProducts = () => {
               </button>
             </div>
 
-            <div className={`${darkMode ? 'bg-gradient-to-r from-indigo-700 to-purple-700 border-indigo-600' : 'bg-gradient-to-r from-indigo-500 to-purple-500 border-indigo-200'} p-6 rounded-xl border shadow-lg relative overflow-hidden`}>
+            <div className={`${darkMode ? 'bg-gradient-to-r from-indigo-700 to-purple-700 border-indigo-600' : 'bg-gradient-to-r from-indigo-500 to-purple-500 border-indigo-200'} p-4 sm:p-6 rounded-xl border shadow-lg relative overflow-hidden`}>
               <div className={`absolute top-0 left-0 w-full h-full ${darkMode ? 'bg-gray-800 opacity-80' : 'bg-white opacity-90'} backdrop-blur-sm`}></div>
               <div className="relative">
-                <div className={`text-xl md:text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'} text-center mb-3`}>
+                <div className={`text-lg sm:text-xl md:text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'} text-center mb-3`}>
                   {clientName ? `${clientName}'s Order` : 'Order Summary'}
                 </div>
 
@@ -1138,8 +1649,8 @@ const AddProducts = () => {
                   <div className={`mb-4 p-3 ${darkMode ? 'bg-gray-700 bg-opacity-80' : 'bg-white bg-opacity-80'} backdrop-blur-sm rounded-lg`}>
                     <div className="grid grid-cols-1 gap-2">
                       {clientAddress && (
-                        <div className="flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'} mr-2`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div className="flex items-start sm:items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'} mr-2 mt-1 sm:mt-0 flex-shrink-0`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                           </svg>
@@ -1148,7 +1659,7 @@ const AddProducts = () => {
                       )}
                       {clientPhone && (
                         <div className="flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'} mr-2`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'} mr-2 flex-shrink-0`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                           </svg>
                           <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{clientPhone}</span>
@@ -1156,7 +1667,7 @@ const AddProducts = () => {
                       )}
                       {clientGst && (
                         <div className="flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'} mr-2`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'} mr-2 flex-shrink-0`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
                           <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>GST: {clientGst}</span>
@@ -1168,18 +1679,18 @@ const AddProducts = () => {
 
                 <div className={`flex justify-between items-center mt-4 p-3 ${darkMode ? 'bg-gray-700 bg-opacity-80' : 'bg-white bg-opacity-80'} backdrop-blur-sm rounded-lg`}>
                   <span className={`font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Grand Total:</span>
-                  <span className={`font-bold text-xl ${darkMode ? 'text-indigo-300' : 'text-indigo-700'}`}>₹ {grandTotal.toFixed(2)}</span>
+                  <span className={`font-bold text-lg sm:text-xl ${darkMode ? 'text-indigo-300' : 'text-indigo-700'}`}>₹ {grandTotal.toFixed(2)}</span>
                 </div>
 
                 {billMode === 'full' && amountPaid && (
                   <div className="mt-3 grid grid-cols-2 gap-3">
                     <div className={`p-3 ${darkMode ? 'bg-gray-700 bg-opacity-80' : 'bg-white bg-opacity-80'} backdrop-blur-sm rounded-lg`}>
-                      <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} text-sm`}>Amount Paid</span>
-                      <div className={`font-bold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>₹ {parseFloat(amountPaid).toFixed(2)}</div>
+                      <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} text-xs sm:text-sm`}>Amount Paid</span>
+                      <div className={`font-bold text-sm sm:text-base ${darkMode ? 'text-green-400' : 'text-green-600'}`}>₹ {parseFloat(amountPaid).toFixed(2)}</div>
                     </div>
                     <div className={`p-3 ${darkMode ? 'bg-gray-700 bg-opacity-80' : 'bg-white bg-opacity-80'} backdrop-blur-sm rounded-lg`}>
-                      <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} text-sm`}>Balance</span>
-                      <div className={`font-bold ${(grandTotal - parseFloat(amountPaid || 0)) <= 0 
+                      <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} text-xs sm:text-sm`}>Balance</span>
+                      <div className={`font-bold text-sm sm:text-base ${(grandTotal - parseFloat(amountPaid || 0)) <= 0 
                           ? (darkMode ? 'text-green-400' : 'text-green-600') 
                           : (darkMode ? 'text-red-400' : 'text-red-600')}`}>
                         ₹ {(grandTotal - parseFloat(amountPaid || 0)).toFixed(2)}
@@ -1190,7 +1701,7 @@ const AddProducts = () => {
 
                 {billMode === 'full' && (
                   <div className="mt-3 text-center">
-                    <span className={`inline-block px-4 py-2 rounded-full ${
+                    <span className={`inline-block px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm ${
                       paymentStatus === 'pending' 
                         ? (darkMode ? 'bg-yellow-800 text-yellow-200 border border-yellow-700' : 'bg-yellow-100 text-yellow-800 border border-yellow-200')
                         : (darkMode ? 'bg-green-800 text-green-200 border border-green-700' : 'bg-green-100 text-green-800 border border-green-200')
@@ -1341,14 +1852,36 @@ const AddProducts = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h3 className={`text-xl font-medium ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>Order Saved Successfully!</h3>
-              <p className={`${darkMode ? 'text-gray-300' : 'text-gray-500'} mb-5`}>Your order has been saved and is now available in the client list.</p>
-              <button
-                onClick={() => setShowSuccessModal(false)}
-                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:text-sm transition-colors duration-200"
-              >
-                OK
-              </button>
+              <h3 className={`text-xl font-medium ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
+                {billMode === 'existing' 
+                  ? 'Products Added to Order Successfully!' 
+                  : isEditMode 
+                    ? 'Order Updated Successfully!' 
+                    : 'Order Saved Successfully!'}
+              </h3>
+              <p className={`${darkMode ? 'text-gray-300' : 'text-gray-500'} mb-5`}>
+                {billMode === 'existing'
+                  ? 'New products have been added to the existing order and all totals have been recalculated.'
+                  : isEditMode 
+                    ? 'Your order has been updated with new products and is now available in the client list.'
+                    : 'Your order has been saved and is now available in the client list.'}
+              </p>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowSuccessModal(false)}
+                  className="flex-1 inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:text-sm transition-colors duration-200"
+                >
+                  OK
+                </button>
+                {isEditMode && (
+                  <button
+                    onClick={() => navigate(`/order/${currentOrderId}`)}
+                    className="flex-1 inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm transition-colors duration-200"
+                  >
+                    View Order
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

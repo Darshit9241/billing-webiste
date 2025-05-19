@@ -1405,7 +1405,16 @@ const ClientList = () => {
                                 type="number"
                                 name="count"
                                 value={productFormData.count}
-                                onChange={handleProductFormChange}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  // Prevent negative values
+                                  if (parseFloat(value) < 0) return;
+                                  
+                                  setProductFormData({
+                                    ...productFormData,
+                                    count: parseFloat(value)
+                                  });
+                                }}
                                 min="0"
                                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
                                 placeholder="0"
@@ -1421,11 +1430,20 @@ const ClientList = () => {
                                   type="number"
                                   name="price"
                                   value={productFormData.price}
-                                  onChange={handleProductFormChange}
-                                  // min="0"
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+                                    // Prevent negative values
+                                    if (parseFloat(value) < 0) return;
+                                    
+                                    setProductFormData({
+                                      ...productFormData,
+                                      price: parseFloat(value)
+                                    });
+                                  }}
+                                  min="0"
                                   step="0.01"
                                   className="w-full pl-7 px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
-                                // placeholder="0.00"
+                                  placeholder="0.00"
                                 />
                               </div>
                             </div>
@@ -1941,6 +1959,9 @@ const ClientList = () => {
                     value={newPayment}
                     onChange={(e) => {
                       const value = e.target.value;
+                      // Prevent negative values
+                      if (parseFloat(value) < 0) return;
+                      
                       const remainingBalance = (editingClient?.grandTotal || 0) - (parseFloat(editFormData.amountPaid) || 0);
 
                       if (parseFloat(value) > remainingBalance) {
@@ -1950,7 +1971,7 @@ const ClientList = () => {
                       }
                       setNewPayment(value);
                     }}
-                    min="0.01"
+                    min="0"
                     max={((editingClient?.grandTotal || 0) - (parseFloat(editFormData.amountPaid) || 0)).toFixed(2)}
                     step="0.01"
                     placeholder="0.00"

@@ -479,15 +479,15 @@ const ClientList = () => {
     if (editingPayment !== null) {
       // Update existing payment
       const updatedPaymentHistory = [...editFormData.paymentHistory];
-      const oldAmount = updatedPaymentHistory[editingPayment].amount;
+      const oldAmount = parseFloat(updatedPaymentHistory[editingPayment].amount) || 0;
       updatedPaymentHistory[editingPayment] = {
         amount: paymentAmount,
         date: currentDate
       };
 
-      // Recalculate total paid amount
-      const previousTotal = parseFloat(editFormData.amountPaid) || 0;
-      const newTotalPaid = previousTotal - oldAmount + paymentAmount;
+      // Recalculate total paid amount by subtracting the old amount and adding the new amount
+      const totalPaid = parseFloat(editFormData.amountPaid) || 0;
+      const newTotalPaid = totalPaid - oldAmount + paymentAmount;
 
       setEditFormData({
         ...editFormData,
@@ -1970,7 +1970,20 @@ const ClientList = () => {
                 </div>
                 <div className="flex justify-between items-center pt-2 border-t border-white/10">
                   <span className="text-xs font-medium text-slate-300">Remaining Balance:</span>
-                  <span className="text-sm font-bold text-amber-400">₹{((editingClient?.grandTotal || 0) - (parseFloat(editFormData.amountPaid) || 0)).toFixed(2)}</span>
+                  {editingPayment !== null && editFormData.paymentHistory && editFormData.paymentHistory[editingPayment] ? (
+                    <span className="text-sm font-bold text-amber-400">
+                      ₹{(
+                        (editingClient?.grandTotal || 0) - 
+                        (parseFloat(editFormData.amountPaid) || 0) + 
+                        (parseFloat(editFormData.paymentHistory[editingPayment].amount) || 0)
+                      ).toFixed(2)}
+                      <span className="text-xs ml-1 text-slate-400">(including this payment)</span>
+                    </span>
+                  ) : (
+                    <span className="text-sm font-bold text-amber-400">
+                      ₹{((editingClient?.grandTotal || 0) - (parseFloat(editFormData.amountPaid) || 0)).toFixed(2)}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -1990,17 +2003,25 @@ const ClientList = () => {
                       // Prevent negative values
                       if (parseFloat(value) < 0) return;
                       
-                      const remainingBalance = (editingClient?.grandTotal || 0) - (parseFloat(editFormData.amountPaid) || 0);
+                      // When editing a payment, the remaining balance calculation should include the current payment amount
+                      let remainingBalance = (editingClient?.grandTotal || 0) - (parseFloat(editFormData.amountPaid) || 0);
+                      
+                      // If editing, add back the original payment amount to the remaining balance
+                      if (editingPayment !== null && editFormData.paymentHistory && editFormData.paymentHistory[editingPayment]) {
+                        const originalAmount = parseFloat(editFormData.paymentHistory[editingPayment].amount) || 0;
+                        remainingBalance += originalAmount;
+                      }
 
-                      if (parseFloat(value) > remainingBalance) {
+                      // Now check if the new value exceeds the adjusted remaining balance
+                      if (parseFloat(value) > remainingBalance && editingPayment === null) {
                         setError(`Payment amount cannot exceed remaining balance of ₹${remainingBalance.toFixed(2)}`);
                         setTimeout(() => setError(''), 3000);
                         return;
                       }
+                      
                       setNewPayment(value);
                     }}
                     min="0"
-                    max={((editingClient?.grandTotal || 0) - (parseFloat(editFormData.amountPaid) || 0)).toFixed(2)}
                     step="0.01"
                     placeholder="0.00"
                     className="w-full pl-8 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"

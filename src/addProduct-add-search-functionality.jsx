@@ -356,7 +356,7 @@ const AddProducts = () => {
           const count = updatedProduct.count === '' ? 0 : parseFloat(updatedProduct.count);
           const price = updatedProduct.price === '' ? 0 : parseFloat(updatedProduct.price);
           
-          // Calculate total with two decimal places
+          // Calculate total with two decimal places and ensure it's a number
           updatedProduct.total = parseFloat((count * price).toFixed(2));
         }
 
@@ -531,19 +531,44 @@ const AddProducts = () => {
           } else {
             return product.count && product.price;
           }
+        }).map(product => {
+          // Ensure total is properly calculated as a number
+          const count = parseFloat(product.count || 0);
+          const price = parseFloat(product.price || 0);
+          return {
+            ...product,
+            count: count,
+            price: price,
+            total: parseFloat((count * price).toFixed(2))
+          };
         });
         
         // Combine products (keeping existing products and adding new ones)
         const combinedProducts = [
-          ...existingProducts,
+          ...existingProducts.map(product => {
+            // Ensure existing products also have numeric values and correct totals
+            const count = parseFloat(product.count || 0);
+            const price = parseFloat(product.price || 0);
+            return {
+              ...product,
+              count: count,
+              price: price,
+              total: parseFloat((count * price).toFixed(2))
+            };
+          }),
           ...validNewProducts.filter(p => !productIds.has(p.id))
         ];
         
         // Calculate new grand total based on all products
-        const updatedGrandTotal = combinedProducts.reduce(
-          (sum, product) => sum + (typeof product.total === 'number' ? product.total : 0), 
+        const updatedGrandTotal = parseFloat(combinedProducts.reduce(
+          (sum, product) => {
+            // Make sure we're adding numeric values
+            const productTotal = typeof product.total === 'number' ? product.total : 
+              parseFloat(product.count || 0) * parseFloat(product.price || 0);
+            return sum + productTotal;
+          }, 
           0
-        );
+        ).toFixed(2)); // Fix to 2 decimal places and convert back to number
         
         // Create updated order data
         const updatedOrderData = {
@@ -655,7 +680,10 @@ const AddProducts = () => {
     navigate('/login');
   };
 
-  const grandTotal = products.reduce((sum, product) => sum + product.total, 0);
+  const grandTotal = products.reduce((sum, product) => {
+    // Make sure we're adding numeric values
+    return sum + (typeof product.total === 'number' ? product.total : 0);
+  }, 0);
 
   const handleAmountPaidChange = (e) => {
     let value = e.target.value;

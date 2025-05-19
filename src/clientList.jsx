@@ -489,7 +489,6 @@ const ClientList = () => {
       const previousTotal = parseFloat(editFormData.amountPaid) || 0;
       const newTotalPaid = previousTotal - oldAmount + paymentAmount;
 
-      // Update the form data with the new payment
       setEditFormData({
         ...editFormData,
         amountPaid: newTotalPaid,
@@ -1235,7 +1234,7 @@ const ClientList = () => {
                       />
                     </div>
 
-                    <div className="flex justify-between items-center">
+                    <div>
                       <label className="block text-sm font-medium text-slate-300 mb-1">
                         Amount Paid (₹)
                         <span className="text-xs text-slate-500 ml-2">
@@ -1244,6 +1243,22 @@ const ClientList = () => {
                         </span>
                       </label>
                       <div className="flex space-x-2 items-center">
+                        <div className="relative flex-1">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span className="text-slate-400">₹</span>
+                          </div>
+                          <input
+                            type="number"
+                            name="amountPaid"
+                            value={editFormData.amountPaid}
+                            onChange={handleEditInputChange}
+                            min="0"
+                            step="0.01"
+                            placeholder="0.00"
+                            className="w-full pl-8 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
+                            readOnly
+                          />
+                        </div>
                         <button
                           type="button"
                           onClick={() => setShowPaymentModal(true)}
@@ -1975,31 +1990,17 @@ const ClientList = () => {
                       // Prevent negative values
                       if (parseFloat(value) < 0) return;
                       
-                      // Different logic based on whether we're adding or editing a payment
-                      if (editingPayment !== null) {
-                        // When editing, we can set any value up to remaining balance + the current payment amount
-                        const currentPaymentAmount = parseFloat(editFormData.paymentHistory[editingPayment].amount) || 0;
-                        const remainingBalance = (editingClient?.grandTotal || 0) - (parseFloat(editFormData.amountPaid) || 0);
-                        const maxAllowedAmount = remainingBalance + currentPaymentAmount;
-                        
-                        if (parseFloat(value) > maxAllowedAmount) {
-                          setError(`Payment amount cannot exceed ${maxAllowedAmount.toFixed(2)}`);
-                          setTimeout(() => setError(''), 3000);
-                          return;
-                        }
-                      } else {
-                        // For new payments, restrict to remaining balance
-                        const remainingBalance = (editingClient?.grandTotal || 0) - (parseFloat(editFormData.amountPaid) || 0);
-                        if (parseFloat(value) > remainingBalance) {
-                          setError(`Payment amount cannot exceed remaining balance of ₹${remainingBalance.toFixed(2)}`);
-                          setTimeout(() => setError(''), 3000);
-                          return;
-                        }
+                      const remainingBalance = (editingClient?.grandTotal || 0) - (parseFloat(editFormData.amountPaid) || 0);
+
+                      if (parseFloat(value) > remainingBalance) {
+                        setError(`Payment amount cannot exceed remaining balance of ₹${remainingBalance.toFixed(2)}`);
+                        setTimeout(() => setError(''), 3000);
+                        return;
                       }
-                      
                       setNewPayment(value);
                     }}
                     min="0"
+                    max={((editingClient?.grandTotal || 0) - (parseFloat(editFormData.amountPaid) || 0)).toFixed(2)}
                     step="0.01"
                     placeholder="0.00"
                     className="w-full pl-8 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"

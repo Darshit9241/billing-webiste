@@ -637,9 +637,10 @@ const AddProducts = () => {
         setIsLoading(false);
       }, 3000);
 
-      // Auto-hide the success modal after 3 seconds
+      // Auto-hide the success modal after 3 seconds and redirect to clients page
       setTimeout(() => {
         setShowSuccessModal(false);
+        // navigate('/clients');
       }, 3000);
     } catch (error) {
       setSaveStatus(`Error: ${error.message}`);
@@ -940,7 +941,7 @@ const AddProducts = () => {
                 /> */}
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight">Siyaram Lace</h1>
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight">Billing System</h1>
                 <p className="text-indigo-100 text-xs sm:text-sm mt-0.5 sm:mt-1">Billing System</p>
               </div>
             </div>
@@ -1889,17 +1890,20 @@ const AddProducts = () => {
               </h3>
               <p className={`${darkMode ? 'text-gray-300' : 'text-gray-500'} mb-5`}>
                 {billMode === 'existing'
-                  ? 'New products have been added to the existing order and all totals have been recalculated.'
+                  ? 'New products have been added to the existing order and all totals have been recalculated. Redirecting to clients page...'
                   : isEditMode 
-                    ? 'Your order has been updated with new products and is now available in the client list.'
-                    : 'Your order has been saved and is now available in the client list.'}
+                    ? 'Your order has been updated with new products and is now available in the client list. Redirecting to clients page...'
+                    : 'Your order has been saved and is now available in the client list. Redirecting to clients page...'}
               </p>
               <div className="flex space-x-3">
                 <button
-                  onClick={() => setShowSuccessModal(false)}
+                  onClick={() => {
+                    setShowSuccessModal(false);
+                    navigate('/clients');
+                  }}
                   className="flex-1 inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:text-sm transition-colors duration-200"
                 >
-                  OK
+                  Go to Clients
                 </button>
                 {isEditMode && (
                   <button

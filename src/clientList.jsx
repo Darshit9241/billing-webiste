@@ -398,17 +398,28 @@ const ClientList = () => {
     const updatedProducts = [...editFormData.products];
     const currentTime = Date.now();
 
+    // Ensure numeric values for price and count
+    const price = parseFloat(productFormData.price || 0);
+    const count = parseFloat(productFormData.count || 0);
+    
+    // Calculate total with 2 decimal precision
+    const total = parseFloat((price * count).toFixed(2));
+
     updatedProducts[editingProduct.index] = {
       ...editingProduct,
       name: productFormData.name,
-      price: productFormData.price,
-      count: productFormData.count,
+      price: price,
+      count: count,
+      total: total,
       timestamp: editingProduct.timestamp || currentTime // Keep existing timestamp if it exists, otherwise create new one
     };
 
     // Recalculate the grand total
-    const grandTotal = updatedProducts.reduce((total, product) =>
-      total + (parseFloat(product.price) || 0) * (parseFloat(product.count) || 0), 0);
+    const grandTotal = parseFloat(updatedProducts.reduce((total, product) => {
+      const productPrice = parseFloat(product.price || 0);
+      const productCount = parseFloat(product.count || 0);
+      return total + (productPrice * productCount);
+    }, 0).toFixed(2));
 
     setEditFormData({
       ...editFormData,
@@ -426,8 +437,11 @@ const ClientList = () => {
     updatedProducts.splice(index, 1);
 
     // Recalculate the grand total
-    const grandTotal = updatedProducts.reduce((total, product) =>
-      total + (parseFloat(product.price) || 0) * (parseFloat(product.count) || 0), 0);
+    const grandTotal = parseFloat(updatedProducts.reduce((total, product) => {
+      const productPrice = parseFloat(product.price || 0);
+      const productCount = parseFloat(product.count || 0);
+      return total + (productPrice * productCount);
+    }, 0).toFixed(2));
 
     setEditFormData({
       ...editFormData,
@@ -445,6 +459,7 @@ const ClientList = () => {
       name: '',
       price: 0,
       count: 1,
+      total: 0, // Initialize with zero total
       index: editFormData.products.length,
       timestamp: Date.now() // Add timestamp for new products
     });
@@ -551,8 +566,11 @@ const ClientList = () => {
 
     try {
       // Recalculate the grand total
-      const grandTotal = editFormData.products.reduce((total, product) =>
-        total + (parseFloat(product.price) || 0) * (parseFloat(product.count) || 0), 0);
+      const grandTotal = parseFloat(editFormData.products.reduce((total, product) => {
+        const productPrice = parseFloat(product.price || 0);
+        const productCount = parseFloat(product.count || 0);
+        return total + (productPrice * productCount);
+      }, 0).toFixed(2));
 
       // Prepare updated client data
       const updatedClient = {
@@ -563,7 +581,17 @@ const ClientList = () => {
         clientGst: editFormData.clientGst,
         amountPaid: editFormData.amountPaid,
         paymentStatus: editFormData.paymentStatus,
-        products: editFormData.products,
+        products: editFormData.products.map(product => {
+          // Ensure all products have correct numeric values and totals
+          const count = parseFloat(product.count || 0);
+          const price = parseFloat(product.price || 0);
+          return {
+            ...product,
+            count: count,
+            price: price,
+            total: parseFloat((count * price).toFixed(2))
+          };
+        }),
         grandTotal: grandTotal,
         paymentHistory: editFormData.paymentHistory
       };

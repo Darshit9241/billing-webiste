@@ -239,6 +239,11 @@ const AddProducts = () => {
   const handleChange = (id, field, value) => {
     const updatedProducts = products.map(product => {
       if (product.id === id) {
+        // For numeric fields, ensure values can't be negative
+        if ((field === 'count' || field === 'price') && parseFloat(value) < 0) {
+          value = "0";
+        }
+        
         const updatedProduct = { ...product, [field]: value };
 
         // Recalculate total when count or price changes
@@ -939,6 +944,7 @@ const AddProducts = () => {
                           value={product.count}
                           onChange={(e) => handleChange(product.id, 'count', e.target.value)}
                           min="0"
+                          onInput={(e) => e.target.value < 0 && (e.target.value = 0)}
                           ref={(el) => (productRefs.current[`${product.id}_count`] = el)}
                           onKeyDown={(e) => handleKeyPress(e, product.id, 'count')}
                         />
@@ -952,6 +958,7 @@ const AddProducts = () => {
                           onChange={(e) => handleChange(product.id, 'price', e.target.value)}
                           min="0"
                           step="0.01"
+                          onInput={(e) => e.target.value < 0 && (e.target.value = 0)}
                           ref={(el) => (productRefs.current[`${product.id}_price`] = el)}
                           onKeyDown={(e) => handleKeyPress(e, product.id, 'price', product.id === products[products.length - 1].id)}
                         />
@@ -997,6 +1004,7 @@ const AddProducts = () => {
                       value={product.count}
                       onChange={(e) => handleChange(product.id, 'count', e.target.value)}
                       min="0"
+                      onInput={(e) => e.target.value < 0 && (e.target.value = 0)}
                       ref={(el) => (productRefs.current[`${product.id}_count`] = el)}
                       onKeyDown={(e) => handleKeyPress(e, product.id, 'count')}
                     />
@@ -1009,6 +1017,7 @@ const AddProducts = () => {
                       onChange={(e) => handleChange(product.id, 'price', e.target.value)}
                       min="0"
                       step="0.01"
+                      onInput={(e) => e.target.value < 0 && (e.target.value = 0)}
                       ref={(el) => (productRefs.current[`${product.id}_price`] = el)}
                       onKeyDown={(e) => handleKeyPress(e, product.id, 'price', product.id === products[products.length - 1].id)}
                     />

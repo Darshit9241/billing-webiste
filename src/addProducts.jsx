@@ -323,8 +323,10 @@ const AddProducts = () => {
       // Convert to number if possible
       if (value !== '') {
         const numValue = parseInt(value, 10);
-        // Ensure value is not negative
-        value = Math.max(0, numValue).toString();
+        // Ensure value is not negative and is a valid number
+        if (!isNaN(numValue)) {
+          value = Math.max(0, numValue).toString();
+        }
       }
     } else if (field === 'price') {
       // Remove any non-numeric characters except decimal point
@@ -339,7 +341,7 @@ const AddProducts = () => {
       // Convert to number if possible
       if (value !== '') {
         const numValue = parseFloat(value);
-        // Ensure value is not negative
+        // Ensure value is not negative and is a valid number
         if (!isNaN(numValue)) {
           value = Math.max(0, numValue).toString();
         }
@@ -361,7 +363,7 @@ const AddProducts = () => {
         }
 
         // If this is a new product being edited for the first time, add a timestamp
-        if (!updatedProduct.timestamp && (field === 'name' || field === 'count' || field === 'price')) {
+        if (!updatedProduct.timestamp) {
           updatedProduct.timestamp = Date.now();
         }
 
@@ -376,14 +378,26 @@ const AddProducts = () => {
   const addProduct = () => {
     const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
     // Add timestamp when creating a new product
-    setProducts([...products, { 
+    const newProduct = { 
       id: newId, 
       name: '', 
       count: '', 
       price: '', 
       total: 0,
       timestamp: Date.now() // Add timestamp for the new product
-    }]);
+    };
+    
+    setProducts([...products, newProduct]);
+    
+    // Focus on the first field of the new product after it's added
+    setTimeout(() => {
+      const firstField = billMode === 'full' ? 'name' : 'count';
+      const ref = productRefs.current[`${newId}_${firstField}`];
+      if (ref) {
+        ref.focus();
+        ref.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
   };
 
   const removeProduct = (id) => {
@@ -418,22 +432,37 @@ const AddProducts = () => {
       setErrorMessage(errorMsg);
       setShowErrorModal(true);
       
-      // Focus on the first invalid field
+      // Focus on the first invalid field and scroll it into view
       const firstInvalidProduct = invalidProducts[0];
       setTimeout(() => {
         // Try to focus on the first missing field
+        let fieldToFocus = null;
+        
         if (billMode === 'full' && !firstInvalidProduct.name) {
-          productRefs.current[`${firstInvalidProduct.id}_name`]?.focus();
+          fieldToFocus = 'name';
         } else if (!firstInvalidProduct.count) {
-          productRefs.current[`${firstInvalidProduct.id}_count`]?.focus();
+          fieldToFocus = 'count';
         } else if (!firstInvalidProduct.price) {
-          productRefs.current[`${firstInvalidProduct.id}_price`]?.focus();
+          fieldToFocus = 'price';
         }
         
-        // Scroll the product into view
-        const element = productRefs.current[`${firstInvalidProduct.id}_${billMode === 'full' ? 'name' : 'count'}`];
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (fieldToFocus) {
+          const focusRef = productRefs.current[`${firstInvalidProduct.id}_${fieldToFocus}`];
+          if (focusRef) {
+            focusRef.focus();
+            focusRef.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Optional: Add visual highlighting to the field
+            const originalBorderColor = focusRef.style.borderColor;
+            focusRef.style.borderColor = '#ef4444'; // red-500
+            focusRef.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.3)';
+            
+            // Remove highlighting after a short delay
+            setTimeout(() => {
+              focusRef.style.borderColor = originalBorderColor;
+              focusRef.style.boxShadow = '';
+            }, 2000);
+          }
         }
       }, 500); // Delay to allow the error modal to be shown first
       
@@ -452,16 +481,31 @@ const AddProducts = () => {
       // Focus on the first zero-value field
       const firstZeroProduct = zeroQuantityProducts[0];
       setTimeout(() => {
+        let fieldToFocus = null;
+        
         if (parseFloat(firstZeroProduct.count) === 0) {
-          productRefs.current[`${firstZeroProduct.id}_count`]?.focus();
+          fieldToFocus = 'count';
         } else if (parseFloat(firstZeroProduct.price) === 0) {
-          productRefs.current[`${firstZeroProduct.id}_price`]?.focus();
+          fieldToFocus = 'price';
         }
         
-        // Scroll the product into view
-        const element = productRefs.current[`${firstZeroProduct.id}_${parseFloat(firstZeroProduct.count) === 0 ? 'count' : 'price'}`];
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (fieldToFocus) {
+          const focusRef = productRefs.current[`${firstZeroProduct.id}_${fieldToFocus}`];
+          if (focusRef) {
+            focusRef.focus();
+            focusRef.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Optional: Add visual highlighting to the field
+            const originalBorderColor = focusRef.style.borderColor;
+            focusRef.style.borderColor = '#ef4444'; // red-500
+            focusRef.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.3)';
+            
+            // Remove highlighting after a short delay
+            setTimeout(() => {
+              focusRef.style.borderColor = originalBorderColor;
+              focusRef.style.boxShadow = '';
+            }, 2000);
+          }
         }
       }, 500);
       
@@ -606,14 +650,34 @@ const AddProducts = () => {
           });
         }
         
+        // Filter out empty products and ensure correct data types for all fields
+        const validProducts = products.filter(product => {
+          if (billMode === 'full') {
+            return product.name && product.count && product.price;
+          } else {
+            return product.count && product.price;
+          }
+        }).map(product => {
+          // Convert all numeric fields to ensure they're numbers, not strings
+          const count = parseFloat(product.count || 0);
+          const price = parseFloat(product.price || 0);
+          return {
+            ...product,
+            count: count,
+            price: price,
+            total: parseFloat((count * price).toFixed(2)),
+            timestamp: product.timestamp || Date.now() // Ensure all products have a timestamp
+          };
+        });
+        
         // Create order data object
         const orderData = {
           clientName,
           clientAddress,
           clientPhone,
           clientGst,
-          products,
-          grandTotal,
+          products: validProducts, // Use the filtered and processed products
+          grandTotal: parseFloat(validProducts.reduce((sum, product) => sum + product.total, 0).toFixed(2)),
           paymentStatus: initialPaymentAmount >= grandTotal ? 'cleared' : 'pending',
           amountPaid: initialPaymentAmount,
           timestamp: Date.now(),
@@ -640,7 +704,7 @@ const AddProducts = () => {
       // Auto-hide the success modal after 3 seconds and redirect to clients page
       setTimeout(() => {
         setShowSuccessModal(false);
-        // navigate('/clients');
+        navigate('/clients');
       }, 3000);
     } catch (error) {
       setSaveStatus(`Error: ${error.message}`);

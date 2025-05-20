@@ -55,12 +55,6 @@ const ClientList = () => {
   const [isDateFilterActive, setIsDateFilterActive] = useState(false);
   const [viewMode, setViewMode] = useState('card'); // Add this new state for view mode
 
-  // New state for merge functionality 
-  const [selectedClientsForMerge, setSelectedClientsForMerge] = useState([]);
-  const [showMergeButton, setShowMergeButton] = useState(false);
-  const [showMergeModal, setShowMergeModal] = useState(false);
-  const [mergedClient, setMergedClient] = useState(null);
-
   const [showModalDelete, setShowDeleteModal] = useState(false);
   const [selectedDeleteClientId, setSelectedDeleteClientId] = useState(null);
 
@@ -168,120 +162,6 @@ const ClientList = () => {
     }
 
     setFilteredClients(filtered);
-    // Show merge button only when search results contain multiple clients
-    setShowMergeButton(filtered.length > 1 && searchQuery.trim() !== '');
-  };
-
-  // Toggle client selection for merge
-  const toggleClientSelection = (clientId) => {
-    if (selectedClientsForMerge.includes(clientId)) {
-      setSelectedClientsForMerge(selectedClientsForMerge.filter(id => id !== clientId));
-    } else {
-      setSelectedClientsForMerge([...selectedClientsForMerge, clientId]);
-    }
-  };
-
-  // Handle merge button click
-  const handleMergeButtonClick = () => {
-    if (selectedClientsForMerge.length < 2) {
-      setError('Please select at least two clients to merge');
-      setTimeout(() => setError(''), 3000);
-      return;
-    }
-
-    // Get the selected clients from filtered clients
-    const clientsToMerge = filteredClients.filter(client => 
-      selectedClientsForMerge.includes(client.id)
-    );
-
-    // Create a merged client object
-    const mergedClientData = createMergedClient(clientsToMerge);
-    setMergedClient(mergedClientData);
-    setShowMergeModal(true);
-  };
-
-  // Create merged client from selected clients
-  const createMergedClient = (clients) => {
-    // Use the first client as the base
-    const baseClient = { ...clients[0] };
-    
-    // Initialize merged values
-    let allProducts = [...(baseClient.products || [])];
-    let totalGrandTotal = baseClient.grandTotal || 0;
-    let totalAmountPaid = baseClient.amountPaid || 0;
-    let allPaymentHistory = [...(baseClient.paymentHistory || [])];
-    
-    // Combine data from all other selected clients
-    for (let i = 1; i < clients.length; i++) {
-      const client = clients[i];
-      
-      // Merge products
-      if (client.products && client.products.length > 0) {
-        allProducts = [...allProducts, ...client.products];
-      }
-      
-      // Sum up the financial data
-      totalGrandTotal += client.grandTotal || 0;
-      totalAmountPaid += client.amountPaid || 0;
-      
-      // Merge payment history
-      if (client.paymentHistory && client.paymentHistory.length > 0) {
-        allPaymentHistory = [...allPaymentHistory, ...client.paymentHistory];
-      }
-    }
-    
-    // Sort payment history by date
-    allPaymentHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
-    
-    // Create the merged client
-    const mergedClient = {
-      ...baseClient,
-      clientName: `Merged: ${baseClient.clientName || 'Clients'}`,
-      products: allProducts,
-      grandTotal: totalGrandTotal,
-      amountPaid: totalAmountPaid,
-      paymentHistory: allPaymentHistory,
-      paymentStatus: totalAmountPaid >= totalGrandTotal ? 'cleared' : 'pending',
-      merged: true,
-      mergedFrom: clients.map(c => c.id),
-      timestamp: Date.now()
-    };
-    
-    return mergedClient;
-  };
-
-  // Save the merged client
-  const saveMergedClient = async () => {
-    try {
-      setLoading(true);
-      
-      // Create a new client with the merged data
-      const mergedClientWithId = {
-        ...mergedClient,
-        id: `merged_${Date.now()}`
-      };
-      
-      // Save to Firebase
-      await updateClient(mergedClientWithId);
-      
-      // Update local state
-      setSavedClients([...savedClients, mergedClientWithId]);
-      
-      // Reset merge state
-      setSelectedClientsForMerge([]);
-      setShowMergeModal(false);
-      setMergedClient(null);
-      setSearchQuery('');
-      
-      // Show success message
-      setError('Clients successfully merged!');
-      setTimeout(() => setError(''), 3000);
-    } catch (err) {
-      setError(`Failed to save merged client: ${err.message}`);
-      setTimeout(() => setError(''), 3000);
-    } finally {
-      setLoading(false);
-    }
   };
 
   const fetchClients = async () => {
@@ -1311,61 +1191,11 @@ const ClientList = () => {
                 placeholder="Search by client name, ID or GST number..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={`w-full pl-10 pr-24 py-3 ${isDarkMode ? 'bg-white/5' : 'bg-white'} border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} rounded-xl ${isDarkMode ? 'text-white placeholder-slate-400' : 'text-gray-900 placeholder-gray-400'} focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 shadow-sm`}
+                className={`w-full pl-10 pr-10 py-3 ${isDarkMode ? 'bg-white/5' : 'bg-white'} border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} rounded-xl ${isDarkMode ? 'text-white placeholder-slate-400' : 'text-gray-900 placeholder-gray-400'} focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 shadow-sm`}
               />
-              {/* Merge buttons */}
-              {showMergeButton && (
-                <div className="absolute inset-y-0 right-10 flex items-center">
-                  {/* Select All button */}
-                  <button
-                    onClick={() => {
-                      // Check if all filtered clients are already selected
-                      const allSelected = filteredClients.every(client => 
-                        selectedClientsForMerge.includes(client.id)
-                      );
-                      
-                      if (allSelected) {
-                        // If all are selected, deselect all
-                        setSelectedClientsForMerge([]);
-                      } else {
-                        // Otherwise, select all filtered clients
-                        setSelectedClientsForMerge(filteredClients.map(client => client.id));
-                      }
-                    }}
-                    className={`mr-3 px-2 py-1 rounded-md text-xs font-medium ${
-                      filteredClients.length > 0 && filteredClients.every(client => selectedClientsForMerge.includes(client.id))
-                      ? `${isDarkMode ? 'bg-emerald-500/80 text-white' : 'bg-emerald-100 text-emerald-700'}`
-                      : `${isDarkMode ? 'bg-white/10 text-slate-300 hover:bg-white/20' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`
-                    } transition-colors`}
-                  >
-                    {filteredClients.length > 0 && filteredClients.every(client => selectedClientsForMerge.includes(client.id))
-                      ? 'Deselect All'
-                      : 'Select All'}
-                  </button>
-                  
-                  {/* Merge button */}
-                  <button
-                    onClick={handleMergeButtonClick}
-                    disabled={selectedClientsForMerge.length < 2}
-                    className={`flex items-center pr-3 pl-3 ${
-                      selectedClientsForMerge.length < 2 
-                      ? `${isDarkMode ? 'text-slate-500' : 'text-gray-400'} cursor-not-allowed` 
-                      : `${isDarkMode ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-500'} cursor-pointer`
-                    }`}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-                    </svg>
-                    <span className="ml-1 text-sm font-medium">Merge ({selectedClientsForMerge.length})</span>
-                  </button>
-                </div>
-              )}
               {searchQuery && (
                 <button
-                  onClick={() => {
-                    setSearchQuery('');
-                    setSelectedClientsForMerge([]);
-                  }}
+                  onClick={() => setSearchQuery('')}
                   className="absolute inset-y-0 right-0 flex items-center pr-3"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${isDarkMode ? 'text-slate-400 hover:text-white' : 'text-gray-400 hover:text-gray-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1382,74 +1212,9 @@ const ClientList = () => {
           <div className="bg-red-900/50 border-l-4 border-red-500 text-red-100 p-4 mb-6 rounded-lg animate-pulse backdrop-blur-sm shadow-xl">
             <div className="flex">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
               {error}
-            </div>
-          </div>
-        )}
-
-        {/* Selection info panel - Show when search has results */}
-        {showMergeButton && filteredClients.length > 0 && (
-          <div className={`mb-6 p-4 rounded-xl ${isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-white border border-gray-200'} shadow-sm animate-fadeIn`}>
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-2 ${isDarkMode ? 'text-emerald-400' : 'text-emerald-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                <div>
-                  <h3 className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    {filteredClients.length} {filteredClients.length === 1 ? 'result' : 'results'} found
-                  </h3>
-                  <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
-                    {selectedClientsForMerge.length} of {filteredClients.length} selected for merging
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => {
-                    const allSelected = filteredClients.every(client => 
-                      selectedClientsForMerge.includes(client.id)
-                    );
-                    
-                    if (allSelected) {
-                      setSelectedClientsForMerge([]);
-                    } else {
-                      setSelectedClientsForMerge(filteredClients.map(client => client.id));
-                    }
-                  }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
-                    filteredClients.every(client => selectedClientsForMerge.includes(client.id))
-                    ? `${isDarkMode ? 'bg-emerald-500/80 text-white' : 'bg-emerald-100 text-emerald-800'}`
-                    : `${isDarkMode ? 'bg-white/10 text-white' : 'bg-gray-100 text-gray-800'}`
-                  } transition-colors flex items-center`}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    {filteredClients.every(client => selectedClientsForMerge.includes(client.id)) ? (
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    ) : (
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
-                    )}
-                  </svg>
-                  {filteredClients.every(client => selectedClientsForMerge.includes(client.id))
-                    ? 'Deselect All'
-                    : 'Select All'}
-                </button>
-                
-                {selectedClientsForMerge.length >= 2 && (
-                  <button
-                    onClick={handleMergeButtonClick}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white transition-colors flex items-center shadow-sm`}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-                    </svg>
-                    Merge {selectedClientsForMerge.length} Clients
-                  </button>
-                )}
-              </div>
             </div>
           </div>
         )}
@@ -1967,51 +1732,8 @@ const ClientList = () => {
             {filteredClients.map((client) => (
               <div
                 key={client.id}
-                className={`backdrop-blur-md ${isDarkMode ? 'bg-white/10' : 'bg-white'} ${selectedClientsForMerge.includes(client.id) ? `${isDarkMode ? 'ring-2 ring-emerald-500' : 'ring-2 ring-emerald-500'}` : ''} rounded-xl shadow-xl overflow-hidden border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} hover:shadow-emerald-500/10 transition-all duration-300`}
+                className={`backdrop-blur-md ${isDarkMode ? 'bg-white/10' : 'bg-white'} rounded-xl shadow-xl overflow-hidden border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} hover:shadow-emerald-500/10 transition-all duration-300`}
               >
-                {/* Card header with selection checkbox */}
-                <div className={`p-5 ${isDarkMode ? 'bg-gradient-to-r from-slate-800/80 to-slate-700/80' : 'bg-gradient-to-r from-gray-50 to-gray-100'} border-b ${isDarkMode ? 'border-slate-600/30' : 'border-gray-200'}`}>
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-start">
-                      {/* Checkbox for merge functionality */}
-                      {showMergeButton && (
-                        <div className="mr-3 mt-1">
-                          <input
-                            type="checkbox"
-                            checked={selectedClientsForMerge.includes(client.id)}
-                            onChange={() => toggleClientSelection(client.id)}
-                            className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
-                          />
-                        </div>
-                      )}
-                      <div>
-                        <h3 className={`font-semibold text-left text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                          {client.clientName || 'Unnamed Client'}
-                          {client.merged && <span className="ml-2 text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full">Merged</span>}
-                        </h3>
-                        <p className={`text-xs text-left ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mt-1`}>Order ID: {client.id}</p>
-                        {client.clientGst && (
-                          <p className={`text-xs text-left ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'} mt-1 flex items-center`}>
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            GST: {client.clientGst}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <span className={`text-xs px-3 py-1 rounded-full font-medium ${client.paymentStatus === 'cleared'
-                      ? `${isDarkMode ? 'bg-sky-500/20' : 'bg-sky-100'} ${isDarkMode ? 'text-sky-300' : 'text-sky-700'} border ${isDarkMode ? 'border-sky-500/30' : 'border-sky-200'}`
-                      : `${isDarkMode ? 'bg-amber-500/20' : 'bg-amber-100'} ${isDarkMode ? 'text-amber-300' : 'text-amber-700'} border ${isDarkMode ? 'border-amber-500/30' : 'border-amber-200'}`
-                      }`}>
-                      {client.paymentStatus === 'cleared' ? 'Paid' : 'Pending'}
-                    </span>
-                  </div>
-                  <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mt-3`}>
-                    {formatDate(client.timestamp)}
-                  </p>
-                </div>
-
                 <div className="p-5">
                   <div className="flex justify-between items-start mb-4">
                     <div>
@@ -2117,38 +1839,23 @@ const ClientList = () => {
             {filteredClients.map((client) => (
               <div
                 key={client.id}
-                className={`backdrop-blur-md ${isDarkMode ? 'bg-white/10' : 'bg-white'} ${selectedClientsForMerge.includes(client.id) ? `${isDarkMode ? 'ring-2 ring-emerald-500' : 'ring-2 ring-emerald-500'}` : ''} rounded-xl shadow-xl overflow-hidden border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} group hover:shadow-emerald-500/10 transition-all duration-300 hover:-translate-y-1`}
+                className={`backdrop-blur-md ${isDarkMode ? 'bg-white/10' : 'bg-white'} rounded-xl shadow-xl overflow-hidden border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} group hover:shadow-emerald-500/10 transition-all duration-300 hover:-translate-y-1`}
               >
                 {/* Card header */}
                 <div className={`p-5 ${isDarkMode ? 'bg-gradient-to-r from-slate-800/80 to-slate-700/80' : 'bg-gradient-to-r from-gray-50 to-gray-100'} border-b ${isDarkMode ? 'border-slate-600/30' : 'border-gray-200'}`}>
                   <div className="flex justify-between items-start">
-                    <div className="flex items-start">
-                      {/* Checkbox for merge functionality */}
-                      {showMergeButton && (
-                        <div className="mr-3 mt-1">
-                          <input
-                            type="checkbox"
-                            checked={selectedClientsForMerge.includes(client.id)}
-                            onChange={() => toggleClientSelection(client.id)}
-                            className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
-                          />
-                        </div>
+                    <div>
+                      <h3 className={`font-semibold text-left text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{client.clientName || 'Unnamed Client'}</h3>
+                      <p className={`text-xs text-left ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mt-1`}>Order ID: {client.id}</p>
+                      {client.clientGst && (
+                        <p className={`text-xs text-left ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'} mt-1 flex items-center`}>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          GST: {client.clientGst}
+                        </p>
+
                       )}
-                      <div>
-                        <h3 className={`font-semibold text-left text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                          {client.clientName || 'Unnamed Client'}
-                          {client.merged && <span className="ml-2 text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full">Merged</span>}
-                        </h3>
-                        <p className={`text-xs text-left ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mt-1`}>Order ID: {client.id}</p>
-                        {client.clientGst && (
-                          <p className={`text-xs text-left ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'} mt-1 flex items-center`}>
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            GST: {client.clientGst}
-                          </p>
-                        )}
-                      </div>
                     </div>
                     <span className={`text-xs px-3 py-1 rounded-full font-medium ${client.paymentStatus === 'cleared'
                       ? `${isDarkMode ? 'bg-sky-500/20' : 'bg-sky-100'} ${isDarkMode ? 'text-sky-300' : 'text-sky-700'} border ${isDarkMode ? 'border-sky-500/30' : 'border-sky-200'}`
@@ -2545,204 +2252,6 @@ const ClientList = () => {
               >
                 Delete Product
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Merge Preview Modal */}
-      {showMergeModal && mergedClient && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm overflow-y-auto py-10">
-          <div className="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-3xl mx-4 border border-slate-700 overflow-hidden animate-fadeIn my-8">
-            <div className="p-5 bg-gradient-to-r from-slate-700 to-slate-800 border-b border-slate-700 sticky top-0 z-10">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold text-white flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-                  </svg>
-                  Merge Preview
-                </h3>
-                <button
-                  onClick={() => {
-                    setShowMergeModal(false);
-                    setMergedClient(null);
-                  }}
-                  className="text-slate-400 hover:text-white p-1 rounded-full hover:bg-white/10 transition-all"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <div className="p-5 max-h-[70vh] overflow-y-auto custom-scrollbar">
-              {/* Client Details */}
-              <div className="mb-6">
-                <h4 className="text-white font-medium text-lg mb-3 flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  Client Information
-                </h4>
-                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-slate-400 mb-1">Client Name</p>
-                      <p className="text-white font-medium">{mergedClient.clientName}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-400 mb-1">GST Number</p>
-                      <p className="text-white">{mergedClient.clientGst || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-400 mb-1">Address</p>
-                      <p className="text-white">{mergedClient.clientAddress || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-400 mb-1">Phone</p>
-                      <p className="text-white">{mergedClient.clientPhone || 'N/A'}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Financial Summary */}
-              <div className="mb-6">
-                <h4 className="text-white font-medium text-lg mb-3 flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Financial Summary
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                    <p className="text-xs text-slate-400 mb-1">Total Amount</p>
-                    <p className="text-white text-xl font-bold">₹{mergedClient.grandTotal.toFixed(2)}</p>
-                  </div>
-                  <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                    <p className="text-xs text-slate-400 mb-1">Amount Paid</p>
-                    <p className="text-emerald-400 text-xl font-bold">₹{mergedClient.amountPaid.toFixed(2)}</p>
-                  </div>
-                  <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                    <p className="text-xs text-slate-400 mb-1">Balance Due</p>
-                    <p className={`text-xl font-bold ${(mergedClient.grandTotal - mergedClient.amountPaid) <= 0 ? 'text-sky-500' : 'text-amber-500'}`}>
-                      ₹{(mergedClient.grandTotal - mergedClient.amountPaid).toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Payment History */}
-              <div className="mb-6">
-                <h4 className="text-white font-medium text-lg mb-3 flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                  Payment History ({mergedClient.paymentHistory ? mergedClient.paymentHistory.length : 0})
-                </h4>
-                {mergedClient.paymentHistory && mergedClient.paymentHistory.length > 0 ? (
-                  <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
-                    <table className="w-full">
-                      <thead className="bg-white/10">
-                        <tr>
-                          <th className="py-2.5 px-4 text-left text-xs font-medium text-slate-300">Date</th>
-                          <th className="py-2.5 px-4 text-right text-xs font-medium text-slate-300">Amount</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-white/5">
-                        {mergedClient.paymentHistory.map((payment, index) => (
-                          <tr key={index} className="text-white hover:bg-white/5">
-                            <td className="py-2.5 px-4 text-xs text-slate-300">
-                              {new Date(payment.date).toLocaleString('en-IN', {
-                                dateStyle: 'medium',
-                                timeStyle: 'short',
-                                timeZone: 'Asia/Kolkata',
-                                hour12: true
-                              })}
-                            </td>
-                            <td className="py-2.5 px-4 text-xs text-right font-medium text-emerald-500">
-                              ₹{parseFloat(payment.amount).toFixed(2)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="bg-white/5 rounded-xl p-4 border border-white/10 text-center text-slate-400 text-sm">
-                    No payment history available
-                  </div>
-                )}
-              </div>
-
-              {/* Products */}
-              <div className="mb-6">
-                <h4 className="text-white font-medium text-lg mb-3 flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                  </svg>
-                  Products ({mergedClient.products ? mergedClient.products.length : 0})
-                </h4>
-                {mergedClient.products && mergedClient.products.length > 0 ? (
-                  <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
-                    <table className="w-full">
-                      <thead className="bg-white/10">
-                        <tr>
-                          <th className="py-2.5 px-4 text-left text-xs font-medium text-slate-300">Product</th>
-                          <th className="py-2.5 px-4 text-right text-xs font-medium text-slate-300">Quantity</th>
-                          <th className="py-2.5 px-4 text-right text-xs font-medium text-slate-300">Price</th>
-                          <th className="py-2.5 px-4 text-right text-xs font-medium text-slate-300">Total</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-white/5">
-                        {mergedClient.products.map((product, index) => (
-                          <tr key={index} className="text-white hover:bg-white/5">
-                            <td className="py-2.5 px-4 text-sm">{product.name}</td>
-                            <td className="py-2.5 px-4 text-xs text-right text-slate-300">{product.count}</td>
-                            <td className="py-2.5 px-4 text-xs text-right text-slate-300">₹{parseFloat(product.price).toFixed(2)}</td>
-                            <td className="py-2.5 px-4 text-xs text-right font-medium text-emerald-500">
-                              ₹{(product.count * parseFloat(product.price)).toFixed(2)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="bg-white/5 rounded-xl p-4 border border-white/10 text-center text-slate-400 text-sm">
-                    No products available
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="p-5 border-t border-slate-700">
-              <div className="flex justify-between items-center">
-                <div className="text-slate-400 text-sm">
-                  <span className="text-white font-medium">{selectedClientsForMerge.length}</span> clients will be merged
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => {
-                      setShowMergeModal(false);
-                      setMergedClient(null);
-                    }}
-                    className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={saveMergedClient}
-                    className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl transition-colors flex items-center"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-                    </svg>
-                    Confirm & Merge
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
         </div>

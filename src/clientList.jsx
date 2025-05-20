@@ -72,7 +72,8 @@ const ClientList = () => {
   const [productFormData, setProductFormData] = useState({
     name: '',
     price: 0,
-    count: 1
+    count: 1,
+    timestamp: Date.now() // Add timestamp to the form data
   });
   const [activeTab, setActiveTab] = useState('general');
   const [isInfoOpen, setIsInfoOpen] = useState(false);
@@ -317,7 +318,8 @@ const ClientList = () => {
     setProductFormData({
       name: '',
       price: 0,
-      count: 1
+      count: 1,
+      timestamp: Date.now() // Add timestamp to the form data
     });
   };
 
@@ -363,7 +365,8 @@ const ClientList = () => {
     setProductFormData({
       name: product.name || '',
       price: product.price || 0,
-      count: product.count || 1
+      count: product.count || 1,
+      timestamp: product.timestamp || Date.now() // Capture existing timestamp or set current time
     });
   };
 
@@ -372,7 +375,8 @@ const ClientList = () => {
     setProductFormData({
       name: '',
       price: 0,
-      count: 1
+      count: 1,
+      timestamp: Date.now() // Add timestamp to the form data
     });
   };
 
@@ -391,6 +395,29 @@ const ClientList = () => {
     }
   };
 
+  // Add a specific handler for the timestamp field
+  const handleTimestampChange = (e) => {
+    // Get the date string from the input
+    const dateString = e.target.value;
+    
+    if (!dateString) {
+      // If the field is cleared, use current timestamp
+      setProductFormData({
+        ...productFormData,
+        timestamp: Date.now()
+      });
+      return;
+    }
+    
+    // Create a date object in local timezone from the input value
+    const localDate = new Date(dateString);
+    
+    // Set the timestamp in milliseconds
+    setProductFormData({
+      ...productFormData,
+      timestamp: localDate.getTime()
+    });
+  };
 
   const saveProductChanges = () => {
     if (!editingProduct) return;
@@ -411,7 +438,7 @@ const ClientList = () => {
       price: price,
       count: count,
       total: total,
-      timestamp: editingProduct.timestamp || currentTime // Keep existing timestamp if it exists, otherwise create new one
+      timestamp: productFormData.timestamp || currentTime // Use the timestamp from form data
     };
 
     // Recalculate the grand total
@@ -655,6 +682,21 @@ const ClientList = () => {
       // Clear error after 3 seconds
       setTimeout(() => setError(''), 3000);
     }
+  };
+
+  // Helper function to format date for datetime-local input
+  const formatDateForInput = (timestamp) => {
+    const date = new Date(timestamp);
+    
+    // Get local ISO string parts
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    
+    // Format as YYYY-MM-DDThh:mm (required format for datetime-local)
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
   return (
@@ -1518,6 +1560,18 @@ const ClientList = () => {
                                 />
                               </div>
                             </div>
+                          </div>
+
+                          {/* Add timestamp editing field */}
+                          <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-1">Date Added</label>
+                            <input
+                              type="datetime-local"
+                              value={productFormData.timestamp ? formatDateForInput(productFormData.timestamp) : ''}
+                              onChange={handleTimestampChange}
+                              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
+                            />
+                            <p className="mt-1 text-xs text-slate-500">This controls when the product appears to have been added</p>
                           </div>
 
                           <div className="flex justify-end gap-2 pt-2">

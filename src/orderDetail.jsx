@@ -374,6 +374,19 @@ const OrderDetail = () => {
                     {isPaid ? 'Paid' : 'Pending'}
                   </span>
                 </div>
+
+                <div className="text-gray-500 font-medium text-left">Order Status:</div>
+                <div className="text-right">
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                      orderData.orderStatus === 'sell' 
+                        ? 'text-blue-800 bg-blue-100 border border-blue-200' 
+                        : 'text-purple-800 bg-purple-100 border border-purple-200'
+                    }`}
+                  >
+                    {orderData.orderStatus === 'sell' ? '📤 Sell' : '📥 Purchased'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>

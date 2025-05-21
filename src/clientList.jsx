@@ -43,6 +43,7 @@ const ClientList = () => {
   const [savedClients, setSavedClients] = useState([]);
   const [filteredClients, setFilteredClients] = useState([]);
   const [activeFilter, setActiveFilter] = useState('all');
+  const [orderStatusFilter, setOrderStatusFilter] = useState('all'); // Add order status filter
   const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < 768);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -71,6 +72,7 @@ const ClientList = () => {
     clientGst: '',
     amountPaid: '',
     paymentStatus: 'pending',
+    orderStatus: 'sell', // Add order status to initial state
     products: [],
     paymentHistory: []
   });
@@ -114,7 +116,7 @@ const ClientList = () => {
   useEffect(() => {
     // Apply filters when savedClients or activeFilter changes
     applyFilters();
-  }, [savedClients, activeFilter, searchQuery, startDate, endDate, isDateFilterActive]);
+  }, [savedClients, activeFilter, orderStatusFilter, searchQuery, startDate, endDate, isDateFilterActive]);
 
   const applyFilters = () => {
     let filtered = savedClients;
@@ -124,6 +126,13 @@ const ClientList = () => {
       filtered = filtered.filter(client => client.paymentStatus !== 'cleared');
     } else if (activeFilter === 'cleared') {
       filtered = filtered.filter(client => client.paymentStatus === 'cleared');
+    }
+
+    // Filter by order status
+    if (orderStatusFilter === 'sell') {
+      filtered = filtered.filter(client => client.orderStatus === 'sell');
+    } else if (orderStatusFilter === 'purchased') {
+      filtered = filtered.filter(client => client.orderStatus === 'purchased');
     }
 
     // Apply date range filter if active
@@ -242,6 +251,7 @@ const ClientList = () => {
       amountPaid: totalAmountPaid,
       paymentHistory: allPaymentHistory,
       paymentStatus: totalAmountPaid >= totalGrandTotal ? 'cleared' : 'pending',
+      orderStatus: baseClient.orderStatus || 'sell', // Preserve order status from base client
       merged: true,
       mergedFrom: clients.map(c => c.id),
       timestamp: Date.now()
@@ -416,6 +426,7 @@ const ClientList = () => {
       clientGst: client.clientGst || '',
       amountPaid: client.amountPaid || '',
       paymentStatus: client.paymentStatus || 'pending',
+      orderStatus: client.orderStatus || 'sell', // Add order status to edit form data
       products: client.products ? [...client.products] : [],
       paymentHistory: client.paymentHistory ? [...client.paymentHistory] : []
     });
@@ -431,6 +442,7 @@ const ClientList = () => {
       clientGst: '',
       amountPaid: '',
       paymentStatus: 'pending',
+      orderStatus: 'sell', // Reset order status
       products: [],
       paymentHistory: []
     });
@@ -752,43 +764,40 @@ const ClientList = () => {
   const saveClientChanges = async (e) => {
     e.preventDefault();
 
-    if (!editingClient) return;
+    const grandTotal = parseFloat(editFormData.products.reduce((total, product) => {
+      const productTotal = product.total || (product.count * product.price);
+      return total + productTotal;
+    }, 0).toFixed(2));
 
     try {
-      // Recalculate the grand total
-      const grandTotal = parseFloat(editFormData.products.reduce((total, product) => {
-        const productPrice = parseFloat(product.price || 0);
-        const productCount = parseFloat(product.count || 0);
-        return total + (productPrice * productCount);
-      }, 0).toFixed(2));
-
-      // Prepare updated client data
       const updatedClient = {
-        ...editingClient,
+        id: editingClient.id,
+        timestamp: editingClient.timestamp,
         clientName: editFormData.clientName,
         clientAddress: editFormData.clientAddress,
         clientPhone: editFormData.clientPhone,
         clientGst: editFormData.clientGst,
         amountPaid: editFormData.amountPaid,
         paymentStatus: editFormData.paymentStatus,
+        orderStatus: editFormData.orderStatus, // Include order status when saving
         products: editFormData.products.map(product => {
-          // Ensure all products have correct numeric values and totals
-          const count = parseFloat(product.count || 0);
-          const price = parseFloat(product.price || 0);
-          return {
-            ...product,
-            count: count,
-            price: price,
-            total: parseFloat((count * price).toFixed(2))
-          };
+          // Ensure product has a timestamp
+          if (!product.timestamp) {
+            product.timestamp = Date.now();
+          }
+          // Calculate total if not present
+          if (product.total === undefined) {
+            product.total = product.count * product.price;
+          }
+          return product;
         }),
-        grandTotal: grandTotal,
+        grandTotal,
         paymentHistory: editFormData.paymentHistory
       };
 
       await updateClient(updatedClient);
 
-      // Update the UI with the updated client
+      // Update the client in the local state
       setSavedClients(savedClients.map(client =>
         client.id === editingClient.id ? updatedClient : client
       ));
@@ -796,7 +805,7 @@ const ClientList = () => {
       // Close the edit form
       closeEditForm();
     } catch (err) {
-      setError('Failed to update client details. Please try again.');
+      setError('Failed to update client. Please try again.');
       console.error(err);
 
       // Clear error after 3 seconds
@@ -1271,6 +1280,63 @@ const ClientList = () => {
                       </div>
                       <span className={`text-sm ${isDarkMode ? 'text-white/80' : 'text-gray-600'} bg-black/10 px-2 py-0.5 rounded-full`}>{savedClients.filter(client => client.paymentStatus === 'cleared').length}</span>
                     </button>
+
+                    {/* Order Status Filter Section */}
+                    <div className={`mt-4 pt-4 border-t ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
+                      <h3 className={`text-sm font-medium mb-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        Order Status Filter
+                      </h3>
+                      <div className="space-y-3">
+                        <button
+                          onClick={() => {
+                            setOrderStatusFilter('all');
+                            setIsInfoOpen(false);
+                          }}
+                          className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all flex items-center justify-between ${orderStatusFilter === 'all'
+                            ? `${isDarkMode ? 'bg-emerald-500' : 'bg-emerald-600'} text-white shadow-md shadow-emerald-500/20`
+                            : `${isDarkMode ? 'bg-white/5' : 'bg-white'} ${isDarkMode ? 'text-slate-300' : 'text-gray-700'} border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} hover:${isDarkMode ? 'bg-white/10' : 'bg-gray-50'}`
+                            }`}
+                        >
+                          <div className="flex items-center">
+                            <div className={`w-3 h-3 rounded-full ${orderStatusFilter === 'all' ? 'bg-white' : 'bg-emerald-500'} mr-2`}></div>
+                            <span className={`text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>All Types</span>
+                          </div>
+                          <span className={`text-sm ${isDarkMode ? 'text-white/80' : 'text-gray-600'} bg-black/10 px-2 py-0.5 rounded-full`}>{savedClients.length}</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setOrderStatusFilter('sell');
+                            setIsInfoOpen(false);
+                          }}
+                          className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all flex items-center justify-between ${orderStatusFilter === 'sell'
+                            ? `${isDarkMode ? 'bg-blue-500' : 'bg-blue-600'} text-white shadow-md shadow-blue-500/20`
+                            : `${isDarkMode ? 'bg-white/5' : 'bg-white'} ${isDarkMode ? 'text-slate-300' : 'text-gray-700'} border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} hover:${isDarkMode ? 'bg-white/10' : 'bg-gray-50'}`
+                            }`}
+                        >
+                          <div className="flex items-center">
+                            <div className={`w-3 h-3 rounded-full ${orderStatusFilter === 'sell' ? 'bg-white' : 'bg-blue-500'} mr-2`}></div>
+                            <span className={`text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Sell</span>
+                          </div>
+                          <span className={`text-sm ${isDarkMode ? 'text-white/80' : 'text-gray-600'} bg-black/10 px-2 py-0.5 rounded-full`}>{savedClients.filter(client => client.orderStatus === 'sell').length}</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setOrderStatusFilter('purchased');
+                            setIsInfoOpen(false);
+                          }}
+                          className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all flex items-center justify-between ${orderStatusFilter === 'purchased'
+                            ? `${isDarkMode ? 'bg-purple-500' : 'bg-purple-600'} text-white shadow-md shadow-purple-500/20`
+                            : `${isDarkMode ? 'bg-white/5' : 'bg-white'} ${isDarkMode ? 'text-slate-300' : 'text-gray-700'} border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} hover:${isDarkMode ? 'bg-white/10' : 'bg-gray-50'}`
+                            }`}
+                        >
+                          <div className="flex items-center">
+                            <div className={`w-3 h-3 rounded-full ${orderStatusFilter === 'purchased' ? 'bg-white' : 'bg-purple-500'} mr-2`}></div>
+                            <span className={`text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Purchased</span>
+                          </div>
+                          <span className={`text-sm ${isDarkMode ? 'text-white/80' : 'text-gray-600'} bg-black/10 px-2 py-0.5 rounded-full`}>{savedClients.filter(client => client.orderStatus === 'purchased').length}</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -1718,6 +1784,47 @@ const ClientList = () => {
                         )}
                       </div>
                     </div>
+
+                    {/* Order Status field */}
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-1">Order Status</label>
+                      <div className="flex items-center space-x-4">
+                        <label className="inline-flex items-center cursor-pointer">
+                          <input
+                            type="radio"
+                            className="sr-only peer"
+                            name="orderStatus"
+                            value="sell"
+                            checked={editFormData.orderStatus === 'sell'}
+                            onChange={() => setEditFormData({ ...editFormData, orderStatus: 'sell' })}
+                          />
+                          <div className="w-10 h-5 bg-slate-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-600 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600 relative"></div>
+                          <span className="ml-2 text-sm text-slate-300">Sell</span>
+                        </label>
+                        
+                        <label className="inline-flex items-center cursor-pointer">
+                          <input
+                            type="radio"
+                            className="sr-only peer"
+                            name="orderStatus"
+                            value="purchased"
+                            checked={editFormData.orderStatus === 'purchased'}
+                            onChange={() => setEditFormData({ ...editFormData, orderStatus: 'purchased' })}
+                          />
+                          <div className="w-10 h-5 bg-slate-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-600 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600 relative"></div>
+                          <span className="ml-2 text-sm text-slate-300">Purchased</span>
+                        </label>
+                      </div>
+                      <div className="mt-2 flex items-center">
+                        <span className={`px-2 py-1 text-xs rounded-md ${
+                          editFormData.orderStatus === 'sell' 
+                            ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' 
+                            : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                        }`}>
+                          {editFormData.orderStatus === 'sell' ? '📤 Sell' : '📥 Purchased'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <div className="p-5">
@@ -2000,12 +2107,23 @@ const ClientList = () => {
                         )}
                       </div>
                     </div>
-                    <span className={`text-xs px-3 py-1 rounded-full font-medium ${client.paymentStatus === 'cleared'
-                      ? `${isDarkMode ? 'bg-sky-500/20' : 'bg-sky-100'} ${isDarkMode ? 'text-sky-300' : 'text-sky-700'} border ${isDarkMode ? 'border-sky-500/30' : 'border-sky-200'}`
-                      : `${isDarkMode ? 'bg-amber-500/20' : 'bg-amber-100'} ${isDarkMode ? 'text-amber-300' : 'text-amber-700'} border ${isDarkMode ? 'border-amber-500/30' : 'border-amber-200'}`
-                      }`}>
-                      {client.paymentStatus === 'cleared' ? 'Paid' : 'Pending'}
-                    </span>
+                      <div className="flex flex-col items-end gap-2">
+                      <span className={`text-xs px-3 py-1 rounded-full font-medium ${client.paymentStatus === 'cleared'
+                        ? `${isDarkMode ? 'bg-sky-500/20' : 'bg-sky-100'} ${isDarkMode ? 'text-sky-300' : 'text-sky-700'} border ${isDarkMode ? 'border-sky-500/30' : 'border-sky-200'}`
+                        : `${isDarkMode ? 'bg-amber-500/20' : 'bg-amber-100'} ${isDarkMode ? 'text-amber-300' : 'text-amber-700'} border ${isDarkMode ? 'border-amber-500/30' : 'border-amber-200'}`
+                        }`}>
+                        {client.paymentStatus === 'cleared' ? 'Paid' : 'Pending'}
+                      </span>
+                      {client.orderStatus && (
+                        <span className={`text-xs px-3 py-1 rounded-full font-medium ${
+                          client.orderStatus === 'sell'
+                          ? `${isDarkMode ? 'bg-blue-500/20' : 'bg-blue-100'} ${isDarkMode ? 'text-blue-300' : 'text-blue-700'} border ${isDarkMode ? 'border-blue-500/30' : 'border-blue-200'}`
+                          : `${isDarkMode ? 'bg-purple-500/20' : 'bg-purple-100'} ${isDarkMode ? 'text-purple-300' : 'text-purple-700'} border ${isDarkMode ? 'border-purple-500/30' : 'border-purple-200'}`
+                        }`}>
+                          {client.orderStatus === 'sell' ? '📤 Sell' : '📥 Purchased'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mt-3`}>
                     {formatDate(client.timestamp)}
@@ -2026,12 +2144,23 @@ const ClientList = () => {
                         </p>
                       )}
                     </div>
-                    <span className={`text-xs px-3 py-1 rounded-full font-medium ${client.paymentStatus === 'cleared'
-                      ? `${isDarkMode ? 'bg-sky-500/20' : 'bg-sky-100'} ${isDarkMode ? 'text-sky-300' : 'text-sky-700'} border ${isDarkMode ? 'border-sky-500/30' : 'border-sky-200'}`
-                      : `${isDarkMode ? 'bg-amber-500/20' : 'bg-amber-100'} ${isDarkMode ? 'text-amber-300' : 'text-amber-700'} border ${isDarkMode ? 'border-amber-500/30' : 'border-amber-200'}`
-                      }`}>
-                      {client.paymentStatus === 'cleared' ? 'Paid' : 'Pending'}
-                    </span>
+                    <div className="flex flex-col items-end gap-2">
+                      <span className={`text-xs px-3 py-1 rounded-full font-medium ${client.paymentStatus === 'cleared'
+                        ? `${isDarkMode ? 'bg-sky-500/20' : 'bg-sky-100'} ${isDarkMode ? 'text-sky-300' : 'text-sky-700'} border ${isDarkMode ? 'border-sky-500/30' : 'border-sky-200'}`
+                        : `${isDarkMode ? 'bg-amber-500/20' : 'bg-amber-100'} ${isDarkMode ? 'text-amber-300' : 'text-amber-700'} border ${isDarkMode ? 'border-amber-500/30' : 'border-amber-200'}`
+                        }`}>
+                        {client.paymentStatus === 'cleared' ? 'Paid' : 'Pending'}
+                      </span>
+                      {client.orderStatus && (
+                        <span className={`text-xs px-3 py-1 rounded-full font-medium ${
+                          client.orderStatus === 'sell'
+                          ? `${isDarkMode ? 'bg-blue-500/20' : 'bg-blue-100'} ${isDarkMode ? 'text-blue-300' : 'text-blue-700'} border ${isDarkMode ? 'border-blue-500/30' : 'border-blue-200'}`
+                          : `${isDarkMode ? 'bg-purple-500/20' : 'bg-purple-100'} ${isDarkMode ? 'text-purple-300' : 'text-purple-700'} border ${isDarkMode ? 'border-purple-500/30' : 'border-purple-200'}`
+                        }`}>
+                          {client.orderStatus === 'sell' ? '📤 Sell' : '📥 Purchased'}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -2052,6 +2181,28 @@ const ClientList = () => {
                           (typeof client.amountPaid === 'number' ? client.amountPaid : 0)).toFixed(2)}
                       </p>
                     </div>
+                  </div>
+
+                  <div className={`flex items-center mb-4 ${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-lg p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
+                    <div className="flex-1">
+                      <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Order Status:</p>
+                      <p className={`font-medium text-sm ${
+                        client.orderStatus === 'sell'
+                        ? `${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`
+                        : `${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`
+                      }`}>
+                        {client.orderStatus === 'sell' ? 'Sell' : client.orderStatus === 'purchased' ? 'Purchased' : 'Not specified'}
+                      </p>
+                    </div>
+                    {client.orderStatus && (
+                      <span className={`text-xs px-3 py-1 rounded-full font-medium ${
+                        client.orderStatus === 'sell'
+                        ? `${isDarkMode ? 'bg-blue-500/20' : 'bg-blue-100'} ${isDarkMode ? 'text-blue-300' : 'text-blue-700'} border ${isDarkMode ? 'border-blue-500/30' : 'border-blue-200'}`
+                        : `${isDarkMode ? 'bg-purple-500/20' : 'bg-purple-100'} ${isDarkMode ? 'text-purple-300' : 'text-purple-700'} border ${isDarkMode ? 'border-purple-500/30' : 'border-purple-200'}`
+                      }`}>
+                        {client.orderStatus === 'sell' ? '📤 Sell' : '📥 Purchased'}
+                      </span>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-4 border-t border-gray-200 dark:border-slate-700/50">
@@ -2150,12 +2301,23 @@ const ClientList = () => {
                         )}
                       </div>
                     </div>
-                    <span className={`text-xs px-3 py-1 rounded-full font-medium ${client.paymentStatus === 'cleared'
-                      ? `${isDarkMode ? 'bg-sky-500/20' : 'bg-sky-100'} ${isDarkMode ? 'text-sky-300' : 'text-sky-700'} border ${isDarkMode ? 'border-sky-500/30' : 'border-sky-200'}`
-                      : `${isDarkMode ? 'bg-amber-500/20' : 'bg-amber-100'} ${isDarkMode ? 'text-amber-300' : 'text-amber-700'} border ${isDarkMode ? 'border-amber-500/30' : 'border-amber-200'}`
-                      }`}>
-                      {client.paymentStatus === 'cleared' ? 'Paid' : 'Pending'}
-                    </span>
+                    <div className="flex flex-col items-end gap-2">
+                      <span className={`text-xs px-3 py-1 rounded-full font-medium ${client.paymentStatus === 'cleared'
+                        ? `${isDarkMode ? 'bg-sky-500/20' : 'bg-sky-100'} ${isDarkMode ? 'text-sky-300' : 'text-sky-700'} border ${isDarkMode ? 'border-sky-500/30' : 'border-sky-200'}`
+                        : `${isDarkMode ? 'bg-amber-500/20' : 'bg-amber-100'} ${isDarkMode ? 'text-amber-300' : 'text-amber-700'} border ${isDarkMode ? 'border-amber-500/30' : 'border-amber-200'}`
+                        }`}>
+                        {client.paymentStatus === 'cleared' ? 'Paid' : 'Pending'}
+                      </span>
+                      {client.orderStatus && (
+                        <span className={`text-xs px-3 py-1 rounded-full font-medium ${
+                          client.orderStatus === 'sell'
+                          ? `${isDarkMode ? 'bg-blue-500/20' : 'bg-blue-100'} ${isDarkMode ? 'text-blue-300' : 'text-blue-700'} border ${isDarkMode ? 'border-blue-500/30' : 'border-blue-200'}`
+                          : `${isDarkMode ? 'bg-purple-500/20' : 'bg-purple-100'} ${isDarkMode ? 'text-purple-300' : 'text-purple-700'} border ${isDarkMode ? 'border-purple-500/30' : 'border-purple-200'}`
+                        }`}>
+                          {client.orderStatus === 'sell' ? '📤 Sell' : '📥 Purchased'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mt-3`}>
                     {formatDate(client.timestamp)}

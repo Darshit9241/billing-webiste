@@ -16,6 +16,7 @@ const AddProducts = () => {
   const [saveStatus, setSaveStatus] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState('pending');
+  const [orderStatus, setOrderStatus] = useState('sell'); // Add new state for order status
   const [amountPaid, setAmountPaid] = useState('');
   const [billMode, setBillMode] = useState('full');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -158,6 +159,7 @@ const AddProducts = () => {
       setClientPhone(orderData.clientPhone || '');
       setClientGst(orderData.clientGst || '');
       setPaymentStatus(orderData.paymentStatus || 'pending');
+      setOrderStatus(orderData.orderStatus || 'sell'); // Set order status from existing order
       setAmountPaid(orderData.amountPaid || '');
       setBillMode(orderData.billMode || 'full');
       
@@ -624,6 +626,7 @@ const AddProducts = () => {
           products: combinedProducts,
           grandTotal: updatedGrandTotal,
           paymentStatus: newAmountPaid >= updatedGrandTotal ? 'cleared' : 'pending',
+          orderStatus, // Include order status in the update
           amountPaid: newAmountPaid,
           paymentHistory: updatedPaymentHistory,
           billMode,
@@ -679,6 +682,7 @@ const AddProducts = () => {
           products: validProducts, // Use the filtered and processed products
           grandTotal: parseFloat(validProducts.reduce((sum, product) => sum + product.total, 0).toFixed(2)),
           paymentStatus: initialPaymentAmount >= grandTotal ? 'cleared' : 'pending',
+          orderStatus, // Include order status in new orders
           amountPaid: initialPaymentAmount,
           timestamp: Date.now(),
           billMode,
@@ -725,6 +729,7 @@ const AddProducts = () => {
     setProducts([{ id: 1, name: '', count: '', price: '', total: 0 }]);
     setAmountPaid('');
     setPaymentStatus('pending');
+    setOrderStatus('sell'); // Reset order status
     setOrderId('');
     setIsEditMode(false);
     setCurrentOrderId(null);
@@ -1694,6 +1699,41 @@ const AddProducts = () => {
             </div>
           )}
 
+          {/* Add Order Status field */}
+          <div className="mb-8">
+            <div className={`${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-100'} rounded-xl p-4 shadow-sm border`}>
+              <label className={`block ${darkMode ? 'text-gray-300' : 'text-gray-700'} font-medium mb-3 text-sm sm:text-base`}>
+                Order Status
+              </label>
+              <div className="flex flex-wrap gap-4 sm:gap-6">
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name="orderStatus"
+                    value="sell"
+                    checked={orderStatus === 'sell'}
+                    onChange={() => setOrderStatus('sell')}
+                    className="sr-only peer"
+                  />
+                  <div className="w-10 sm:w-11 h-5 sm:h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 sm:after:h-5 after:w-4 sm:after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                  <span className={`ml-2 sm:ml-3 text-sm sm:text-base ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Sell</span>
+                </label>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name="orderStatus"
+                    value="purchased"
+                    checked={orderStatus === 'purchased'}
+                    onChange={() => setOrderStatus('purchased')}
+                    className="sr-only peer"
+                  />
+                  <div className="w-10 sm:w-11 h-5 sm:h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 sm:after:h-5 after:w-4 sm:after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
+                  <span className={`ml-2 sm:ml-3 text-sm sm:text-base ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Purchased</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
           {/* Actions and total section with glass morphism effect */}
           <div className="mt-6 md:mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
             <div className="flex flex-col sm:flex-row gap-3">
@@ -1766,6 +1806,16 @@ const AddProducts = () => {
                           <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>GST: {clientGst}</span>
                         </div>
                       )}
+                      <div className="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'} mr-2 flex-shrink-0`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                          Status: <span className={`font-medium ${orderStatus === 'sell' ? 'text-blue-400' : 'text-purple-400'}`}>
+                            {orderStatus === 'sell' ? 'Sell' : 'Purchased'}
+                          </span>
+                        </span>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1794,13 +1844,23 @@ const AddProducts = () => {
 
                 {billMode === 'full' && (
                   <div className="mt-3 text-center">
-                    <span className={`inline-block px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm ${
-                      paymentStatus === 'pending' 
-                        ? (darkMode ? 'bg-yellow-800 text-yellow-200 border border-yellow-700' : 'bg-yellow-100 text-yellow-800 border border-yellow-200')
-                        : (darkMode ? 'bg-green-800 text-green-200 border border-green-700' : 'bg-green-100 text-green-800 border border-green-200')
-                    } border`}>
-                      {paymentStatus === 'pending' ? '⏳ Payment Pending' : '✓ Payment Cleared'}
-                    </span>
+                    <div className="flex flex-wrap justify-center gap-2">
+                      <span className={`inline-block px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm ${
+                        paymentStatus === 'pending' 
+                          ? (darkMode ? 'bg-yellow-800 text-yellow-200 border border-yellow-700' : 'bg-yellow-100 text-yellow-800 border border-yellow-200')
+                          : (darkMode ? 'bg-green-800 text-green-200 border border-green-700' : 'bg-green-100 text-green-800 border border-green-200')
+                      } border`}>
+                        {paymentStatus === 'pending' ? '⏳ Payment Pending' : '✓ Payment Cleared'}
+                      </span>
+                      
+                      <span className={`inline-block px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm ${
+                        orderStatus === 'sell'
+                          ? (darkMode ? 'bg-blue-800 text-blue-200 border border-blue-700' : 'bg-blue-100 text-blue-800 border border-blue-200')
+                          : (darkMode ? 'bg-purple-800 text-purple-200 border border-purple-700' : 'bg-purple-100 text-purple-800 border border-purple-200')
+                      } border`}>
+                        {orderStatus === 'sell' ? '📤 Sell' : '📥 Purchased'}
+                      </span>
+                    </div>
                   </div>
                 )}
               </div>

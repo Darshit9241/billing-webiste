@@ -155,7 +155,25 @@ const ClientList = () => {
       const dateRegex = /^(\d{2})\/(\d{2})(?:\/(\d{4}))?$/;
       const dateMatch = query.match(dateRegex);
 
-      if (dateMatch) {
+      // Check if the query matches status keywords
+      const isPendingSearch = query === 'pending';
+      const isClearedSearch = query === 'cleared' || query === 'paid';
+      const isSellSearch = query === 'sell';
+      const isPurchasedSearch = query === 'purchased' || query === 'purchase';
+
+      if (isPendingSearch) {
+        // Filter for pending payment status
+        filtered = filtered.filter(client => client.paymentStatus !== 'cleared');
+      } else if (isClearedSearch) {
+        // Filter for cleared payment status
+        filtered = filtered.filter(client => client.paymentStatus === 'cleared');
+      } else if (isSellSearch) {
+        // Filter for sell order status
+        filtered = filtered.filter(client => client.orderStatus === 'sell');
+      } else if (isPurchasedSearch) {
+        // Filter for purchased order status
+        filtered = filtered.filter(client => client.orderStatus === 'purchased');
+      } else if (dateMatch) {
         const [_, day, month, year] = dateMatch;
         const currentYear = new Date().getFullYear();
         const searchYear = year || currentYear;

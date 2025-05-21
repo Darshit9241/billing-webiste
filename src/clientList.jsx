@@ -58,7 +58,8 @@ const ClientList = () => {
 
   // New state for merge functionality 
   const [selectedClientsForMerge, setSelectedClientsForMerge] = useState([]);
-  const [showMergeButton, setShowMergeButton] = useState(false);
+  // const [showMergeButton, setShowMergeButton] = useState(true); // Changed from false to true
+  const [showMergeButton, setShowMergeButton] = useState(false); // Changed from false to true
   const [showMergeModal, setShowMergeModal] = useState(false);
   const [mergedClient, setMergedClient] = useState(null);
 
@@ -177,7 +178,6 @@ const ClientList = () => {
     }
 
     setFilteredClients(filtered);
-    // Show merge button only when search results contain multiple clients
     setShowMergeButton(filtered.length > 1 && searchQuery.trim() !== '');
   };
 

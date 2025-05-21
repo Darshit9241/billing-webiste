@@ -20,7 +20,10 @@ const ClientNameOrders = () => {
   // New state variables for enhanced functionality
   const [sortField, setSortField] = useState('timestamp');
   const [sortDirection, setSortDirection] = useState('desc');
-  const [viewMode, setViewMode] = useState('card');
+  const [viewMode, setViewMode] = useState(() => {
+    // Get saved view mode from localStorage or use default 'card'
+    return localStorage.getItem('viewMode') || 'card';
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   
@@ -31,6 +34,11 @@ const ClientNameOrders = () => {
     
     fetchOrdersByClientName(decoded);
   }, [clientName]);
+  
+  // Save viewMode to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('viewMode', viewMode);
+  }, [viewMode]);
   
   const fetchOrdersByClientName = async (name) => {
     setLoading(true);

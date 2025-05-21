@@ -148,7 +148,11 @@ const ClientList = () => {
     setStartDate(params.startDate);
     setEndDate(params.endDate);
     setIsDateFilterActive(params.dateFilter);
-    setViewMode(params.viewMode);
+    
+    // Get view mode from localStorage, fall back to URL param, then default to 'card'
+    const savedViewMode = localStorage.getItem('viewMode');
+    setViewMode(savedViewMode || params.viewMode || 'card');
+    
     setShowMergedOnly(params.mergedOnly);
 
     // Add window resize listener for responsive behavior
@@ -954,6 +958,7 @@ const ClientList = () => {
   // Add a function to set view mode
   const setViewModeWithUpdate = (mode) => {
     setViewMode(mode);
+    localStorage.setItem('viewMode', mode);
   };
 
   return (
@@ -1037,7 +1042,7 @@ const ClientList = () => {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
             {/* Logo and Title Section */}
             <div className="flex items-center justify-between w-full sm:w-auto">
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-1">
                 <button
                   onClick={handleBackClick}
                   className={`p-2 rounded-lg ${isDarkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'} transition-colors`}
@@ -1099,7 +1104,7 @@ const ClientList = () => {
                   </button>
                   <button
                     onClick={() => setViewModeWithUpdate('card')}
-                    className={`p-1.5 rounded-lg transition-colors ${viewMode === 'card'
+                    className={`p-1.5 rounded-lg transition-colors${viewMode === 'card'
                       ? (isDarkMode ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-700')
                       : (isDarkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200')} ${isDarkMode ? 'text-white' : 'text-gray-700'}`}
                   >
@@ -1108,7 +1113,6 @@ const ClientList = () => {
                     </svg>
                   </button>
                 </div>
-                <ThemeToggle />
               </div>
             </div>
 
@@ -1144,7 +1148,7 @@ const ClientList = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </button>
-                <div className="hidden sm:block">
+                <div className="hidden md:flex">
                   <ThemeToggle />
                 </div>
               </div>
@@ -2387,37 +2391,6 @@ const ClientList = () => {
                     </div>
                   )}
 
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className={`font-semibold text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{client.clientName || 'Unnamed Client'}</h3>
-                      <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mt-1`}>Order ID: {client.id}</p>
-                      {client.clientGst && (
-                        <p className={`text-xs ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'} mt-1 flex items-center`}>
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                          GST: {client.clientGst}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <span className={`text-xs px-3 py-1 rounded-full font-medium ${client.paymentStatus === 'cleared'
-                        ? `${isDarkMode ? 'bg-sky-500/20' : 'bg-sky-100'} ${isDarkMode ? 'text-sky-300' : 'text-sky-700'} border ${isDarkMode ? 'border-sky-500/30' : 'border-sky-200'}`
-                        : `${isDarkMode ? 'bg-amber-500/20' : 'bg-amber-100'} ${isDarkMode ? 'text-amber-300' : 'text-amber-700'} border ${isDarkMode ? 'border-amber-500/30' : 'border-amber-200'}`
-                        }`}>
-                        {client.paymentStatus === 'cleared' ? 'Paid' : 'Pending'}
-                      </span>
-                      {client.orderStatus && (
-                        <span className={`text-xs px-3 py-1 rounded-full font-medium ${client.orderStatus === 'sell'
-                            ? `${isDarkMode ? 'bg-blue-500/20' : 'bg-blue-100'} ${isDarkMode ? 'text-blue-300' : 'text-blue-700'} border ${isDarkMode ? 'border-blue-500/30' : 'border-blue-200'}`
-                            : `${isDarkMode ? 'bg-purple-500/20' : 'bg-purple-100'} ${isDarkMode ? 'text-purple-300' : 'text-purple-700'} border ${isDarkMode ? 'border-purple-500/30' : 'border-purple-200'}`
-                          }`}>
-                          {client.orderStatus === 'sell' ? '📤 Sell' : '📥 Purchased'}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-lg p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
                       <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Total:</p>
@@ -2436,26 +2409,6 @@ const ClientList = () => {
                           (typeof client.amountPaid === 'number' ? client.amountPaid : 0)).toFixed(2)}
                       </p>
                     </div>
-                  </div>
-
-                  <div className={`flex items-center mb-4 ${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-lg p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
-                    <div className="flex-1">
-                      <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Order Status:</p>
-                      <p className={`font-medium text-sm ${client.orderStatus === 'sell'
-                          ? `${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`
-                          : `${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`
-                        }`}>
-                        {client.orderStatus === 'sell' ? 'Sell' : client.orderStatus === 'purchased' ? 'Purchased' : 'Not specified'}
-                      </p>
-                    </div>
-                    {client.orderStatus && (
-                      <span className={`text-xs px-3 py-1 rounded-full font-medium ${client.orderStatus === 'sell'
-                          ? `${isDarkMode ? 'bg-blue-500/20' : 'bg-blue-100'} ${isDarkMode ? 'text-blue-300' : 'text-blue-700'} border ${isDarkMode ? 'border-blue-500/30' : 'border-blue-200'}`
-                          : `${isDarkMode ? 'bg-purple-500/20' : 'bg-purple-100'} ${isDarkMode ? 'text-purple-300' : 'text-purple-700'} border ${isDarkMode ? 'border-purple-500/30' : 'border-purple-200'}`
-                        }`}>
-                        {client.orderStatus === 'sell' ? '📤 Sell' : '📥 Purchased'}
-                      </span>
-                    )}
                   </div>
 
                   <div className="grid grid-cols-4 border-t border-gray-200 dark:border-slate-700/50">

@@ -6,6 +6,8 @@ import OrderDetail from './orderDetail';
 import Login from './Login';
 import ProtectedRoute from './ProtectedRoute';
 import ClientOrders from './ClientOrders';
+import ClientNameOrders from './ClientNameOrders';
+import ClientNames from './ClientNames';
 //   import React, { useState, useEffect } from 'react';
 
 // // Simple error boundary component
@@ -94,6 +96,8 @@ function App() {
               <Route path="/clients" element={<ClientList />} />
               <Route path="/order/:id" element={<OrderDetail />} />
               <Route path="/clientorders" element={<ClientOrders />} />
+              <Route path="/client-name/:clientName" element={<ClientNameOrders />} />
+              <Route path="/client-names" element={<ClientNames />} />
             </Route>
             
             {/* Redirect any unknown routes to login */}

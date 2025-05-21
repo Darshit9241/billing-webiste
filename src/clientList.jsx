@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import ThemeToggle from './components/ThemeToggle';
 import { useTheme } from './context/ThemeContext';
 import { fetchAllClients, deleteClient, clearClientPayment, updateClient } from './firebase/clientsFirebase';
@@ -56,6 +56,8 @@ const ClientList = () => {
   const [isDateFilterActive, setIsDateFilterActive] = useState(false);
   const [viewMode, setViewMode] = useState('card'); // Add this new state for view mode
   const [showMergedOnly, setShowMergedOnly] = useState(false); // Add state for merged cards filter
+  const navigate = useNavigate();
+  const location = useLocation();
 
   // New state for merge functionality 
   const [selectedClientsForMerge, setSelectedClientsForMerge] = useState([]);
@@ -89,7 +91,6 @@ const ClientList = () => {
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isStatsOpen, setIsStatsOpen] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const navigate = useNavigate();
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [newPayment, setNewPayment] = useState('');
@@ -102,9 +103,53 @@ const ClientList = () => {
   const [showDeleteProductModal, setShowDeleteProductModal] = useState(false);
   const [selectedProductIndex, setSelectedProductIndex] = useState(null);
 
+  // Function to update URL query parameters
+  const updateUrlParams = (params) => {
+    const searchParams = new URLSearchParams(location.search);
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (value) {
+        searchParams.set(key, value);
+      } else {
+        searchParams.delete(key);
+      }
+    });
+
+    navigate({
+      pathname: location.pathname,
+      search: searchParams.toString()
+    }, { replace: true });
+  };
+
+  // Function to read URL query parameters
+  const getUrlParams = () => {
+    const searchParams = new URLSearchParams(location.search);
+    return {
+      search: searchParams.get('search') || '',
+      filter: searchParams.get('filter') || 'all',
+      orderStatus: searchParams.get('orderStatus') || 'all',
+      startDate: searchParams.get('startDate') || '',
+      endDate: searchParams.get('endDate') || '',
+      dateFilter: searchParams.get('dateFilter') === 'true',
+      viewMode: searchParams.get('viewMode') || 'card',
+      mergedOnly: searchParams.get('mergedOnly') === 'true'
+    };
+  };
+
   useEffect(() => {
     // Fetch clients from API when component mounts
     fetchClients();
+
+    // Load filters and search query from URL params
+    const params = getUrlParams();
+    setSearchQuery(params.search);
+    setActiveFilter(params.filter);
+    setOrderStatusFilter(params.orderStatus);
+    setStartDate(params.startDate);
+    setEndDate(params.endDate);
+    setIsDateFilterActive(params.dateFilter);
+    setViewMode(params.viewMode);
+    setShowMergedOnly(params.mergedOnly);
 
     // Add window resize listener for responsive behavior
     const handleResize = () => {
@@ -119,6 +164,20 @@ const ClientList = () => {
     // Apply filters when savedClients or activeFilter changes
     applyFilters();
   }, [savedClients, activeFilter, orderStatusFilter, searchQuery, startDate, endDate, isDateFilterActive, showMergedOnly]);
+
+  // Update URL when filters or search change
+  useEffect(() => {
+    updateUrlParams({
+      search: searchQuery,
+      filter: activeFilter !== 'all' ? activeFilter : null,
+      orderStatus: orderStatusFilter !== 'all' ? orderStatusFilter : null,
+      startDate: isDateFilterActive ? startDate : null,
+      endDate: isDateFilterActive ? endDate : null,
+      dateFilter: isDateFilterActive ? 'true' : null,
+      viewMode: viewMode !== 'card' ? viewMode : null,
+      mergedOnly: showMergedOnly ? 'true' : null
+    });
+  }, [searchQuery, activeFilter, orderStatusFilter, startDate, endDate, isDateFilterActive, viewMode, showMergedOnly]);
 
   const applyFilters = () => {
     let filtered = savedClients;
@@ -225,7 +284,7 @@ const ClientList = () => {
     }
 
     // Get the selected clients from filtered clients
-    const clientsToMerge = filteredClients.filter(client => 
+    const clientsToMerge = filteredClients.filter(client =>
       selectedClientsForMerge.includes(client.id)
     );
 
@@ -239,35 +298,35 @@ const ClientList = () => {
   const createMergedClient = (clients) => {
     // Use the first client as the base
     const baseClient = { ...clients[0] };
-    
+
     // Initialize merged values
     let allProducts = [...(baseClient.products || [])];
     let totalGrandTotal = baseClient.grandTotal || 0;
     let totalAmountPaid = baseClient.amountPaid || 0;
     let allPaymentHistory = [...(baseClient.paymentHistory || [])];
-    
+
     // Combine data from all other selected clients
     for (let i = 1; i < clients.length; i++) {
       const client = clients[i];
-      
+
       // Merge products
       if (client.products && client.products.length > 0) {
         allProducts = [...allProducts, ...client.products];
       }
-      
+
       // Sum up the financial data
       totalGrandTotal += client.grandTotal || 0;
       totalAmountPaid += client.amountPaid || 0;
-      
+
       // Merge payment history
       if (client.paymentHistory && client.paymentHistory.length > 0) {
         allPaymentHistory = [...allPaymentHistory, ...client.paymentHistory];
       }
     }
-    
+
     // Sort payment history by date
     allPaymentHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
-    
+
     // Create the merged client
     const mergedClient = {
       ...baseClient,
@@ -282,7 +341,7 @@ const ClientList = () => {
       mergedFrom: clients.map(c => c.id),
       timestamp: Date.now()
     };
-    
+
     return mergedClient;
   };
 
@@ -290,25 +349,25 @@ const ClientList = () => {
   const saveMergedClient = async () => {
     try {
       setLoading(true);
-      
+
       // Create a new client with the merged data
       const mergedClientWithId = {
         ...mergedClient,
         id: `merged_${Date.now()}`
       };
-      
+
       // Save to Firebase
       await updateClient(mergedClientWithId);
-      
+
       // Update local state
       setSavedClients([...savedClients, mergedClientWithId]);
-      
+
       // Reset merge state
       setSelectedClientsForMerge([]);
       setShowMergeModal(false);
       setMergedClient(null);
       setSearchQuery('');
-      
+
       // Show success message
       setError('Clients successfully merged!');
       setTimeout(() => setError(''), 3000);
@@ -559,7 +618,7 @@ const ClientList = () => {
   const handleTimestampChange = (e) => {
     // Get the date string from the input
     const dateString = e.target.value;
-    
+
     if (!dateString) {
       // If the field is cleared, use current timestamp
       setProductFormData({
@@ -568,10 +627,10 @@ const ClientList = () => {
       });
       return;
     }
-    
+
     // Create a date object in local timezone from the input value
     const localDate = new Date(dateString);
-    
+
     // Set the timestamp in milliseconds
     setProductFormData({
       ...productFormData,
@@ -588,7 +647,7 @@ const ClientList = () => {
     // Ensure numeric values for price and count
     const price = parseFloat(productFormData.price || 0);
     const count = parseFloat(productFormData.count || 0);
-    
+
     // Calculate total with 2 decimal precision
     const total = parseFloat((price * count).toFixed(2));
 
@@ -611,7 +670,7 @@ const ClientList = () => {
     // Handle amount paid and payment status consistency
     let amountPaid = parseFloat(editFormData.amountPaid) || 0;
     let paymentStatus = editFormData.paymentStatus;
-    
+
     if (grandTotal < amountPaid) {
       // If there are no products or grandTotal is 0, reset amount paid
       if (updatedProducts.length === 0 || grandTotal === 0) {
@@ -654,7 +713,7 @@ const ClientList = () => {
     // If the grand total is now less than the amount paid, adjust the amount paid
     let amountPaid = parseFloat(editFormData.amountPaid) || 0;
     let paymentStatus = editFormData.paymentStatus;
-    
+
     if (grandTotal < amountPaid) {
       // If there are no products or grandTotal is 0, reset amount paid
       if (updatedProducts.length === 0 || grandTotal === 0) {
@@ -788,6 +847,9 @@ const ClientList = () => {
     setShowDeletePaymentModal(false);
     setSelectedPaymentIndex(null);
   };
+  const handleBackClick = () => {
+    navigate('/');
+  };
 
   const saveClientChanges = async (e) => {
     e.preventDefault();
@@ -844,14 +906,14 @@ const ClientList = () => {
   // Helper function to format date for datetime-local input
   const formatDateForInput = (timestamp) => {
     const date = new Date(timestamp);
-    
+
     // Get local ISO string parts
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
-    
+
     // Format as YYYY-MM-DDThh:mm (required format for datetime-local)
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
@@ -866,6 +928,33 @@ const ClientList = () => {
       console.log('Found merged clients:', mergedClients.map(c => c.id));
     }
   }, [savedClients]);
+
+  // Update the setSearchQuery function to also update URL
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+  };
+
+  // Add a function to clear the search query
+  const clearSearchQuery = () => {
+    setSearchQuery('');
+    setSelectedClientsForMerge([]);
+  };
+
+  // Add a function to toggle merged only filter
+  const toggleMergedOnly = () => {
+    setShowMergedOnly(!showMergedOnly);
+  };
+
+  // Add a function to clear merged only filter
+  const clearMergedOnly = () => {
+    setShowMergedOnly(false);
+  };
+
+  // Add a function to set view mode
+  const setViewModeWithUpdate = (mode) => {
+    setViewMode(mode);
+  };
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-gray-100 to-white'} py-8 px-4 sm:px-6 lg:px-8 transition-colors duration-200`}>
@@ -948,20 +1037,25 @@ const ClientList = () => {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
             {/* Logo and Title Section */}
             <div className="flex items-center justify-between w-full sm:w-auto">
-              <h1 className={`text-lg sm:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} flex items-center`}>
-                <div className="relative mr-3 hidden md:block">
-                  <div className={`p-2 rounded-xl ${isDarkMode ? 'bg-emerald-500/20' : 'bg-emerald-100'}`}>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 sm:h-8 sm:w-8 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </div>
-                  <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-xl -z-10"></div>
-                </div>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={handleBackClick}
+                  className={`p-2 rounded-lg ${isDarkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'} transition-colors`}
+                  aria-label="Back to clients"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${isDarkMode ? 'text-white' : 'text-gray-700'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                </button>
 
-                <a href="/" className="bg-gradient-to-r from-emerald-500 to-teal-400 inline-block text-transparent bg-clip-text text-xl font-bold">
-                  ORDERS
-                </a>
-              </h1>
+                <h1 className={`text-lg sm:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} flex items-center`}>
+                  <span className="bg-gradient-to-r from-emerald-500 to-teal-400 inline-block text-transparent bg-clip-text text-xl sm:text-2xl font-bold">
+                    <a href="/clients" className="bg-gradient-to-r from-emerald-500 to-teal-400 inline-block text-transparent bg-clip-text text-xl font-bold">
+                      ORDERS
+                    </a>
+                  </span>
+                </h1>
+              </div>
 
               {/* Mobile View Controls */}
               <div className="flex items-center gap-2 sm:hidden">
@@ -994,7 +1088,7 @@ const ClientList = () => {
                     </svg>
                   </button>
                   <button
-                    onClick={() => setViewMode('list')}
+                    onClick={() => setViewModeWithUpdate('list')}
                     className={`p-1.5 rounded-lg transition-colors ${viewMode === 'list'
                       ? (isDarkMode ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-700')
                       : (isDarkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200')} ${isDarkMode ? 'text-white' : 'text-gray-700'}`}
@@ -1004,7 +1098,7 @@ const ClientList = () => {
                     </svg>
                   </button>
                   <button
-                    onClick={() => setViewMode('card')}
+                    onClick={() => setViewModeWithUpdate('card')}
                     className={`p-1.5 rounded-lg transition-colors ${viewMode === 'card'
                       ? (isDarkMode ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-700')
                       : (isDarkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200')} ${isDarkMode ? 'text-white' : 'text-gray-700'}`}
@@ -1022,7 +1116,7 @@ const ClientList = () => {
             <div className="flex flex-wrap items-center gap-3">
 
 
-            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => navigate(`/clientorders`)}
                   className={`p-2 rounded-lg ${isDarkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'} transition-colors hidden sm:flex`}
@@ -1057,7 +1151,7 @@ const ClientList = () => {
               {/* View Mode Toggle - Desktop */}
               <div className="hidden sm:flex items-center gap-1">
                 <button
-                  onClick={() => setViewMode('list')}
+                  onClick={() => setViewModeWithUpdate('list')}
                   className={`p-2 rounded-lg transition-colors ${viewMode === 'list'
                     ? (isDarkMode ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-700')
                     : (isDarkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200')} ${isDarkMode ? 'text-white' : 'text-gray-700'}`}
@@ -1067,7 +1161,7 @@ const ClientList = () => {
                   </svg>
                 </button>
                 <button
-                  onClick={() => setViewMode('card')}
+                  onClick={() => setViewModeWithUpdate('card')}
                   className={`p-2 rounded-lg transition-colors ${viewMode === 'card'
                     ? (isDarkMode ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-700')
                     : (isDarkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200')} ${isDarkMode ? 'text-white' : 'text-gray-700'}`}
@@ -1087,11 +1181,7 @@ const ClientList = () => {
                     </svg>
                     {new Date(startDate).toLocaleDateString()} - {new Date(endDate).toLocaleDateString()}
                     <button
-                      onClick={() => {
-                        setStartDate('');
-                        setEndDate('');
-                        setIsDateFilterActive(false);
-                      }}
+                      onClick={clearDateFilter}
                       className="ml-2 text-amber-800 hover:text-amber-900"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1202,22 +1292,13 @@ const ClientList = () => {
 
                     <div className="flex justify-end gap-2 mt-3">
                       <button
-                        onClick={() => {
-                          setStartDate('');
-                          setEndDate('');
-                          setIsDateFilterActive(false);
-                        }}
+                        onClick={clearDateFilter}
                         className={`px-3 py-1 text-xs rounded-lg ${isDarkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} transition-colors`}
                       >
                         Reset
                       </button>
                       <button
-                        onClick={() => {
-                          if (startDate && endDate) {
-                            setIsDateFilterActive(true);
-                            applyFilters();
-                          }
-                        }}
+                        onClick={applyDateFilter}
                         disabled={!startDate || !endDate}
                         className={`px-3 py-1 text-xs rounded-lg ${startDate && endDate ? 'bg-emerald-500 text-white hover:bg-emerald-600' : isDarkMode ? 'bg-slate-700 text-slate-300' : 'bg-gray-200 text-gray-500'} transition-colors`}
                       >
@@ -1411,11 +1492,7 @@ const ClientList = () => {
               </svg>
               {new Date(startDate).toLocaleDateString()} - {new Date(endDate).toLocaleDateString()}
               <button
-                onClick={() => {
-                  setStartDate('');
-                  setEndDate('');
-                  setIsDateFilterActive(false);
-                }}
+                onClick={clearDateFilter}
                 className="ml-2 text-amber-800 hover:text-amber-900"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1437,7 +1514,7 @@ const ClientList = () => {
                 type="text"
                 placeholder="Search by client name, ID or GST number..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={handleSearchChange}
                 className={`w-full pl-10 pr-24 py-3 ${isDarkMode ? 'bg-white/5' : 'bg-white'} border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} rounded-xl ${isDarkMode ? 'text-white placeholder-slate-400' : 'text-gray-900 placeholder-gray-400'} focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 shadow-sm`}
               />
               {/* Merge buttons */}
@@ -1447,10 +1524,10 @@ const ClientList = () => {
                   <button
                     onClick={() => {
                       // Check if all filtered clients are already selected
-                      const allSelected = filteredClients.every(client => 
+                      const allSelected = filteredClients.every(client =>
                         selectedClientsForMerge.includes(client.id)
                       );
-                      
+
                       if (allSelected) {
                         // If all are selected, deselect all
                         setSelectedClientsForMerge([]);
@@ -1459,26 +1536,24 @@ const ClientList = () => {
                         setSelectedClientsForMerge(filteredClients.map(client => client.id));
                       }
                     }}
-                    className={`mr-3 px-2 py-1 rounded-md text-xs font-medium ${
-                      filteredClients.length > 0 && filteredClients.every(client => selectedClientsForMerge.includes(client.id))
-                      ? `${isDarkMode ? 'bg-emerald-500/80 text-white' : 'bg-emerald-100 text-emerald-700'}`
-                      : `${isDarkMode ? 'bg-white/10 text-slate-300 hover:bg-white/20' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`
-                    } transition-colors`}
+                    className={`mr-3 px-2 py-1 rounded-md text-xs font-medium ${filteredClients.length > 0 && filteredClients.every(client => selectedClientsForMerge.includes(client.id))
+                        ? `${isDarkMode ? 'bg-emerald-500/80 text-white' : 'bg-emerald-100 text-emerald-700'}`
+                        : `${isDarkMode ? 'bg-white/10 text-slate-300 hover:bg-white/20' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`
+                      } transition-colors`}
                   >
                     {filteredClients.length > 0 && filteredClients.every(client => selectedClientsForMerge.includes(client.id))
                       ? 'Deselect All'
                       : 'Select All'}
                   </button>
-                  
+
                   {/* Merge button */}
                   <button
                     onClick={handleMergeButtonClick}
                     disabled={selectedClientsForMerge.length < 2}
-                    className={`flex items-center pr-3 pl-3 ${
-                      selectedClientsForMerge.length < 2 
-                      ? `${isDarkMode ? 'text-slate-500' : 'text-gray-400'} cursor-not-allowed` 
-                      : `${isDarkMode ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-500'} cursor-pointer`
-                    }`}
+                    className={`flex items-center pr-3 pl-3 ${selectedClientsForMerge.length < 2
+                        ? `${isDarkMode ? 'text-slate-500' : 'text-gray-400'} cursor-not-allowed`
+                        : `${isDarkMode ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-500'} cursor-pointer`
+                      }`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
@@ -1489,10 +1564,7 @@ const ClientList = () => {
               )}
               {searchQuery && (
                 <button
-                  onClick={() => {
-                    setSearchQuery('');
-                    setSelectedClientsForMerge([]);
-                  }}
+                  onClick={clearSearchQuery}
                   className="absolute inset-y-0 right-0 flex items-center pr-3"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${isDarkMode ? 'text-slate-400 hover:text-white' : 'text-gray-400 hover:text-gray-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1533,8 +1605,8 @@ const ClientList = () => {
                 <div className="text-xs py-1.5 px-3 bg-purple-500/20 rounded-lg border border-purple-500/30">
                   <span className="font-medium">{Math.round((filteredClients.length / savedClients.length) * 100)}%</span> of total orders
                 </div>
-                <button 
-                  onClick={() => setShowMergedOnly(false)}
+                <button
+                  onClick={clearMergedOnly}
                   className="px-3 py-1.5 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg text-sm flex items-center transition-colors"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1564,25 +1636,24 @@ const ClientList = () => {
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => {
-                    const allSelected = filteredClients.every(client => 
+                    const allSelected = filteredClients.every(client =>
                       selectedClientsForMerge.includes(client.id)
                     );
-                    
+
                     if (allSelected) {
                       setSelectedClientsForMerge([]);
                     } else {
                       setSelectedClientsForMerge(filteredClients.map(client => client.id));
                     }
                   }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
-                    filteredClients.every(client => selectedClientsForMerge.includes(client.id))
-                    ? `${isDarkMode ? 'bg-emerald-500/80 text-white' : 'bg-emerald-100 text-emerald-800'}`
-                    : `${isDarkMode ? 'bg-white/10 text-white' : 'bg-gray-100 text-gray-800'}`
-                  } transition-colors flex items-center`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium ${filteredClients.every(client => selectedClientsForMerge.includes(client.id))
+                      ? `${isDarkMode ? 'bg-emerald-500/80 text-white' : 'bg-emerald-100 text-emerald-800'}`
+                      : `${isDarkMode ? 'bg-white/10 text-white' : 'bg-gray-100 text-gray-800'}`
+                    } transition-colors flex items-center`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     {filteredClients.every(client => selectedClientsForMerge.includes(client.id)) ? (
@@ -1595,7 +1666,7 @@ const ClientList = () => {
                     ? 'Deselect All'
                     : 'Select All'}
                 </button>
-                
+
                 {selectedClientsForMerge.length >= 2 && (
                   <button
                     onClick={handleMergeButtonClick}
@@ -1722,13 +1793,13 @@ const ClientList = () => {
                         onChange={(e) => {
                           const localDate = new Date(e.target.value);
                           const newTimestamp = localDate.getTime();
-                          
+
                           // Update the main order timestamp
                           const updatedFormData = {
                             ...editFormData,
                             timestamp: newTimestamp
                           };
-                          
+
                           // Also update all product timestamps to match the new order timestamp
                           if (updatedFormData.products && updatedFormData.products.length > 0) {
                             updatedFormData.products = updatedFormData.products.map(product => ({
@@ -1736,7 +1807,7 @@ const ClientList = () => {
                               timestamp: newTimestamp
                             }));
                           }
-                          
+
                           setEditFormData(updatedFormData);
                         }}
                         className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
@@ -1925,7 +1996,7 @@ const ClientList = () => {
                           <div className="w-10 h-5 bg-slate-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-600 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600 relative"></div>
                           <span className="ml-2 text-sm text-slate-300">Sell</span>
                         </label>
-                        
+
                         <label className="inline-flex items-center cursor-pointer">
                           <input
                             type="radio"
@@ -1940,11 +2011,10 @@ const ClientList = () => {
                         </label>
                       </div>
                       <div className="mt-2 flex items-center">
-                        <span className={`px-2 py-1 text-xs rounded-md ${
-                          editFormData.orderStatus === 'sell' 
-                            ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' 
+                        <span className={`px-2 py-1 text-xs rounded-md ${editFormData.orderStatus === 'sell'
+                            ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
                             : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                        }`}>
+                          }`}>
                           {editFormData.orderStatus === 'sell' ? '📤 Sell' : '📥 Purchased'}
                         </span>
                       </div>
@@ -1988,7 +2058,7 @@ const ClientList = () => {
                                   const value = e.target.value;
                                   // Prevent negative values
                                   if (parseFloat(value) < 0) return;
-                                  
+
                                   setProductFormData({
                                     ...productFormData,
                                     count: parseFloat(value)
@@ -2013,7 +2083,7 @@ const ClientList = () => {
                                     const value = e.target.value;
                                     // Prevent negative values
                                     if (parseFloat(value) < 0) return;
-                                    
+
                                     setProductFormData({
                                       ...productFormData,
                                       price: parseFloat(value)
@@ -2221,7 +2291,7 @@ const ClientList = () => {
                       )}
                       <div>
                         <h3 className={`font-semibold text-left text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'} flex items-center`}>
-                            {client.clientName || 'Unnamed Client'}
+                          {client.clientName || 'Unnamed Client'}
                           {client.merged && (
                             <span className="ml-2 text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full flex items-center group relative">
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -2262,11 +2332,10 @@ const ClientList = () => {
                         {client.paymentStatus === 'cleared' ? 'Paid' : 'Pending'}
                       </span>
                       {client.orderStatus && (
-                        <span className={`text-xs px-3 py-1 rounded-full font-medium ${
-                          client.orderStatus === 'sell'
-                          ? `${isDarkMode ? 'bg-blue-500/20' : 'bg-blue-100'} ${isDarkMode ? 'text-blue-300' : 'text-blue-700'} border ${isDarkMode ? 'border-blue-500/30' : 'border-blue-200'}`
-                          : `${isDarkMode ? 'bg-purple-500/20' : 'bg-purple-100'} ${isDarkMode ? 'text-purple-300' : 'text-purple-700'} border ${isDarkMode ? 'border-purple-500/30' : 'border-purple-200'}`
-                        }`}>
+                        <span className={`text-xs px-3 py-1 rounded-full font-medium ${client.orderStatus === 'sell'
+                            ? `${isDarkMode ? 'bg-blue-500/20' : 'bg-blue-100'} ${isDarkMode ? 'text-blue-300' : 'text-blue-700'} border ${isDarkMode ? 'border-blue-500/30' : 'border-blue-200'}`
+                            : `${isDarkMode ? 'bg-purple-500/20' : 'bg-purple-100'} ${isDarkMode ? 'text-purple-300' : 'text-purple-700'} border ${isDarkMode ? 'border-purple-500/30' : 'border-purple-200'}`
+                          }`}>
                           {client.orderStatus === 'sell' ? '📤 Sell' : '📥 Purchased'}
                         </span>
                       )}
@@ -2305,7 +2374,7 @@ const ClientList = () => {
                       )}
                     </div>
                   )}
-                  
+
                   {/* Display merged source IDs if available */}
                   {client.merged && client.mergedFrom && client.mergedFrom.length > 0 && (
                     <div id={`listMergedFrom-${client.id}`} className="hidden mb-4 ml-2 p-2 bg-purple-500/5 border-l-2 border-purple-500/30 rounded-r-lg">
@@ -2339,11 +2408,10 @@ const ClientList = () => {
                         {client.paymentStatus === 'cleared' ? 'Paid' : 'Pending'}
                       </span>
                       {client.orderStatus && (
-                        <span className={`text-xs px-3 py-1 rounded-full font-medium ${
-                          client.orderStatus === 'sell'
-                          ? `${isDarkMode ? 'bg-blue-500/20' : 'bg-blue-100'} ${isDarkMode ? 'text-blue-300' : 'text-blue-700'} border ${isDarkMode ? 'border-blue-500/30' : 'border-blue-200'}`
-                          : `${isDarkMode ? 'bg-purple-500/20' : 'bg-purple-100'} ${isDarkMode ? 'text-purple-300' : 'text-purple-700'} border ${isDarkMode ? 'border-purple-500/30' : 'border-purple-200'}`
-                        }`}>
+                        <span className={`text-xs px-3 py-1 rounded-full font-medium ${client.orderStatus === 'sell'
+                            ? `${isDarkMode ? 'bg-blue-500/20' : 'bg-blue-100'} ${isDarkMode ? 'text-blue-300' : 'text-blue-700'} border ${isDarkMode ? 'border-blue-500/30' : 'border-blue-200'}`
+                            : `${isDarkMode ? 'bg-purple-500/20' : 'bg-purple-100'} ${isDarkMode ? 'text-purple-300' : 'text-purple-700'} border ${isDarkMode ? 'border-purple-500/30' : 'border-purple-200'}`
+                          }`}>
                           {client.orderStatus === 'sell' ? '📤 Sell' : '📥 Purchased'}
                         </span>
                       )}
@@ -2373,20 +2441,18 @@ const ClientList = () => {
                   <div className={`flex items-center mb-4 ${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-lg p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
                     <div className="flex-1">
                       <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Order Status:</p>
-                      <p className={`font-medium text-sm ${
-                        client.orderStatus === 'sell'
-                        ? `${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`
-                        : `${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`
-                      }`}>
+                      <p className={`font-medium text-sm ${client.orderStatus === 'sell'
+                          ? `${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`
+                          : `${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`
+                        }`}>
                         {client.orderStatus === 'sell' ? 'Sell' : client.orderStatus === 'purchased' ? 'Purchased' : 'Not specified'}
                       </p>
                     </div>
                     {client.orderStatus && (
-                      <span className={`text-xs px-3 py-1 rounded-full font-medium ${
-                        client.orderStatus === 'sell'
-                        ? `${isDarkMode ? 'bg-blue-500/20' : 'bg-blue-100'} ${isDarkMode ? 'text-blue-300' : 'text-blue-700'} border ${isDarkMode ? 'border-blue-500/30' : 'border-blue-200'}`
-                        : `${isDarkMode ? 'bg-purple-500/20' : 'bg-purple-100'} ${isDarkMode ? 'text-purple-300' : 'text-purple-700'} border ${isDarkMode ? 'border-purple-500/30' : 'border-purple-200'}`
-                      }`}>
+                      <span className={`text-xs px-3 py-1 rounded-full font-medium ${client.orderStatus === 'sell'
+                          ? `${isDarkMode ? 'bg-blue-500/20' : 'bg-blue-100'} ${isDarkMode ? 'text-blue-300' : 'text-blue-700'} border ${isDarkMode ? 'border-blue-500/30' : 'border-blue-200'}`
+                          : `${isDarkMode ? 'bg-purple-500/20' : 'bg-purple-100'} ${isDarkMode ? 'text-purple-300' : 'text-purple-700'} border ${isDarkMode ? 'border-purple-500/30' : 'border-purple-200'}`
+                        }`}>
                         {client.orderStatus === 'sell' ? '📤 Sell' : '📥 Purchased'}
                       </span>
                     )}
@@ -2474,7 +2540,7 @@ const ClientList = () => {
                       )}
                       <div>
                         <h3 className={`font-semibold text-left text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'} flex items-center`}>
-                            {client.clientName || 'Unnamed Client'}
+                          {client.clientName || 'Unnamed Client'}
                           {client.merged && (
                             <span className="ml-2 text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full flex items-center group relative">
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -2515,11 +2581,10 @@ const ClientList = () => {
                         {client.paymentStatus === 'cleared' ? 'Paid' : 'Pending'}
                       </span>
                       {client.orderStatus && (
-                        <span className={`text-xs px-3 py-1 rounded-full font-medium ${
-                          client.orderStatus === 'sell'
-                          ? `${isDarkMode ? 'bg-blue-500/20' : 'bg-blue-100'} ${isDarkMode ? 'text-blue-300' : 'text-blue-700'} border ${isDarkMode ? 'border-blue-500/30' : 'border-blue-200'}`
-                          : `${isDarkMode ? 'bg-purple-500/20' : 'bg-purple-100'} ${isDarkMode ? 'text-purple-300' : 'text-purple-700'} border ${isDarkMode ? 'border-purple-500/30' : 'border-purple-200'}`
-                        }`}>
+                        <span className={`text-xs px-3 py-1 rounded-full font-medium ${client.orderStatus === 'sell'
+                            ? `${isDarkMode ? 'bg-blue-500/20' : 'bg-blue-100'} ${isDarkMode ? 'text-blue-300' : 'text-blue-700'} border ${isDarkMode ? 'border-blue-500/30' : 'border-blue-200'}`
+                            : `${isDarkMode ? 'bg-purple-500/20' : 'bg-purple-100'} ${isDarkMode ? 'text-purple-300' : 'text-purple-700'} border ${isDarkMode ? 'border-purple-500/30' : 'border-purple-200'}`
+                          }`}>
                           {client.orderStatus === 'sell' ? '📤 Sell' : '📥 Purchased'}
                         </span>
                       )}
@@ -2577,7 +2642,7 @@ const ClientList = () => {
                             </svg>
                             Merged from {client.mergedFrom.length} clients
                           </p>
-                          <button 
+                          <button
                             onClick={() => {
                               const element = document.getElementById(`mergedFrom-${client.id}`);
                               if (element) {
@@ -2729,12 +2794,11 @@ const ClientList = () => {
       {savedClients.filter(client => client.merged === true).length > 0 && !showModal && !showMergeModal && !editingClient && (
         <div className="fixed right-6 bottom-6 z-40">
           <button
-            onClick={() => setShowMergedOnly(!showMergedOnly)}
-            className={`flex items-center justify-center p-3 sm:p-4 rounded-full shadow-lg ${
-              showMergedOnly
+            onClick={toggleMergedOnly}
+            className={`flex items-center justify-center p-3 sm:p-4 rounded-full shadow-lg ${showMergedOnly
                 ? "bg-purple-600 text-white hover:bg-purple-700"
                 : `${isDarkMode ? "bg-slate-700 text-white hover:bg-slate-600" : "bg-white text-purple-600 hover:bg-purple-50"}`
-            } transition-all duration-300 group`}
+              } transition-all duration-300 group`}
             title={showMergedOnly ? "Show All Orders" : "Show Merged Only"}
           >
             {showMergedOnly ? (
@@ -2747,7 +2811,7 @@ const ClientList = () => {
               </svg>
             )}
             <span className="absolute -top-2 -right-2 px-1.5 py-0.5 text-[10px] rounded-full bg-purple-600 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
-              {showMergedOnly ? "Show All" : "Merged Only"} 
+              {showMergedOnly ? "Show All" : "Merged Only"}
             </span>
           </button>
         </div>
@@ -2795,8 +2859,8 @@ const ClientList = () => {
                   {editingPayment !== null && editFormData.paymentHistory && editFormData.paymentHistory[editingPayment] ? (
                     <span className="text-sm font-bold text-amber-400">
                       ₹{(
-                        (editingClient?.grandTotal || 0) - 
-                        (parseFloat(editFormData.amountPaid) || 0) + 
+                        (editingClient?.grandTotal || 0) -
+                        (parseFloat(editFormData.amountPaid) || 0) +
                         (parseFloat(editFormData.paymentHistory[editingPayment].amount) || 0)
                       ).toFixed(2)}
                       <span className="text-xs ml-1 text-slate-400">(including this payment)</span>
@@ -2824,7 +2888,7 @@ const ClientList = () => {
                       const value = e.target.value;
                       // Prevent negative values
                       if (parseFloat(value) < 0) return;
-                      
+
                       setNewPayment(value);
                     }}
                     min="0"
@@ -3177,8 +3241,8 @@ const ClientList = () => {
                 Showing Only Merged Cards ({filteredClients.length})
               </span>
             </div>
-            <button 
-              onClick={() => setShowMergedOnly(false)}
+            <button
+              onClick={clearMergedOnly}
               className="text-purple-300 hover:text-purple-100 p-1"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

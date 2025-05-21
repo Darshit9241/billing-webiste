@@ -389,7 +389,7 @@ const ClientNameOrders = () => {
                       <div className="flex justify-between items-start">
                         <div>
                           <h3 className={`font-semibold text-left text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                            Order #{order.id.substring(0, 8)}...
+                            Order #{order.id.substring(0, 8)}
                           </h3>
                           <p className={`text-xs text-left ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mt-1`}>
                             {formatDate(order.timestamp)}
@@ -481,7 +481,7 @@ const ClientNameOrders = () => {
                             onClick={() => handleOrderClick(order.id)}
                             className={`${index % 2 === 0 ? (isDarkMode ? 'bg-white/5' : 'bg-white') : (isDarkMode ? 'bg-white/[0.02]' : 'bg-gray-50')} cursor-pointer hover:bg-emerald-500/10`}
                           >
-                            <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>#{order.id.substring(0, 8)}...</td>
+                            <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>#{order.id.substring(0, 8)}</td>
                             <td className={`px-6 py-4 whitespace-nowrap text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>{formatDate(order.timestamp)}</td>
                             <td className={`px-6 py-4 whitespace-nowrap text-sm text-center ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>₹{parseFloat(order.grandTotal || 0).toFixed(2)}</td>
                             <td className={`px-6 py-4 whitespace-nowrap text-sm text-center text-emerald-500 font-medium`}>₹{parseFloat(order.amountPaid || 0).toFixed(2)}</td>

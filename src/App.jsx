@@ -8,6 +8,7 @@ import ProtectedRoute from './ProtectedRoute';
 import ClientOrders from './ClientOrders';
 import ClientNameOrders from './ClientNameOrders';
 import ClientNames from './ClientNames';
+import Dashboard from './Dashboard';
 //   import React, { useState, useEffect } from 'react';
 
 // // Simple error boundary component
@@ -93,6 +94,7 @@ function App() {
             {/* Protected routes */}
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<AddProducts />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/clients" element={<ClientList />} />
               <Route path="/order/:id" element={<OrderDetail />} />
               <Route path="/clientorders" element={<ClientOrders />} />

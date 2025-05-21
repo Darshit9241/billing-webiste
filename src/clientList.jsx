@@ -55,6 +55,7 @@ const ClientList = () => {
   const [endDate, setEndDate] = useState('');
   const [isDateFilterActive, setIsDateFilterActive] = useState(false);
   const [viewMode, setViewMode] = useState('card'); // Add this new state for view mode
+  const [showMergedOnly, setShowMergedOnly] = useState(false); // Add state for merged cards filter
 
   // New state for merge functionality 
   const [selectedClientsForMerge, setSelectedClientsForMerge] = useState([]);
@@ -117,10 +118,17 @@ const ClientList = () => {
   useEffect(() => {
     // Apply filters when savedClients or activeFilter changes
     applyFilters();
-  }, [savedClients, activeFilter, orderStatusFilter, searchQuery, startDate, endDate, isDateFilterActive]);
+  }, [savedClients, activeFilter, orderStatusFilter, searchQuery, startDate, endDate, isDateFilterActive, showMergedOnly]);
 
   const applyFilters = () => {
     let filtered = savedClients;
+
+    // Filter by merged status if needed - MOVE THIS TO THE TOP FOR PRIORITY
+    if (showMergedOnly) {
+      // More robust check for merged property being strictly true
+      filtered = filtered.filter(client => client.merged === true);
+      console.log('Showing only merged clients:', filtered.length);
+    }
 
     // First filter by payment status
     if (activeFilter === 'pending') {
@@ -848,6 +856,17 @@ const ClientList = () => {
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
+  // Add this right after the codebase search to help with debugging
+  useEffect(() => {
+    // Check for merged clients and log them
+    const mergedClients = savedClients.filter(client => client.merged === true);
+    console.log('Total clients:', savedClients.length);
+    console.log('Merged clients count:', mergedClients.length);
+    if (mergedClients.length > 0) {
+      console.log('Found merged clients:', mergedClients.map(c => c.id));
+    }
+  }, [savedClients]);
+
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-gray-100 to-white'} py-8 px-4 sm:px-6 lg:px-8 transition-colors duration-200`}>
       {/* Inject custom styles */}
@@ -1497,6 +1516,37 @@ const ClientList = () => {
           </div>
         )}
 
+        {/* Active Filter Indicator */}
+        {showMergedOnly && (
+          <div className="bg-purple-900/30 border-l-4 border-purple-500 text-purple-100 p-4 mb-6 rounded-lg backdrop-blur-sm shadow-xl">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2 flex-shrink-0 text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                <div>
+                  <h3 className="font-medium">Showing Merged Cards Only</h3>
+                  <p className="text-sm mt-0.5 text-purple-300">Displaying {filteredClients.length} merged card{filteredClients.length !== 1 ? 's' : ''} out of {savedClients.filter(client => client.merged === true).length} total merged cards</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="text-xs py-1.5 px-3 bg-purple-500/20 rounded-lg border border-purple-500/30">
+                  <span className="font-medium">{Math.round((filteredClients.length / savedClients.length) * 100)}%</span> of total orders
+                </div>
+                <button 
+                  onClick={() => setShowMergedOnly(false)}
+                  className="px-3 py-1.5 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg text-sm flex items-center transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  Clear Filter
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Selection info panel - Show when search has results */}
         {showMergeButton && filteredClients.length > 0 && (
           <div className={`mb-6 p-4 rounded-xl ${isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-white border border-gray-200'} shadow-sm animate-fadeIn`}>
@@ -2122,14 +2172,18 @@ const ClientList = () => {
             <h2 className="text-2xl font-semibold text-white mb-3">
               {savedClients.length === 0
                 ? 'No orders found'
-                : `No ${activeFilter === 'pending' ? 'pending payment' : activeFilter === 'cleared' ? 'cleared payment' : ''} orders found`}
+                : showMergedOnly
+                  ? 'No merged cards found'
+                  : `No ${activeFilter === 'pending' ? 'pending payment' : activeFilter === 'cleared' ? 'cleared payment' : ''} orders found`}
             </h2>
             <p className="text-slate-400 max-w-lg mx-auto mb-8">
               {savedClients.length === 0
                 ? 'You haven\'t created any orders yet. Get started by creating your first order.'
-                : activeFilter !== 'all'
-                  ? `There are no orders with ${activeFilter === 'pending' ? 'pending' : 'cleared'} payment status.`
-                  : 'You haven\'t created any orders yet.'}
+                : showMergedOnly
+                  ? 'There are no merged cards in the system yet. You can merge cards by searching and selecting multiple clients.'
+                  : activeFilter !== 'all'
+                    ? `There are no orders with ${activeFilter === 'pending' ? 'pending' : 'cleared'} payment status.`
+                    : 'You haven\'t created any orders yet.'}
             </p>
             {savedClients.length === 0 && (
               <Link
@@ -2148,7 +2202,7 @@ const ClientList = () => {
             {filteredClients.map((client) => (
               <div
                 key={client.id}
-                className={`backdrop-blur-md ${isDarkMode ? 'bg-white/10' : 'bg-white'} ${selectedClientsForMerge.includes(client.id) ? `${isDarkMode ? 'ring-2 ring-emerald-500' : 'ring-2 ring-emerald-500'}` : ''} rounded-xl shadow-xl overflow-hidden border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} hover:shadow-emerald-500/10 transition-all duration-300`}
+                className={`backdrop-blur-md ${isDarkMode ? 'bg-white/10' : 'bg-white'} ${selectedClientsForMerge.includes(client.id) ? `${isDarkMode ? 'ring-2 ring-emerald-500' : 'ring-2 ring-emerald-500'}` : ''} ${client.merged ? `${isDarkMode ? 'border-purple-500/40' : 'border-purple-200'}` : `${isDarkMode ? 'border-white/10' : 'border-gray-200'}`} rounded-xl shadow-xl overflow-hidden border hover:shadow-emerald-500/10 transition-all duration-300`}
               >
                 {/* Card header with selection checkbox */}
                 <div className={`p-5 ${isDarkMode ? 'bg-gradient-to-r from-slate-800/80 to-slate-700/80' : 'bg-gradient-to-r from-gray-50 to-gray-100'} border-b ${isDarkMode ? 'border-slate-600/30' : 'border-gray-200'}`}>
@@ -2166,9 +2220,28 @@ const ClientList = () => {
                         </div>
                       )}
                       <div>
-                        <h3 className={`font-semibold text-left text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        <h3 className={`font-semibold text-left text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'} flex items-center`}>
                             {client.clientName || 'Unnamed Client'}
-                          {client.merged && <span className="ml-2 text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full">Merged</span>}
+                          {client.merged && (
+                            <span className="ml-2 text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full flex items-center group relative">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                              </svg>
+                              Merged
+                              {client.mergedFrom && client.mergedFrom.length > 0 && (
+                                <div className="absolute z-10 left-0 top-full mt-1 w-48 p-2 bg-slate-800 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                                  <div className="text-xs text-slate-300 font-normal">
+                                    <p className="font-medium mb-1">Merged from:</p>
+                                    <ul className="list-disc pl-4 text-[10px] space-y-1">
+                                      {client.mergedFrom.map((id, index) => (
+                                        <li key={index} className="truncate">{id}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                </div>
+                              )}
+                            </span>
+                          )}
                         </h3>
                         <p className={`text-xs text-left ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mt-1`}>Order ID: {client.id}</p>
                         {client.clientGst && (
@@ -2181,7 +2254,7 @@ const ClientList = () => {
                         )}
                       </div>
                     </div>
-                      <div className="flex flex-col items-end gap-2">
+                    <div className="flex flex-col items-end gap-2">
                       <span className={`text-xs px-3 py-1 rounded-full font-medium ${client.paymentStatus === 'cleared'
                         ? `${isDarkMode ? 'bg-sky-500/20' : 'bg-sky-100'} ${isDarkMode ? 'text-sky-300' : 'text-sky-700'} border ${isDarkMode ? 'border-sky-500/30' : 'border-sky-200'}`
                         : `${isDarkMode ? 'bg-amber-500/20' : 'bg-amber-100'} ${isDarkMode ? 'text-amber-300' : 'text-amber-700'} border ${isDarkMode ? 'border-amber-500/30' : 'border-amber-200'}`
@@ -2205,6 +2278,46 @@ const ClientList = () => {
                 </div>
 
                 <div className="p-5">
+                  {/* If this is a merged card, add a special header */}
+                  {client.merged && (
+                    <div className="mb-4 px-3 py-2 rounded-lg bg-purple-500/10 border border-purple-500/30 flex items-center justify-between">
+                      <div className="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                        </svg>
+                        <span className="text-xs text-purple-300 font-medium">Merged Card</span>
+                      </div>
+                      {client.mergedFrom && client.mergedFrom.length > 0 && (
+                        <button
+                          onClick={() => {
+                            const element = document.getElementById(`listMergedFrom-${client.id}`);
+                            if (element) {
+                              element.classList.toggle('hidden');
+                            }
+                          }}
+                          className="text-xs text-purple-400 hover:text-purple-300 flex items-center"
+                        >
+                          <span className="mr-1">From {client.mergedFrom.length} cards</span>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Display merged source IDs if available */}
+                  {client.merged && client.mergedFrom && client.mergedFrom.length > 0 && (
+                    <div id={`listMergedFrom-${client.id}`} className="hidden mb-4 ml-2 p-2 bg-purple-500/5 border-l-2 border-purple-500/30 rounded-r-lg">
+                      <p className="text-xs text-purple-300 mb-1">Merged from:</p>
+                      <ul className="text-[10px] text-slate-400 space-y-1 pl-2">
+                        {client.mergedFrom.map((id, index) => (
+                          <li key={index} className="truncate">{id}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <h3 className={`font-semibold text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{client.clientName || 'Unnamed Client'}</h3>
@@ -2342,7 +2455,7 @@ const ClientList = () => {
             {filteredClients.map((client) => (
               <div
                 key={client.id}
-                className={`backdrop-blur-md ${isDarkMode ? 'bg-white/10' : 'bg-white'} ${selectedClientsForMerge.includes(client.id) ? `${isDarkMode ? 'ring-2 ring-emerald-500' : 'ring-2 ring-emerald-500'}` : ''} rounded-xl shadow-xl overflow-hidden border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} group hover:shadow-emerald-500/10 transition-all duration-300 hover:-translate-y-1`}
+                className={`backdrop-blur-md ${isDarkMode ? 'bg-white/10' : 'bg-white'} ${selectedClientsForMerge.includes(client.id) ? `${isDarkMode ? 'ring-2 ring-emerald-500' : 'ring-2 ring-emerald-500'}` : ''} ${client.merged ? `${isDarkMode ? 'border-purple-500/40' : 'border-purple-200'} ${isDarkMode ? 'bg-gradient-to-br from-white/10 to-purple-900/5' : 'bg-gradient-to-br from-white to-purple-50'}` : `${isDarkMode ? 'border-white/10' : 'border-gray-200'}`} rounded-xl shadow-xl overflow-hidden border group hover:shadow-emerald-500/10 transition-all duration-300 hover:-translate-y-1`}
               >
                 {/* Card header */}
                 <div className={`p-5 ${isDarkMode ? 'bg-gradient-to-r from-slate-800/80 to-slate-700/80' : 'bg-gradient-to-r from-gray-50 to-gray-100'} border-b ${isDarkMode ? 'border-slate-600/30' : 'border-gray-200'}`}>
@@ -2360,9 +2473,28 @@ const ClientList = () => {
                         </div>
                       )}
                       <div>
-                        <h3 className={`font-semibold text-left text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        <h3 className={`font-semibold text-left text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'} flex items-center`}>
                             {client.clientName || 'Unnamed Client'}
-                          {client.merged && <span className="ml-2 text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full">Merged</span>}
+                          {client.merged && (
+                            <span className="ml-2 text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full flex items-center group relative">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                              </svg>
+                              Merged
+                              {client.mergedFrom && client.mergedFrom.length > 0 && (
+                                <div className="absolute z-10 left-0 top-full mt-1 w-48 p-2 bg-slate-800 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                                  <div className="text-xs text-slate-300 font-normal">
+                                    <p className="font-medium mb-1">Merged from:</p>
+                                    <ul className="list-disc pl-4 text-[10px] space-y-1">
+                                      {client.mergedFrom.map((id, index) => (
+                                        <li key={index} className="truncate">{id}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                </div>
+                              )}
+                            </span>
+                          )}
                         </h3>
                         <p className={`text-xs text-left ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mt-1`}>Order ID: {client.id}</p>
                         {client.clientGst && (
@@ -2434,6 +2566,42 @@ const ClientList = () => {
                         {client.products?.length || 0} items
                       </span>
                     </div>
+
+                    {/* Add merged info section if this is a merged card */}
+                    {client.merged && client.mergedFrom && client.mergedFrom.length > 0 && (
+                      <div className="mb-3 p-2 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-purple-300 font-medium flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                            </svg>
+                            Merged from {client.mergedFrom.length} clients
+                          </p>
+                          <button 
+                            onClick={() => {
+                              const element = document.getElementById(`mergedFrom-${client.id}`);
+                              if (element) {
+                                element.classList.toggle('hidden');
+                              }
+                            }}
+                            className="text-purple-300 hover:text-purple-200 text-xs p-1 rounded-md hover:bg-white/5 transition-colors"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </button>
+                        </div>
+                        <div id={`mergedFrom-${client.id}`} className="mt-2 hidden">
+                          <ul className="space-y-1">
+                            {client.mergedFrom.map((id, index) => (
+                              <li key={index} className="text-[10px] text-slate-400 truncate px-1 py-0.5 rounded-md hover:bg-white/5">
+                                {id}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    )}
 
                     {client.products && client.products.length > 0 ? (
                       <div className="relative">
@@ -2556,6 +2724,34 @@ const ClientList = () => {
           </div>
         )}
       </div>
+
+      {/* Floating Action Button for Quick Merged Filter Toggle */}
+      {savedClients.filter(client => client.merged === true).length > 0 && !showModal && !showMergeModal && !editingClient && (
+        <div className="fixed right-6 bottom-6 z-40">
+          <button
+            onClick={() => setShowMergedOnly(!showMergedOnly)}
+            className={`flex items-center justify-center p-3 sm:p-4 rounded-full shadow-lg ${
+              showMergedOnly
+                ? "bg-purple-600 text-white hover:bg-purple-700"
+                : `${isDarkMode ? "bg-slate-700 text-white hover:bg-slate-600" : "bg-white text-purple-600 hover:bg-purple-50"}`
+            } transition-all duration-300 group`}
+            title={showMergedOnly ? "Show All Orders" : "Show Merged Only"}
+          >
+            {showMergedOnly ? (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+              </svg>
+            )}
+            <span className="absolute -top-2 -right-2 px-1.5 py-0.5 text-[10px] rounded-full bg-purple-600 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+              {showMergedOnly ? "Show All" : "Merged Only"} 
+            </span>
+          </button>
+        </div>
+      )}
 
       {/* Payment Modal - Updated Design */}
       {showPaymentModal && (
@@ -2967,6 +3163,34 @@ const ClientList = () => {
           </div>
         </div>
       )}
+
+      <div className="px-6 py-5">
+        <h1 className={`text-2xl sm:text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+          All Orders
+        </h1>
+
+        {/* Show a prominent banner when merged filter is active */}
+        {showMergedOnly && (
+          <div className="mt-3 py-2 px-3 bg-purple-500/20 border border-purple-400/30 rounded-lg flex items-center justify-between">
+            <div className="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+              </svg>
+              <span className="text-sm font-medium text-purple-300">
+                Showing Only Merged Cards ({filteredClients.length})
+              </span>
+            </div>
+            <button 
+              onClick={() => setShowMergedOnly(false)}
+              className="text-purple-300 hover:text-purple-100 p-1"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
+      </div>
 
     </div>
   );

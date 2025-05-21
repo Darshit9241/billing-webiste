@@ -1623,7 +1623,7 @@ const AddProducts = () => {
           </div>
 
           {/* Payment status and amount section with improved design */}
-          {(isEditMode || (billMode === 'full' && !isEditMode) || (billMode === 'existing' && currentOrderId)) && (
+          {(isEditMode || (billMode === 'full' && !isEditMode) || (billMode === 'half' && !isEditMode) || (billMode === 'existing' && currentOrderId)) && (
             <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className={`${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-100'} rounded-xl p-4 shadow-sm border`}>
                 <label className={`block ${darkMode ? 'text-gray-300' : 'text-gray-700'} font-medium mb-3 text-sm sm:text-base`}>
@@ -1690,7 +1690,7 @@ const AddProducts = () => {
               </div>
 
               {/* Only show Amount Paid input when in full bill mode or when updating an existing order */}
-              {(billMode === 'full' || (billMode === 'existing' && currentOrderId)) && !isEditMode && (
+              {(billMode === 'full' || billMode === 'half' || (billMode === 'existing' && currentOrderId)) && !isEditMode && (
                 <div className="relative">
                   <input
                     type="text"
@@ -1760,6 +1760,42 @@ const AddProducts = () => {
 
           {/* Actions and total section with glass morphism effect */}
           <div className="mt-6 items-center">
+            {/* Action buttons that were removed */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-6">
+              <button
+                className="flex items-center justify-center p-3.5 min-h-[50px] bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-xl hover:from-indigo-700 hover:to-blue-700 transition-all duration-300 shadow-md text-base"
+                onClick={addProduct}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                </svg>
+                Add Product
+              </button>
+
+              <button
+                className={`flex cursor-pointer items-center justify-center p-3.5 min-h-[50px] ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'} text-white rounded-xl transition-all duration-300 shadow-md text-base`}
+                onClick={saveOrder}
+                disabled={products.every(p => p.total === 0) || isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    Save Order
+                  </>
+                )}
+              </button>
+            </div>
+
             <div className={`${darkMode ? 'bg-gradient-to-r from-indigo-700 to-purple-700 border-indigo-600' : 'bg-gradient-to-r from-indigo-500 to-purple-500 border-indigo-200'} p-4 sm:p-6 rounded-xl border shadow-lg relative overflow-hidden`}>
               <div className={`absolute top-0 left-0 w-full h-full ${darkMode ? 'bg-gray-800 opacity-80' : 'bg-white opacity-90'} backdrop-blur-sm`}></div>
               <div className="relative">
@@ -1814,7 +1850,7 @@ const AddProducts = () => {
                   <span className={`font-bold text-lg sm:text-xl ${darkMode ? 'text-indigo-300' : 'text-indigo-700'}`}>₹ {grandTotal.toFixed(2)}</span>
                 </div>
 
-                {billMode === 'full' && amountPaid && (
+                {(billMode === 'full' || billMode === 'half') && amountPaid && (
                   <div className="mt-3 grid grid-cols-2 gap-3">
                     <div className={`p-3 ${darkMode ? 'bg-gray-700 bg-opacity-80' : 'bg-white bg-opacity-80'} backdrop-blur-sm rounded-lg`}>
                       <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} text-xs sm:text-sm`}>Amount Paid</span>
@@ -1831,7 +1867,7 @@ const AddProducts = () => {
                   </div>
                 )}
 
-                {billMode === 'full' && (
+                {billMode === 'full' || billMode === 'half' ? (
                   <div className="mt-3 text-center">
                     <div className="flex flex-wrap justify-center gap-2">
                       <span className={`inline-block px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm ${paymentStatus === 'pending'
@@ -1849,7 +1885,7 @@ const AddProducts = () => {
                       </span>
                     </div>
                   </div>
-                )}
+                ) : null}
               </div>
             </div>
           </div>

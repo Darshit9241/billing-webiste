@@ -4,6 +4,21 @@ import { fetchAllClients, updateClient, deleteClient } from './firebase/clientsF
 import { useTheme } from './context/ThemeContext';
 import ThemeToggle from './components/ThemeToggle';
 
+// CSS keyframes for animations
+const fadeInKeyframes = `
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+`;
+
+const slideDownKeyframes = `
+  @keyframes slideDown {
+    from { transform: translateY(-10px); }
+    to { transform: translateY(0); }
+  }
+`;
+
 const ClientNameOrders = () => {
   const { clientName } = useParams();
   const { isDarkMode } = useTheme();
@@ -30,6 +45,7 @@ const ClientNameOrders = () => {
   // Search functionality
   const [searchTerm, setSearchTerm] = useState('');
   const [searchField, setSearchField] = useState('all');
+  const [searchFieldDropdownOpen, setSearchFieldDropdownOpen] = useState(false);
   
   // State variables for order merging
   const [selectedOrders, setSelectedOrders] = useState([]);
@@ -58,6 +74,29 @@ const ClientNameOrders = () => {
   useEffect(() => {
     localStorage.setItem('viewMode', viewMode);
   }, [viewMode]);
+  
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const dropdownElements = document.querySelectorAll('.search-field-dropdown');
+      let clickedInsideDropdown = false;
+      
+      dropdownElements.forEach(element => {
+        if (element.contains(event.target)) {
+          clickedInsideDropdown = true;
+        }
+      });
+      
+      if (!clickedInsideDropdown) {
+        setSearchFieldDropdownOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
   
   const fetchOrdersByClientName = async (name) => {
     setLoading(true);
@@ -115,8 +154,8 @@ const ClientNameOrders = () => {
   };
   
   // Handle search field change
-  const handleSearchFieldChange = (e) => {
-    setSearchField(e.target.value);
+  const handleSearchFieldChange = (value) => {
+    setSearchField(value);
     setCurrentPage(1); // Reset to first page on search field change
   };
   
@@ -446,6 +485,12 @@ const ClientNameOrders = () => {
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-gray-100 to-white'} py-8 px-4 sm:px-6 lg:px-8 transition-colors duration-200`}>
+      {/* Inject CSS keyframes */}
+      <style>
+        {fadeInKeyframes}
+        {slideDownKeyframes}
+      </style>
+      
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
@@ -571,22 +616,155 @@ const ClientNameOrders = () => {
               />
             </div>
             <div className="sm:w-48">
-              <select
-                value={searchField}
-                onChange={handleSearchFieldChange}
-                className={`block w-full px-3 py-2 rounded-lg ${
-                  isDarkMode 
-                    ? 'bg-white/10 border-white/10 text-white' 
-                    : 'bg-gray-50 border-gray-300 text-gray-900'
-                } border focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition-colors`}
-              >
-                <option value="all">All Fields</option>
-                <option value="id">Order ID</option>
-                <option value="amount">Amount</option>
-                <option value="status">Payment Status</option>
-                <option value="orderType">Order Type</option>
-                <option value="date">Date</option>
-              </select>
+              <div className="relative search-field-dropdown">
+                <button
+                  type="button"
+                  onClick={() => setSearchFieldDropdownOpen(prev => !prev)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      setSearchFieldDropdownOpen(false);
+                    } else if (e.key === 'ArrowDown' && !searchFieldDropdownOpen) {
+                      setSearchFieldDropdownOpen(true);
+                    }
+                  }}
+                  aria-haspopup="listbox"
+                  aria-expanded={searchFieldDropdownOpen}
+                  className={`flex items-center justify-between w-full px-3 py-2 rounded-lg ${
+                    isDarkMode 
+                      ? 'bg-white/10 border-white/10 text-white' 
+                      : 'bg-gray-50 border-gray-300 text-gray-900'
+                  } border focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition-colors`}
+                >
+                  <span className="flex items-center">
+                    {searchField === 'all' && (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                        </svg>
+                        All Fields
+                      </>
+                    )}
+                    {searchField === 'id' && (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                        </svg>
+                        Order ID
+                      </>
+                    )}
+                    {searchField === 'amount' && (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Amount
+                      </>
+                    )}
+                    {searchField === 'status' && (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Payment Status
+                      </>
+                    )}
+                    {searchField === 'orderType' && (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                        Order Type
+                      </>
+                    )}
+                    {searchField === 'date' && (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Date
+                      </>
+                    )}
+                  </span>
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    className={`h-4 w-4 transition-transform duration-200 ${searchFieldDropdownOpen ? 'transform rotate-180' : ''}`} 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {searchFieldDropdownOpen && (
+                  <div 
+                    role="listbox"
+                    tabIndex={-1}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') {
+                        setSearchFieldDropdownOpen(false);
+                      }
+                    }}
+                    className={`absolute z-10 mt-1 w-full rounded-lg shadow-lg ${
+                      isDarkMode 
+                        ? 'bg-slate-800 border border-white/10' 
+                        : 'bg-white border border-gray-200'
+                    } py-1 overflow-hidden animate-fadeIn`}
+                    style={{
+                      animation: 'fadeIn 0.15s ease-out, slideDown 0.15s ease-out'
+                    }}
+                  >
+                    <div className="max-h-60 overflow-auto">
+                      {[
+                        { value: 'all', label: 'All Fields', icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg> },
+                        { value: 'id', label: 'Order ID', icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" /></svg> },
+                        { value: 'amount', label: 'Amount', icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
+                        { value: 'status', label: 'Payment Status', icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
+                        { value: 'orderType', label: 'Order Type', icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg> },
+                        { value: 'date', label: 'Date', icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> }
+                      ].map((option, index) => (
+                        <div
+                          key={option.value}
+                          role="option"
+                          aria-selected={searchField === option.value}
+                          tabIndex={0}
+                          onClick={() => {
+                            handleSearchFieldChange(option.value);
+                            setSearchFieldDropdownOpen(false);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleSearchFieldChange(option.value);
+                              setSearchFieldDropdownOpen(false);
+                            } else if (e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              const nextElement = e.currentTarget.nextElementSibling;
+                              if (nextElement) nextElement.focus();
+                            } else if (e.key === 'ArrowUp') {
+                              e.preventDefault();
+                              const prevElement = e.currentTarget.previousElementSibling;
+                              if (prevElement) prevElement.focus();
+                            }
+                          }}
+                          className={`px-4 py-2 cursor-pointer flex items-center ${
+                            searchField === option.value
+                              ? isDarkMode
+                                ? 'bg-emerald-500/20 text-emerald-300'
+                                : 'bg-emerald-50 text-emerald-700'
+                              : isDarkMode
+                                ? 'text-white hover:bg-white/5'
+                                : 'text-gray-900 hover:bg-gray-100'
+                          } transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-emerald-500/50`}
+                        >
+                          <span className="mr-2">{option.icon}</span>
+                          {option.label}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -721,7 +899,7 @@ const ClientNameOrders = () => {
         ) : orders.length === 0 ? (
           <div className="text-center py-16 bg-white/5 rounded-xl border border-white/10 shadow-xl backdrop-blur-md">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-slate-600 opacity-50 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2" />
             </svg>
             <h2 className="text-2xl font-semibold text-white mb-3">No orders found</h2>
             <p className="text-slate-400 max-w-lg mx-auto mb-6">

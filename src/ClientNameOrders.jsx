@@ -27,6 +27,10 @@ const ClientNameOrders = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   
+  // Search functionality
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchField, setSearchField] = useState('all');
+  
   // State variables for order merging
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -95,11 +99,67 @@ const ClientNameOrders = () => {
     }
   };
 
+  // Format date function - moved up before it's used in filteredOrders
+  const formatDate = (timestamp) => {
+    return new Date(timestamp).toLocaleString('en-IN', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+      timeZone: 'Asia/Kolkata'
+    });
+  };
+
+  // Handle search term change
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1); // Reset to first page on search
+  };
+  
+  // Handle search field change
+  const handleSearchFieldChange = (e) => {
+    setSearchField(e.target.value);
+    setCurrentPage(1); // Reset to first page on search field change
+  };
+  
+  // Filter orders based on search term and field
+  const filteredOrders = useMemo(() => {
+    if (!searchTerm.trim()) return orders;
+    
+    const term = searchTerm.toLowerCase().trim();
+    
+    return orders.filter(order => {
+      switch (searchField) {
+        case 'id':
+          return order.id.toLowerCase().includes(term);
+        case 'amount':
+          const grandTotal = parseFloat(order.grandTotal) || 0;
+          return grandTotal.toString().includes(term);
+        case 'status':
+          return (order.paymentStatus || '').toLowerCase().includes(term);
+        case 'orderType':
+          return (order.orderStatus || '').toLowerCase().includes(term);
+        case 'date':
+          // Search in formatted date
+          const formattedDate = formatDate(order.timestamp).toLowerCase();
+          return formattedDate.includes(term);
+        case 'all':
+        default:
+          // Search in all fields
+          return (
+            order.id.toLowerCase().includes(term) ||
+            ((parseFloat(order.grandTotal) || 0).toString().includes(term)) ||
+            ((order.paymentStatus || '').toLowerCase().includes(term)) ||
+            ((order.orderStatus || '').toLowerCase().includes(term)) ||
+            (formatDate(order.timestamp).toLowerCase().includes(term))
+          );
+      }
+    });
+  }, [orders, searchTerm, searchField]);
+
   // Sort orders
   const sortedOrders = useMemo(() => {
-    if (!orders.length) return [];
+    if (!filteredOrders.length) return [];
     
-    return [...orders].sort((a, b) => {
+    return [...filteredOrders].sort((a, b) => {
       let comparison = 0;
       
       switch (sortField) {
@@ -129,7 +189,7 @@ const ClientNameOrders = () => {
       
       return sortDirection === 'asc' ? comparison : -comparison;
     });
-  }, [orders, sortField, sortDirection]);
+  }, [filteredOrders, sortField, sortDirection]);
   
   // Paginate the sorted orders
   const paginatedOrders = useMemo(() => {
@@ -141,14 +201,6 @@ const ClientNameOrders = () => {
   const totalPages = useMemo(() => {
     return Math.ceil(sortedOrders.length / itemsPerPage);
   }, [sortedOrders, itemsPerPage]);
-  
-  const formatDate = (timestamp) => {
-    return new Date(timestamp).toLocaleString('en-IN', {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-      timeZone: 'Asia/Kolkata'
-    });
-  };
   
   const handleOrderClick = (orderId) => {
     navigate(`/order/${orderId}`);
@@ -497,6 +549,48 @@ const ClientNameOrders = () => {
           </div>
         </div>
         
+        {/* Search bar */}
+        <div className="mb-6">
+          <div className={`flex flex-col sm:flex-row gap-3 ${isDarkMode ? 'bg-white/5' : 'bg-white'} p-4 rounded-xl border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} shadow-sm`}>
+            <div className="relative flex-grow">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${isDarkMode ? 'text-slate-400' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={handleSearchChange}
+                placeholder="Search orders..."
+                className={`block w-full pl-10 pr-3 py-2 rounded-lg ${
+                  isDarkMode 
+                    ? 'bg-white/10 border-white/10 text-white placeholder-slate-400 focus:border-emerald-500' 
+                    : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-emerald-500'
+                } border focus:ring-2 focus:ring-emerald-500/30 outline-none transition-colors`}
+              />
+            </div>
+            <div className="sm:w-48">
+              <select
+                value={searchField}
+                onChange={handleSearchFieldChange}
+                className={`block w-full px-3 py-2 rounded-lg ${
+                  isDarkMode 
+                    ? 'bg-white/10 border-white/10 text-white' 
+                    : 'bg-gray-50 border-gray-300 text-gray-900'
+                } border focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition-colors`}
+              >
+                <option value="all">All Fields</option>
+                <option value="id">Order ID</option>
+                <option value="amount">Amount</option>
+                <option value="status">Payment Status</option>
+                <option value="orderType">Order Type</option>
+                <option value="date">Date</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        
         {/* Sort controls */}
         <div className="mb-6">
           <div className="flex flex-wrap gap-2">
@@ -554,6 +648,19 @@ const ClientNameOrders = () => {
               </svg>
               {error}
             </div>
+          </div>
+        )}
+        
+        {/* Search results message */}
+        {searchTerm && (
+          <div className={`mb-4 px-4 py-2 rounded-lg ${
+            isDarkMode ? 'bg-white/5 text-slate-300' : 'bg-gray-50 text-gray-700'
+          }`}>
+            {filteredOrders.length === 0 ? (
+              <p>No results found for "{searchTerm}"</p>
+            ) : (
+              <p>Found {filteredOrders.length} result{filteredOrders.length !== 1 ? 's' : ''} for "{searchTerm}"</p>
+            )}
           </div>
         )}
         

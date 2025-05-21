@@ -3165,9 +3165,6 @@ const ClientList = () => {
       )}
 
       <div className="px-6 py-5">
-        <h1 className={`text-2xl sm:text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-          All Orders
-        </h1>
 
         {/* Show a prominent banner when merged filter is active */}
         {showMergedOnly && (

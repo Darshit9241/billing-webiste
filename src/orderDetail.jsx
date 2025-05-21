@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { usePDF } from 'react-to-pdf';
-import { ref, get } from 'firebase/database';
+import { ref, get, update } from 'firebase/database';
 import { database } from './firebase/config';
 
 const OrderDetail = () => {
@@ -10,6 +10,11 @@ const OrderDetail = () => {
   const [error, setError] = useState('');
   const [isPdfGenerating, setIsPdfGenerating] = useState(false);
   const [showSharePopup, setShowSharePopup] = useState(false);
+  const [editingDueDate, setEditingDueDate] = useState(false);
+  const [dueDate, setDueDate] = useState(null);
+  const [invoiceDate, setInvoiceDate] = useState(null);
+  const [editingInvoiceDate, setEditingInvoiceDate] = useState(false);
+  const [savingDates, setSavingDates] = useState(false);
   const { id } = useParams();
   const navigate = useNavigate();
   const pdfRef = useRef(null);
@@ -59,6 +64,15 @@ const OrderDetail = () => {
         ...snapshot.val()
       };
       
+      // Set invoice date - use invoiceDate from data if available, otherwise use timestamp
+      const timestamp = data.timestamp || Date.now();
+      setInvoiceDate(data.invoiceDate ? new Date(data.invoiceDate) : new Date(timestamp));
+      
+      // Set due date - use dueDate from data if available, otherwise add 30 days to timestamp
+      const defaultDueDate = new Date(timestamp);
+      defaultDueDate.setDate(defaultDueDate.getDate() + 30); // Add 30 days by default
+      
+      setDueDate(data.dueDate ? new Date(data.dueDate) : defaultDueDate);
       console.log("Order data received:", data);
       setOrderData(data);
       setError('');
@@ -247,6 +261,79 @@ const OrderDetail = () => {
     };
   }, []);
 
+  // Save invoice date to database
+  const saveInvoiceDate = async () => {
+    try {
+      setSavingDates(true);
+      const orderRef = ref(database, `clients/${id}`);
+      await update(orderRef, {
+        invoiceDate: invoiceDate.getTime() // Store as timestamp
+      });
+      
+      // Update local state
+      setOrderData({
+        ...orderData,
+        invoiceDate: invoiceDate.getTime()
+      });
+      
+      setEditingInvoiceDate(false);
+    } catch (error) {
+      console.error("Error saving invoice date:", error);
+      alert("Failed to save invoice date. Please try again.");
+    } finally {
+      setSavingDates(false);
+    }
+  };
+
+  // Save due date to database
+  const saveDueDate = async () => {
+    try {
+      setSavingDates(true);
+      const orderRef = ref(database, `clients/${id}`);
+      await update(orderRef, {
+        dueDate: dueDate.getTime() // Store as timestamp
+      });
+      
+      // Update local state
+      setOrderData({
+        ...orderData,
+        dueDate: dueDate.getTime()
+      });
+      
+      setEditingDueDate(false);
+    } catch (error) {
+      console.error("Error saving due date:", error);
+      alert("Failed to save due date. Please try again.");
+    } finally {
+      setSavingDates(false);
+    }
+  };
+
+  // Handle invoice date input change
+  const handleInvoiceDateChange = (e) => {
+    const newDate = new Date(e.target.value);
+    if (!isNaN(newDate.getTime())) {
+      setInvoiceDate(newDate);
+    }
+  };
+
+  // Handle date input change
+  const handleDueDateChange = (e) => {
+    const newDate = new Date(e.target.value);
+    if (!isNaN(newDate.getTime())) {
+      setDueDate(newDate);
+    }
+  };
+
+  // Format date for input field
+  const formatDateForInput = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '';
+    
+    return d.toISOString().split('T')[0];
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-gray-50 to-gray-100 p-4">
@@ -316,20 +403,146 @@ const OrderDetail = () => {
       <div className="max-w-5xl mx-auto bg-white shadow-xl rounded-xl overflow-hidden print:shadow-none border border-gray-100">
         {/* Header with Company Info and Invoice Label */}
         <div className="px-4 sm:px-6 md:px-8 py-4 md:py-6 bg-gradient-to-r from-indigo-500 to-purple-600 border-b print:hidden">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-3 sm:space-y-0">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
             <Link to="/clients" className="text-white hover:text-indigo-100 flex items-center transition-colors text-sm sm:text-base">
               <svg className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
               <span className="font-medium">Back to Orders</span>
             </Link>
-            <div className="flex space-x-2 sm:space-x-3 w-full sm:w-auto justify-end">
+            
+            {/* Date Editing Controls - Mobile Optimized */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 bg-white/10 backdrop-blur-sm rounded-lg p-2 border border-white/20 w-full sm:w-auto">
+              <div className="flex items-center gap-2">
+                <span className="text-white text-xs font-medium">Invoice:</span>
+                {editingInvoiceDate ? (
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="date"
+                      value={formatDateForInput(invoiceDate)}
+                      onChange={handleInvoiceDateChange}
+                      className="border border-indigo-300 rounded-md p-1 text-xs w-[120px] sm:w-28 bg-white/90 text-gray-800"
+                      disabled={savingDates}
+                    />
+                    <button 
+                      onClick={saveInvoiceDate}
+                      className={`${savingDates ? 'bg-green-400' : 'bg-green-500'} text-white p-1 rounded-md flex-shrink-0`}
+                      title="Save from date"
+                      disabled={savingDates}
+                    >
+                      {savingDates ? (
+                        <svg className="w-3 h-3 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      ) : (
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </button>
+                    <button 
+                      onClick={() => setEditingInvoiceDate(false)}
+                      className="bg-red-500 text-white p-1 rounded-md flex-shrink-0"
+                      title="Cancel"
+                      disabled={savingDates}
+                    >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1">
+                    <span className="text-white text-xs bg-white/20 rounded px-2 py-1 truncate max-w-[120px] sm:max-w-none">
+                      {invoiceDate ? new Date(invoiceDate).toLocaleDateString('en-IN', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                      }) : 'Not set'}
+                    </span>
+                    <button 
+                      onClick={() => setEditingInvoiceDate(true)}
+                      className="text-white hover:text-indigo-200 p-1 flex-shrink-0"
+                      title="Edit from date"
+                    >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-white text-xs font-medium">Due:</span>
+                {editingDueDate ? (
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="date"
+                      value={formatDateForInput(dueDate)}
+                      onChange={handleDueDateChange}
+                      className="border border-indigo-300 rounded-md p-1 text-xs w-[120px] sm:w-28 bg-white/90 text-gray-800"
+                      disabled={savingDates}
+                    />
+                    <button 
+                      onClick={saveDueDate}
+                      className={`${savingDates ? 'bg-green-400' : 'bg-green-500'} text-white p-1 rounded-md flex-shrink-0`}
+                      title="Save to date"
+                      disabled={savingDates}
+                    >
+                      {savingDates ? (
+                        <svg className="w-3 h-3 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      ) : (
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </button>
+                    <button 
+                      onClick={() => setEditingDueDate(false)}
+                      className="bg-red-500 text-white p-1 rounded-md flex-shrink-0"
+                      title="Cancel"
+                      disabled={savingDates}
+                    >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1">
+                    <span className="text-white text-xs bg-white/20 rounded px-2 py-1 truncate max-w-[120px] sm:max-w-none">
+                      {dueDate ? new Date(dueDate).toLocaleDateString('en-IN', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                      }) : 'Not set'}
+                    </span>
+                    <button 
+                      onClick={() => setEditingDueDate(true)}
+                      className="text-white hover:text-indigo-200 p-1 flex-shrink-0"
+                      title="Edit to date"
+                    >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex gap-2 sm:gap-3 w-full sm:w-auto justify-end">
               <button
                 onClick={() => window.print()}
                 className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white/20 text-white backdrop-blur-sm border border-white/30 rounded-lg hover:bg-white/30 flex items-center text-xs sm:text-sm font-medium transition-colors"
                 aria-label="Print invoice"
               >
-                <svg className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                 </svg>
                 <span className="hidden sm:inline">Print</span>
@@ -352,7 +565,7 @@ const OrderDetail = () => {
                   </>
                 ) : (
                   <>
-                    <svg className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
                     <span className="hidden sm:inline">Download PDF</span>
@@ -367,17 +580,17 @@ const OrderDetail = () => {
                   className="px-3 py-1.5 sm:px-4 sm:py-2 bg-green-500 text-white border border-green-600 rounded-lg flex items-center text-xs sm:text-sm font-medium hover:bg-green-600 transition-colors"
                   aria-label="Share invoice"
                 >
-                  <svg className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                   </svg>
-                  <span className="hidden sm:inline ml-1">Share</span>
+                  <span className="hidden sm:inline">Share</span>
                 </button>
                 
-                {/* Share Popup */}
+                {/* Share Popup - Now positioned better for mobile */}
                 {showSharePopup && (
                   <div 
                     ref={sharePopupRef}
-                    className="absolute right-0 mt-2 w-60 bg-white rounded-lg shadow-lg border border-gray-200 z-10"
+                    className="absolute right-0 mt-2 w-60 bg-white rounded-lg shadow-lg border border-gray-200 z-10 sm:right-0 sm:left-auto left-0"
                   >
                     <div className="p-3">
                       <h3 className="text-xs font-semibold text-gray-700 mb-2 pb-1 border-b">Share via</h3>
@@ -460,10 +673,10 @@ const OrderDetail = () => {
                 </svg>
               </div>
               <div className="text-center sm:text-left">
-                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 text-left">Siyaram Lace</h1>
+                {/* <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 text-left">Siyaram Lace</h1> */}
                 <p className="text-gray-500 text-xs sm:text-sm mt-1 text-left">Jay Industrial Estate, IND 79, Anjana, 1, Anjana, Surat, Gujarat 395003</p>
                 <p className="text-gray-500 text-xs sm:text-sm mt-1 text-left">Contact Number :- 98794 43940</p>
-                <p className="text-gray-500 text-xs sm:text-sm mt-1 text-left">Email :- siyaram@gmail.com</p>
+                {/* <p className="text-gray-500 text-xs sm:text-sm mt-1 text-left">Email :- siyaram@gmail.com</p> */}
               </div>
             </div>
             <div className="print:hidden flex flex-row justify-center items-center">
@@ -530,9 +743,7 @@ const OrderDetail = () => {
                   {orderData.clientPhone && (
                     <span className="text-gray-700 text-xs sm:text-sm mt-1 text-left">
                       <span className="inline-block mr-1">
-                        <svg className="h-3 w-3 inline-block -mt-0.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                        </svg>
+                        Mobile No:-
                       </span>
                       {orderData.clientPhone}
                     </span>
@@ -553,22 +764,22 @@ const OrderDetail = () => {
               <div className="grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
                 <div className="text-gray-500 font-medium text-left">Invoice Date:</div>
                 <div className="text-gray-800 font-semibold text-right">
-                  {new Date(orderData.timestamp).toLocaleDateString('en-IN', {
+                  {invoiceDate ? new Date(invoiceDate).toLocaleDateString('en-IN', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
                     timeZone: 'Asia/Kolkata',
-                  })}
+                  }) : 'Not set'}
                 </div>
 
                 <div className="text-gray-500 font-medium text-left">Due Date:</div>
                 <div className="text-gray-800 font-semibold text-right">
-                  {new Date(orderData.timestamp).toLocaleDateString('en-IN', {
+                  {dueDate ? new Date(dueDate).toLocaleDateString('en-IN', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
                     timeZone: 'Asia/Kolkata',
-                  })}
+                  }) : 'Not set'}
                 </div>
 
                 <div className="text-gray-500 font-medium text-left">Status:</div>
@@ -589,8 +800,8 @@ const OrderDetail = () => {
                   <span
                     className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                       orderData.orderStatus === 'sell' 
-                        ? 'text-blue-800 bg-blue-100 border border-blue-200' 
-                        : 'text-purple-800 bg-purple-100 border border-purple-200'
+                        ? 'text-blue-800' 
+                        : 'text-purple-800'
                     }`}
                   >
                     {orderData.orderStatus === 'sell' ? '📤 Sell' : '📥 Purchased'}

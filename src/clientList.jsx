@@ -428,7 +428,8 @@ const ClientList = () => {
       paymentStatus: client.paymentStatus || 'pending',
       orderStatus: client.orderStatus || 'sell', // Add order status to edit form data
       products: client.products ? [...client.products] : [],
-      paymentHistory: client.paymentHistory ? [...client.paymentHistory] : []
+      paymentHistory: client.paymentHistory ? [...client.paymentHistory] : [],
+      timestamp: client.timestamp || Date.now() // Add timestamp to edit form data
     });
     setActiveTab('general');
   };
@@ -444,7 +445,8 @@ const ClientList = () => {
       paymentStatus: 'pending',
       orderStatus: 'sell', // Reset order status
       products: [],
-      paymentHistory: []
+      paymentHistory: [],
+      timestamp: Date.now() // Reset timestamp
     });
     setEditingProduct(null);
     setProductFormData({
@@ -772,7 +774,7 @@ const ClientList = () => {
     try {
       const updatedClient = {
         id: editingClient.id,
-        timestamp: editingClient.timestamp,
+        timestamp: editFormData.timestamp, // Use the timestamp from edit form
         clientName: editFormData.clientName,
         clientAddress: editFormData.clientAddress,
         clientPhone: editFormData.clientPhone,
@@ -1618,6 +1620,38 @@ const ClientList = () => {
                         onChange={handleEditInputChange}
                         className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
                       />
+                    </div>
+
+                    {/* Add order date/timestamp field */}
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-1">Order Date</label>
+                      <input
+                        type="datetime-local"
+                        name="timestamp"
+                        value={formatDateForInput(editFormData.timestamp)}
+                        onChange={(e) => {
+                          const localDate = new Date(e.target.value);
+                          const newTimestamp = localDate.getTime();
+                          
+                          // Update the main order timestamp
+                          const updatedFormData = {
+                            ...editFormData,
+                            timestamp: newTimestamp
+                          };
+                          
+                          // Also update all product timestamps to match the new order timestamp
+                          if (updatedFormData.products && updatedFormData.products.length > 0) {
+                            updatedFormData.products = updatedFormData.products.map(product => ({
+                              ...product,
+                              timestamp: newTimestamp
+                            }));
+                          }
+                          
+                          setEditFormData(updatedFormData);
+                        }}
+                        className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
+                      />
+                      <p className="mt-1 text-xs text-slate-500">Updating this will also update all product timestamps.</p>
                     </div>
 
                     <div>

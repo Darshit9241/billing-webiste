@@ -9,9 +9,11 @@ const OrderDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isPdfGenerating, setIsPdfGenerating] = useState(false);
+  const [showSharePopup, setShowSharePopup] = useState(false);
   const { id } = useParams();
   const navigate = useNavigate();
   const pdfRef = useRef(null);
+  const sharePopupRef = useRef(null);
   
   // Enhanced PDF options for better responsiveness
   const { toPDF, targetRef } = usePDF({
@@ -72,6 +74,20 @@ const OrderDetail = () => {
     fetchOrder();
   }, [fetchOrder]);
 
+  // Handle click outside of share popup to close it
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (sharePopupRef.current && !sharePopupRef.current.contains(event.target)) {
+        setShowSharePopup(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   // Enhanced PDF download handler with loading state
   const handleDownloadPdf = async () => {
     try {
@@ -98,6 +114,110 @@ const OrderDetail = () => {
       if (tempStyle) tempStyle.remove();
     } catch (error) {
       console.error("Error generating PDF:", error);
+    } finally {
+      setIsPdfGenerating(false);
+    }
+  };
+
+  // Share PDF via WhatsApp
+  const shareViaWhatsApp = async (specificPhone = null) => {
+    try {
+      setIsPdfGenerating(true);
+      
+      // Generate PDF blob
+      const blob = await toPDF({ returnPromise: true });
+      
+      // Create a temporary URL for the PDF
+      const pdfUrl = URL.createObjectURL(blob);
+      
+      // Get client name for message
+      const clientName = orderData ? orderData.clientName : `Invoice ${id}`;
+      const message = `Hello! Here's the invoice for ${clientName} (Order #${id})`;
+      
+      let phone = specificPhone;
+      if (!phone) {
+        // For mobile devices or desktop when no specific contact is provided
+        phone = window.prompt("Enter the phone number with country code (e.g., +919876543210):", "");
+      }
+      
+      // Download link for the invoice - let the user save it first
+      if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+        // For IE
+        window.navigator.msSaveOrOpenBlob(blob, `invoice-${id}.pdf`);
+      } else {
+        // For other browsers
+        const link = document.createElement('a');
+        link.href = pdfUrl;
+        link.download = `invoice-${id}.pdf`;
+        link.click();
+      }
+      
+      setTimeout(() => {
+        if (phone) {
+          // Format phone number - remove spaces, brackets, etc.
+          const formattedPhone = phone.replace(/[\s()+\-]/g, "");
+          
+          // Open WhatsApp with specified contact and pre-filled message
+          window.open(`https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`, '_blank');
+        } else {
+          // If no phone entered, open WhatsApp without specific contact
+          window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
+        }
+        
+        // Clean up the temporary URL after a delay
+        setTimeout(() => {
+          URL.revokeObjectURL(pdfUrl);
+        }, 60000); // Revoke after 1 minute
+      }, 1000); // Small delay to allow download to start first
+      
+      setShowSharePopup(false);
+    } catch (error) {
+      console.error("Error sharing via WhatsApp:", error);
+    } finally {
+      setIsPdfGenerating(false);
+    }
+  };
+
+  // Share PDF via Telegram
+  const shareViaTelegram = async () => {
+    try {
+      setIsPdfGenerating(true);
+      
+      // Generate PDF blob
+      const blob = await toPDF({ returnPromise: true });
+      
+      // Create a temporary URL for the PDF
+      const pdfUrl = URL.createObjectURL(blob);
+      
+      // Get client name for message
+      const clientName = orderData ? orderData.clientName : `Invoice ${id}`;
+      const message = `Invoice for ${clientName} (Order #${id})`;
+      
+      // Download link for the invoice - let the user save it first
+      if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+        // For IE
+        window.navigator.msSaveOrOpenBlob(blob, `invoice-${id}.pdf`);
+      } else {
+        // For other browsers
+        const link = document.createElement('a');
+        link.href = pdfUrl;
+        link.download = `invoice-${id}.pdf`;
+        link.click();
+      }
+      
+      // Open Telegram with pre-filled message after download starts
+      setTimeout(() => {
+        window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(message)}`, '_blank');
+        
+        // Clean up the temporary URL
+        setTimeout(() => {
+          URL.revokeObjectURL(pdfUrl);
+        }, 60000); // Revoke after 1 minute
+      }, 1000);
+      
+      setShowSharePopup(false);
+    } catch (error) {
+      console.error("Error sharing via Telegram:", error);
     } finally {
       setIsPdfGenerating(false);
     }
@@ -239,6 +359,92 @@ const OrderDetail = () => {
                   </>
                 )}
               </button>
+              
+              {/* Share Button */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowSharePopup(!showSharePopup)}
+                  className="px-3 py-1.5 sm:px-4 sm:py-2 bg-green-500 text-white border border-green-600 rounded-lg flex items-center text-xs sm:text-sm font-medium hover:bg-green-600 transition-colors"
+                  aria-label="Share invoice"
+                >
+                  <svg className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                  </svg>
+                  <span className="hidden sm:inline ml-1">Share</span>
+                </button>
+                
+                {/* Share Popup */}
+                {showSharePopup && (
+                  <div 
+                    ref={sharePopupRef}
+                    className="absolute right-0 mt-2 w-60 bg-white rounded-lg shadow-lg border border-gray-200 z-10"
+                  >
+                    <div className="p-3">
+                      <h3 className="text-xs font-semibold text-gray-700 mb-2 pb-1 border-b">Share via</h3>
+                      <div className="flex flex-col space-y-1">
+                        <button
+                          onClick={() => shareViaWhatsApp()}
+                          className="flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-green-50 rounded-md transition-colors"
+                        >
+                          <svg className="h-5 w-5 mr-2 text-green-500" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                          </svg>
+                          WhatsApp
+                        </button>
+                        
+                        {/* Common WhatsApp Contacts for Quick Selection */}
+                        <div className="pl-7 pt-1 pb-2">
+                          <p className="text-xs text-gray-500 mb-2">Common contacts:</p>
+                          <div className="grid grid-cols-1 gap-1">
+                            <button 
+                              onClick={() => {
+                                // Share with specific client if available
+                                const clientPhone = orderData?.clientPhone;
+                                if (clientPhone) {
+                                  const formattedPhone = clientPhone.replace(/[\s()+\-]/g, "");
+                                  shareViaWhatsApp(formattedPhone);
+                                } else {
+                                  shareViaWhatsApp();
+                                }
+                              }}
+                              className="text-xs text-left py-1.5 px-2 bg-green-50 hover:bg-green-100 rounded text-green-700 flex items-center"
+                            >
+                              <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span>
+                              {orderData?.clientName || 'Client'} 
+                              {orderData?.clientPhone && 
+                                <span className="ml-1 text-gray-500">({orderData.clientPhone.substring(orderData.clientPhone.length - 4)})</span>
+                              }
+                            </button>
+                            
+                            <button 
+                              onClick={() => {
+                                // Owner/accounting contact
+                                const phone = "+919879443940"; // Example fixed number
+                                shareViaWhatsApp(phone);
+                              }}
+                              className="text-xs text-left py-1.5 px-2 bg-green-50 hover:bg-green-100 rounded text-green-700 flex items-center"
+                            >
+                              <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span>
+                              Accounting
+                              <span className="ml-1 text-gray-500">(3940)</span>
+                            </button>
+                          </div>
+                        </div>
+                        
+                        <button
+                          onClick={shareViaTelegram}
+                          className="flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 rounded-md transition-colors"
+                        >
+                          <svg className="h-5 w-5 mr-2 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.96 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                          </svg>
+                          Telegram
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -368,8 +574,11 @@ const OrderDetail = () => {
                 <div className="text-gray-500 font-medium text-left">Status:</div>
                 <div className="text-right">
                   <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${isPaid ? 'text-green-800' : 'text-amber-800'
-                      } ${isPaid ? 'print:text-green-800' : 'print:text-amber-800'}`}
+                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                      isPaid ? 'text-green-800' : 'text-amber-800'
+                    } ${
+                      isPaid ? 'print:text-green-800' : 'print:text-amber-800'
+                    }`}
                   >
                     {isPaid ? 'Paid' : 'Pending'}
                   </span>

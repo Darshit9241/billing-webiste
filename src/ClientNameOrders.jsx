@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchAllClients } from './firebase/clientsFirebase';
+import { fetchAllClients, updateClient } from './firebase/clientsFirebase';
 import { useTheme } from './context/ThemeContext';
 import ThemeToggle from './components/ThemeToggle';
 
@@ -27,6 +27,13 @@ const ClientNameOrders = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   
+  // State variables for order merging
+  const [selectedOrders, setSelectedOrders] = useState([]);
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [showMergeConfirm, setShowMergeConfirm] = useState(false);
+  const [mergedOrder, setMergedOrder] = useState(null);
+  const [mergeLoading, setMergeLoading] = useState(false);
+  
   useEffect(() => {
     // Decode the client name from URL parameter
     const decoded = decodeURIComponent(clientName);
@@ -50,8 +57,6 @@ const ClientNameOrders = () => {
         client => client.clientName && client.clientName.toLowerCase() === name.toLowerCase()
       );
       
-      // Don't sort here, will sort in the useMemo
-      
       setOrders(matchingOrders);
       
       // Calculate totals
@@ -60,6 +65,9 @@ const ClientNameOrders = () => {
       let paid = 0;
       
       matchingOrders.forEach(order => {
+        // Skip if this order is part of a merged order
+        if (order.mergedFrom) return;
+        
         const orderTotal = parseFloat(order.grandTotal) || 0;
         const orderPaid = parseFloat(order.amountPaid) || 0;
         
@@ -199,6 +207,122 @@ const ClientNameOrders = () => {
     );
   };
 
+  // Order merge functionality
+  const toggleSelectionMode = () => {
+    setIsSelectionMode(prev => !prev);
+    // Clear selections when exiting selection mode
+    if (isSelectionMode) {
+      setSelectedOrders([]);
+    }
+  };
+  
+  const toggleOrderSelection = (order) => {
+    if (!isSelectionMode) return;
+    
+    setSelectedOrders(prev => {
+      const isSelected = prev.some(o => o.id === order.id);
+      if (isSelected) {
+        return prev.filter(o => o.id !== order.id);
+      } else {
+        return [...prev, order];
+      }
+    });
+  };
+  
+  const createMergedOrder = () => {
+    if (selectedOrders.length < 2) {
+      setError("Please select at least 2 orders to merge");
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+    
+    // Use the first order as the base
+    const baseOrder = { ...selectedOrders[0] };
+    
+    // Initialize merged values
+    let allProducts = [...(baseOrder.products || [])];
+    let totalGrandTotal = parseFloat(baseOrder.grandTotal) || 0;
+    let totalAmountPaid = parseFloat(baseOrder.amountPaid) || 0;
+    let allPaymentHistory = [...(baseOrder.paymentHistory || [])];
+    
+    // Combine data from all other selected orders
+    for (let i = 1; i < selectedOrders.length; i++) {
+      const order = selectedOrders[i];
+      
+      // Merge products
+      if (order.products && order.products.length > 0) {
+        allProducts = [...allProducts, ...order.products];
+      }
+      
+      // Sum up the financial data
+      totalGrandTotal += parseFloat(order.grandTotal) || 0;
+      totalAmountPaid += parseFloat(order.amountPaid) || 0;
+      
+      // Merge payment history
+      if (order.paymentHistory && order.paymentHistory.length > 0) {
+        allPaymentHistory = [...allPaymentHistory, ...order.paymentHistory];
+      }
+    }
+    
+    // Sort payment history by date
+    allPaymentHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    // Create the merged order
+    const newMergedOrder = {
+      ...baseOrder,
+      clientName: decodedClientName,
+      products: allProducts,
+      grandTotal: totalGrandTotal,
+      amountPaid: totalAmountPaid,
+      paymentHistory: allPaymentHistory,
+      paymentStatus: totalAmountPaid >= totalGrandTotal ? 'cleared' : 'pending',
+      orderStatus: baseOrder.orderStatus || 'sell',
+      merged: true,
+      mergedFrom: selectedOrders.map(o => o.id),
+      timestamp: Date.now(),
+      id: `merged_${Date.now()}`
+    };
+    
+    setMergedOrder(newMergedOrder);
+    setShowMergeConfirm(true);
+  };
+  
+  const saveMergedOrder = async () => {
+    if (!mergedOrder) return;
+    
+    setMergeLoading(true);
+    try {
+      // Save to Firebase
+      await updateClient(mergedOrder);
+      
+      // Update local state
+      setOrders(prev => [...prev, mergedOrder]);
+      
+      // Reset merge state
+      setSelectedOrders([]);
+      setIsSelectionMode(false);
+      setShowMergeConfirm(false);
+      setMergedOrder(null);
+      
+      // Show success message
+      setError('Orders successfully merged!');
+      setTimeout(() => setError(''), 3000);
+      
+      // Refresh orders to reflect the merge
+      await fetchOrdersByClientName(decodedClientName);
+    } catch (err) {
+      setError(`Failed to save merged order: ${err.message}`);
+      setTimeout(() => setError(''), 5000);
+    } finally {
+      setMergeLoading(false);
+    }
+  };
+  
+  const cancelMerge = () => {
+    setShowMergeConfirm(false);
+    setMergedOrder(null);
+  };
+
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-gray-100 to-white'} py-8 px-4 sm:px-6 lg:px-8 transition-colors duration-200`}>
       <div className="max-w-7xl mx-auto">
@@ -224,6 +348,49 @@ const ClientNameOrders = () => {
             </div>
             
             <div className="flex items-center gap-2">
+              {/* Merge orders button/controls */}
+              {!isSelectionMode ? (
+                <button 
+                  onClick={toggleSelectionMode}
+                  disabled={orders.length < 2}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center space-x-1 
+                    ${orders.length < 2 
+                      ? (isDarkMode ? 'bg-slate-700/50 text-slate-500' : 'bg-gray-200 text-gray-400') 
+                      : (isDarkMode ? 'bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30' : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200')
+                    } transition-colors`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2" />
+                  </svg>
+                  <span>Merge Orders</span>
+                </button>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <button 
+                    onClick={createMergedOrder}
+                    disabled={selectedOrders.length < 2}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center
+                      ${selectedOrders.length < 2 
+                        ? (isDarkMode ? 'bg-slate-700/50 text-slate-500' : 'bg-gray-200 text-gray-400') 
+                        : (isDarkMode ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200')
+                      } transition-colors`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                    </svg>
+                    <span>Merge Selected ({selectedOrders.length})</span>
+                  </button>
+                  <button 
+                    onClick={toggleSelectionMode}
+                    className={`p-1.5 rounded-lg ${isDarkMode ? 'bg-red-500/20 text-red-300 hover:bg-red-500/30' : 'bg-red-100 text-red-700 hover:bg-red-200'} transition-colors`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+              
               {/* View mode toggle */}
               <div className={`p-1 rounded-lg flex ${isDarkMode ? 'bg-white/5' : 'bg-gray-100'}`}>
                 <button 
@@ -386,18 +553,41 @@ const ClientNameOrders = () => {
             {/* Orders in Card or Compact View */}
             {viewMode === 'card' ? (
               <div className="space-y-4">
-                {paginatedOrders.map((order) => (
+                {paginatedOrders.map((order) => {
+                  const isSelected = selectedOrders.some(o => o.id === order.id);
+                  return (
                   <div 
                     key={order.id} 
-                    onClick={() => handleOrderClick(order.id)}
-                    className={`backdrop-blur-md ${isDarkMode ? 'bg-white/10' : 'bg-white'} rounded-xl shadow-xl overflow-hidden border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} hover:shadow-emerald-500/10 transition-all duration-300 cursor-pointer`}
+                    onClick={() => isSelectionMode ? toggleOrderSelection(order) : handleOrderClick(order.id)}
+                    className={`backdrop-blur-md ${isDarkMode ? 'bg-white/10' : 'bg-white'} rounded-xl shadow-xl overflow-hidden border 
+                      ${isSelectionMode && isSelected 
+                        ? (isDarkMode ? 'border-indigo-500 ring-2 ring-indigo-500/50' : 'border-indigo-500 ring-2 ring-indigo-500/30') 
+                        : (isDarkMode ? 'border-white/10' : 'border-gray-200')} 
+                      hover:shadow-emerald-500/10 transition-all duration-300 cursor-pointer
+                      ${order.merged ? (isDarkMode ? 'border-l-4 border-l-blue-500' : 'border-l-4 border-l-blue-500') : ''}
+                    `}
                   >
+                    {/* Selection indicator (shown in selection mode) */}
+                    {isSelectionMode && (
+                      <div className={`absolute top-3 right-3 h-5 w-5 rounded-full flex items-center justify-center 
+                        ${isSelected 
+                          ? (isDarkMode ? 'bg-indigo-500 text-white' : 'bg-indigo-500 text-white') 
+                          : (isDarkMode ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-500')}`}
+                      >
+                        {isSelected && (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
+                    )}
+                    
                     {/* Card header */}
                     <div className={`p-5 ${isDarkMode ? 'bg-gradient-to-r from-slate-800/80 to-slate-700/80' : 'bg-gradient-to-r from-gray-50 to-gray-100'} border-b ${isDarkMode ? 'border-slate-600/30' : 'border-gray-200'}`}>
                       <div className="flex justify-between items-start">
                         <div>
                           <h3 className={`font-semibold text-left text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                            Order #{order.id.substring(0, 8)}
+                            {order.merged ? '🔄 ' : ''}Order #{order.id.substring(0, 8)}
                           </h3>
                           <p className={`text-xs text-left ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mt-1`}>
                             {formatDate(order.timestamp)}
@@ -459,10 +649,11 @@ const ClientNameOrders = () => {
                     
                     {/* View order hint */}
                     <div className={`py-3 px-4 text-center text-xs ${isDarkMode ? 'bg-white/5 text-slate-300' : 'bg-gray-50 text-gray-600'} border-t ${isDarkMode ? 'border-slate-700/50' : 'border-gray-200'}`}>
-                      Click to view complete order details
+                      {isSelectionMode ? 'Click to select for merging' : 'Click to view complete order details'}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               // Compact View
@@ -471,6 +662,11 @@ const ClientNameOrders = () => {
                   <table className="min-w-full divide-y divide-gray-700">
                     <thead className={isDarkMode ? 'bg-slate-800/50' : 'bg-gray-50'}>
                       <tr>
+                        {isSelectionMode && (
+                          <th scope="col" className={`px-4 py-3 text-center ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                            Select
+                          </th>
+                        )}
                         <th scope="col" className={`px-6 py-3 text-left text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} uppercase tracking-wider`}>Order ID</th>
                         <th scope="col" className={`px-6 py-3 text-left text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} uppercase tracking-wider`}>Date</th>
                         <th scope="col" className={`px-6 py-3 text-center text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} uppercase tracking-wider`}>Total</th>
@@ -483,13 +679,35 @@ const ClientNameOrders = () => {
                     <tbody className={`divide-y ${isDarkMode ? 'divide-white/10' : 'divide-gray-200'}`}>
                       {paginatedOrders.map((order, index) => {
                         const balanceDue = (parseFloat(order.grandTotal) || 0) - (parseFloat(order.amountPaid) || 0);
+                        const isSelected = selectedOrders.some(o => o.id === order.id);
                         return (
                           <tr 
                             key={order.id} 
-                            onClick={() => handleOrderClick(order.id)}
-                            className={`${index % 2 === 0 ? (isDarkMode ? 'bg-white/5' : 'bg-white') : (isDarkMode ? 'bg-white/[0.02]' : 'bg-gray-50')} cursor-pointer hover:bg-emerald-500/10`}
+                            onClick={() => isSelectionMode ? toggleOrderSelection(order) : handleOrderClick(order.id)}
+                            className={`${index % 2 === 0 ? (isDarkMode ? 'bg-white/5' : 'bg-white') : (isDarkMode ? 'bg-white/[0.02]' : 'bg-gray-50')} 
+                              cursor-pointer hover:bg-emerald-500/10 
+                              ${isSelectionMode && isSelected ? 'bg-indigo-500/20' : ''}
+                              ${order.merged ? (isDarkMode ? 'border-l-4 border-l-blue-500' : 'border-l-4 border-l-blue-500') : ''}
+                            `}
                           >
-                            <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>#{order.id.substring(0, 8)}</td>
+                            {isSelectionMode && (
+                              <td className="px-4 py-4 whitespace-nowrap text-center">
+                                <div className={`h-5 w-5 rounded-full mx-auto flex items-center justify-center 
+                                  ${isSelected 
+                                    ? (isDarkMode ? 'bg-indigo-500 text-white' : 'bg-indigo-500 text-white') 
+                                    : (isDarkMode ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-500')}`}
+                                >
+                                  {isSelected && (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                  )}
+                                </div>
+                              </td>
+                            )}
+                            <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                              {order.merged ? '🔄 ' : ''}#{order.id.substring(0, 8)}
+                            </td>
                             <td className={`px-6 py-4 whitespace-nowrap text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>{formatDate(order.timestamp)}</td>
                             <td className={`px-6 py-4 whitespace-nowrap text-sm text-center ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>₹{parseFloat(order.grandTotal || 0).toFixed(2)}</td>
                             <td className={`px-6 py-4 whitespace-nowrap text-sm text-center text-emerald-500 font-medium`}>₹{parseFloat(order.amountPaid || 0).toFixed(2)}</td>
@@ -591,6 +809,103 @@ const ClientNameOrders = () => {
                 </div>
               </div>
             )}
+          </div>
+        )}
+        
+        {/* Merge Confirmation Modal */}
+        {showMergeConfirm && mergedOrder && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className={`w-full max-w-2xl rounded-xl shadow-2xl ${isDarkMode ? 'bg-slate-800' : 'bg-white'} p-6`}>
+              <h3 className={`text-xl font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                Confirm Order Merge
+              </h3>
+              
+              <div className="space-y-4 mb-6">
+                <p className={`${isDarkMode ? 'text-slate-300' : 'text-gray-700'}`}>
+                  You are about to merge {selectedOrders.length} orders. This will create a new order that combines all products and payments.
+                </p>
+                
+                <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
+                  <h4 className={`font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Merge Summary:</h4>
+                  <ul className="space-y-2">
+                    <li className="flex justify-between">
+                      <span className={`${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Total Products:</span>
+                      <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{mergedOrder.products?.length || 0}</span>
+                    </li>
+                    <li className="flex justify-between">
+                      <span className={`${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Total Amount:</span>
+                      <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>₹{mergedOrder.grandTotal.toFixed(2)}</span>
+                    </li>
+                    <li className="flex justify-between">
+                      <span className={`${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Amount Paid:</span>
+                      <span className="font-medium text-emerald-500">₹{mergedOrder.amountPaid.toFixed(2)}</span>
+                    </li>
+                    <li className="flex justify-between">
+                      <span className={`${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Balance Due:</span>
+                      <span className={`font-medium ${mergedOrder.grandTotal - mergedOrder.amountPaid <= 0 ? 'text-sky-500' : 'text-amber-500'}`}>
+                        ₹{(mergedOrder.grandTotal - mergedOrder.amountPaid).toFixed(2)}
+                      </span>
+                    </li>
+                    <li className="flex justify-between">
+                      <span className={`${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Payment Status:</span>
+                      <span className={`inline-block text-xs px-2 py-1 rounded-full font-medium ${
+                        mergedOrder.paymentStatus === 'cleared'
+                          ? `${isDarkMode ? 'bg-sky-500/20 text-sky-300' : 'bg-sky-100 text-sky-700'}`
+                          : `${isDarkMode ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-100 text-amber-700'}`
+                      }`}>
+                        {mergedOrder.paymentStatus === 'cleared' ? 'Paid' : 'Pending'}
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+                
+                <div className={`${isDarkMode ? 'bg-yellow-500/10 border-yellow-500/30 text-yellow-300' : 'bg-yellow-50 border-yellow-200 text-yellow-800'} p-3 rounded-lg border`}>
+                  <div className="flex items-start">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-sm">
+                      The original orders will remain unchanged. A new merged order will be created. You can access both the original and merged orders.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3">
+                <button 
+                  onClick={cancelMerge}
+                  disabled={mergeLoading}
+                  className={`px-4 py-2 rounded-lg ${
+                    isDarkMode 
+                      ? 'bg-white/10 text-white hover:bg-white/20' 
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  } transition-colors`}
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={saveMergedOrder}
+                  disabled={mergeLoading}
+                  className={`px-4 py-2 rounded-lg flex items-center ${
+                    isDarkMode 
+                      ? 'bg-emerald-500 text-white hover:bg-emerald-600' 
+                      : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                  } transition-colors`}
+                >
+                  {mergeLoading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Processing...
+                    </>
+                  ) : (
+                    'Confirm Merge'
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

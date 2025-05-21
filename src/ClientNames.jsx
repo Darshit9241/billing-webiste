@@ -23,6 +23,7 @@ const ClientNames = () => {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [showMergedClients, setShowMergedClients] = useState(false);
   
   useEffect(() => {
     fetchClientNames();
@@ -43,6 +44,11 @@ const ClientNames = () => {
       result = result.filter(client => 
         client.clientName.toLowerCase().includes(query)
       );
+    }
+    
+    // Filter out merged clients if toggle is off
+    if (!showMergedClients) {
+      result = result.filter(client => !client.hasMergedClient);
     }
     
     // Apply sorting
@@ -75,22 +81,32 @@ const ClientNames = () => {
     setFilteredClients(result);
     // Reset to first page when filters/sort change
     setCurrentPage(1);
-  }, [searchQuery, clientsData, sortField, sortDirection]);
+  }, [searchQuery, clientsData, sortField, sortDirection, showMergedClients]);
   
   const fetchClientNames = async () => {
     setLoading(true);
     try {
       const allClients = await fetchAllClients();
       
+      // Debug: Log client count to check all clients are retrieved
+      console.log(`Retrieved ${allClients.length} clients from database`);
+      
       // Group by client name and count orders
       const clientMap = new Map();
       
       allClients.forEach(client => {
+        // Skip clients without a name
         if (!client.clientName) return;
         
         const name = client.clientName.trim();
         if (!name) return;
         
+        // Debug: Log client ID and name if ID starts with merged_
+        if (client.id && client.id.startsWith('merged_')) {
+          console.log(`Found merged client: ID=${client.id}, Name=${name}`);
+        }
+        
+        // Process all clients regardless of ID prefix
         if (clientMap.has(name)) {
           const existing = clientMap.get(name);
           existing.orderCount += 1;
@@ -99,13 +115,20 @@ const ClientNames = () => {
             (client.paymentStatus !== 'cleared') 
               ? Math.max(0, parseFloat(client.grandTotal || 0) - parseFloat(client.amountPaid || 0)) 
               : 0;
-          // Add client ID to client IDs array
+          
+          // Store the client ID, regardless of whether it starts with "merged_" or not
           existing.clientIds.push(client.id);
+          
+          // Update hasMergedClient flag if this client has a merged ID
+          if (client.id && client.id.startsWith('merged_')) {
+            existing.hasMergedClient = true;
+          }
           
           if (client.timestamp > existing.lastOrderDate) {
             existing.lastOrderDate = client.timestamp;
           }
         } else {
+          // Create a new entry in the map
           clientMap.set(name, {
             clientName: name,
             orderCount: 1,
@@ -115,7 +138,9 @@ const ClientNames = () => {
                 ? Math.max(0, parseFloat(client.grandTotal || 0) - parseFloat(client.amountPaid || 0)) 
                 : 0,
             lastOrderDate: client.timestamp,
-            clientIds: [client.id]
+            clientIds: [client.id],
+            // Flag to identify if this contains a merged client
+            hasMergedClient: client.id && client.id.startsWith('merged_')
           });
         }
       });
@@ -123,6 +148,12 @@ const ClientNames = () => {
       // Convert Map to array and sort by name
       const clientArray = Array.from(clientMap.values());
       clientArray.sort((a, b) => a.clientName.localeCompare(b.clientName));
+      
+      // Debug: Check for merged clients in final array
+      const mergedClients = clientArray.filter(client => 
+        client.clientIds.some(id => id && id.startsWith('merged_'))
+      );
+      console.log(`Found ${mergedClients.length} clients with merged IDs in final array`);
       
       setClientsData(clientArray);
       setFilteredClients(clientArray);
@@ -140,14 +171,39 @@ const ClientNames = () => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredClients.slice(startIndex, startIndex + itemsPerPage);
   }, [filteredClients, currentPage, itemsPerPage]);
+  console.log("sdasdasd",filteredClients)
   
   // Calculate total pages
   const totalPages = useMemo(() => {
     return Math.ceil(filteredClients.length / itemsPerPage);
   }, [filteredClients, itemsPerPage]);
   
-  const handleClientClick = (clientName) => {
-    navigate(`/client-name/${encodeURIComponent(clientName)}`);
+  // Calculate merged client count
+  const mergedClientCount = useMemo(() => {
+    return clientsData.filter(client => client.hasMergedClient).length;
+  }, [clientsData]);
+  
+  // Calculate stats based on current filter settings
+  const filteredStats = useMemo(() => {
+    // Filter clients based on the merged clients toggle
+    const clientsToCount = showMergedClients 
+      ? clientsData 
+      : clientsData.filter(client => !client.hasMergedClient);
+      
+    return {
+      totalClients: clientsToCount.length,
+      totalOrders: clientsToCount.reduce((sum, client) => sum + client.orderCount, 0),
+      totalValue: clientsToCount.reduce((sum, client) => sum + client.totalAmount, 0),
+      pendingAmount: clientsToCount.reduce((sum, client) => sum + client.pendingAmount, 0)
+    };
+  }, [clientsData, showMergedClients]);
+  
+  const handleClientClick = (clientName, clientIds) => {
+    console.log(`Navigating to client: ${clientName}, IDs: ${clientIds.join(', ')}`);
+    // Pass both the client name and the array of client IDs
+    navigate(`/client-name/${encodeURIComponent(clientName)}`, { 
+      state: { clientIds } 
+    });
   };
   
   const formatDate = (timestamp) => {
@@ -343,6 +399,27 @@ const ClientNames = () => {
               onClick={handleSort} 
               isDarkMode={isDarkMode} 
             />
+            
+            {mergedClientCount > 0 && (
+              <button
+                onClick={() => setShowMergedClients(!showMergedClients)}
+                className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium flex items-center space-x-1 
+                  ${showMergedClients 
+                    ? (isDarkMode ? 'bg-emerald-500/20 text-emerald-300' : 'bg-emerald-100 text-emerald-700') 
+                    : (isDarkMode ? 'bg-white/5 text-slate-300 hover:bg-white/10' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
+                  } transition-colors`}
+                title={showMergedClients ? "Hide merged clients and their values from stats" : "Show merged clients and include their values in stats"}
+              >
+                <span>
+                  {showMergedClients ? 'Including Merged' : 'Excluding Merged'}
+                </span>
+                {showMergedClients && (
+                  <span className="ml-1 px-1.5 py-0.5 rounded-full text-xs bg-emerald-500/20">
+                    {mergedClientCount}
+                  </span>
+                )}
+              </button>
+            )}
           </div>
         </div>
         
@@ -352,27 +429,34 @@ const ClientNames = () => {
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5 sm:gap-4">
               <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-2 sm:p-4 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
                 <p className={`text-xs sm:text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Total Clients</p>
-                <p className={`text-lg sm:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{clientsData.length}</p>
+                <p className={`text-lg sm:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  {filteredStats.totalClients}
+                  {mergedClientCount > 0 && !showMergedClients && (
+                    <span className={`text-xs ml-2 ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                      (+{mergedClientCount} merged)
+                    </span>
+                  )}
+                </p>
               </div>
               
               <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-2 sm:p-4 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
                 <p className={`text-xs sm:text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Total Orders</p>
                 <p className={`text-lg sm:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {clientsData.reduce((sum, client) => sum + client.orderCount, 0)}
+                  {filteredStats.totalOrders}
                 </p>
               </div>
               
               <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-2 sm:p-4 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
                 <p className={`text-xs sm:text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Total Value</p>
                 <p className={`text-lg sm:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  ₹{clientsData.reduce((sum, client) => sum + client.totalAmount, 0).toFixed(2)}
+                  ₹{filteredStats.totalValue.toFixed(2)}
                 </p>
               </div>
               
               <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-2 sm:p-4 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
                 <p className={`text-xs sm:text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Pending Amount</p>
                 <p className={`text-lg sm:text-2xl font-bold text-amber-500`}>
-                  ₹{clientsData.reduce((sum, client) => sum + client.pendingAmount, 0).toFixed(2)}
+                  ₹{filteredStats.pendingAmount.toFixed(2)}
                 </p>
               </div>
               
@@ -444,14 +528,17 @@ const ClientNames = () => {
                 {paginatedClients.map((client) => (
                   <div 
                     key={client.clientName} 
-                    onClick={() => handleClientClick(client.clientName)}
-                    className={`backdrop-blur-md ${isDarkMode ? 'bg-white/10' : 'bg-white'} rounded-xl shadow-xl overflow-hidden border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} hover:shadow-emerald-500/10 transition-all duration-300 cursor-pointer`}
+                    onClick={() => handleClientClick(client.clientName, client.clientIds)}
+                    className={`backdrop-blur-md ${isDarkMode ? 'bg-white/10' : 'bg-white'} rounded-xl shadow-xl overflow-hidden border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} hover:shadow-emerald-500/10 transition-all duration-300 cursor-pointer ${client.hasMergedClient ? (isDarkMode ? 'border-l-emerald-500' : 'border-l-emerald-500') : ''}`}
                   >
                     <div className="p-3 sm:p-5">
                       <div className="flex flex-col gap-3">
                         <div>
                           <h3 className={`font-semibold text-base sm:text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-gray-900'} hover:text-emerald-500 transition-colors`}>
                             {client.clientName}
+                            {client.hasMergedClient && (
+                              <span className="ml-2 text-xs bg-emerald-500 text-white px-2 py-0.5 rounded-full">Merged</span>
+                            )}
                           </h3>
                           <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mt-1`}>
                             Last order: {formatDate(client.lastOrderDate)}
@@ -499,10 +586,15 @@ const ClientNames = () => {
                       {paginatedClients.map((client, index) => (
                         <tr 
                           key={client.clientName} 
-                          onClick={() => handleClientClick(client.clientName)}
-                          className={`${index % 2 === 0 ? (isDarkMode ? 'bg-white/5' : 'bg-white') : (isDarkMode ? 'bg-white/[0.02]' : 'bg-gray-50')} cursor-pointer hover:bg-emerald-500/10`}
+                          onClick={() => handleClientClick(client.clientName, client.clientIds)}
+                          className={`${index % 2 === 0 ? (isDarkMode ? 'bg-white/5' : 'bg-white') : (isDarkMode ? 'bg-white/[0.02]' : 'bg-gray-50')} cursor-pointer hover:bg-emerald-500/10 ${client.hasMergedClient ? (isDarkMode ? 'border-l-4 border-l-emerald-500' : 'border-l-4 border-l-emerald-500') : ''}`}
                         >
-                          <td className={`px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{client.clientName}</td>
+                          <td className={`px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                            {client.clientName}
+                            {client.hasMergedClient && (
+                              <span className="ml-2 text-xs bg-emerald-500 text-white px-1.5 py-0.5 rounded-full">Merged</span>
+                            )}
+                          </td>
                           <td className={`px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-center ${isDarkMode ? 'text-slate-300' : 'text-gray-700'}`}>{client.orderCount}</td>
                           <td className={`px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-center text-emerald-500 font-medium`}>₹{client.totalAmount.toFixed(2)}</td>
                           <td className={`px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-center ${client.pendingAmount > 0 ? 'text-amber-500 font-medium' : (isDarkMode ? 'text-slate-500' : 'text-gray-500')}`}>

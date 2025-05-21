@@ -186,9 +186,11 @@ const ClientList = () => {
   const applyFilters = () => {
     let filtered = savedClients;
 
-    // Filter by merged status if needed - MOVE THIS TO THE TOP FOR PRIORITY
-    if (showMergedOnly) {
-      // More robust check for merged property being strictly true
+    // Default behavior: exclude merged cards unless specifically requested
+    if (!showMergedOnly) {
+      filtered = filtered.filter(client => !client.merged);
+    } else {
+      // When "Merged Only" filter is active, only show merged cards
       filtered = filtered.filter(client => client.merged === true);
       console.log('Showing only merged clients:', filtered.length);
     }
@@ -961,6 +963,25 @@ const ClientList = () => {
     localStorage.setItem('viewMode', mode);
   };
 
+  // Add this function after the toggleMergedOnly or clearMergedOnly function
+  const countNonMergedClients = () => {
+    return savedClients.filter(client => !client.merged).length;
+  };
+
+  // Add this function to count non-merged clients with specific status
+  const countNonMergedClientsWithStatus = (status) => {
+    if (status === 'pending') {
+      return savedClients.filter(client => !client.merged && client.paymentStatus !== 'cleared').length;
+    } else if (status === 'cleared') {
+      return savedClients.filter(client => !client.merged && client.paymentStatus === 'cleared').length;
+    } else if (status === 'sell') {
+      return savedClients.filter(client => !client.merged && client.orderStatus === 'sell').length;
+    } else if (status === 'purchased') {
+      return savedClients.filter(client => !client.merged && client.orderStatus === 'purchased').length;
+    }
+    return 0;
+  };
+
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-gray-100 to-white'} py-8 px-4 sm:px-6 lg:px-8 transition-colors duration-200`}>
       {/* Inject custom styles */}
@@ -1392,7 +1413,7 @@ const ClientList = () => {
                         <div className={`w-3 h-3 rounded-full ${activeFilter === 'all' ? 'bg-white' : 'bg-emerald-500'} mr-2`}></div>
                         <span className={`text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>All Orders</span>
                       </div>
-                      <span className={`text-sm ${isDarkMode ? 'text-white/80' : 'text-gray-600'} bg-black/10 px-2 py-0.5 rounded-full`}>{savedClients.length}</span>
+                      <span className={`text-sm ${isDarkMode ? 'text-white/80' : 'text-gray-600'} bg-black/10 px-2 py-0.5 rounded-full`}>{countNonMergedClients()}</span>
                     </button>
                     <button
                       onClick={() => {
@@ -1408,7 +1429,7 @@ const ClientList = () => {
                         <div className={`w-3 h-3 rounded-full ${activeFilter === 'pending' ? 'bg-white' : 'bg-amber-500'} mr-2`}></div>
                         <span className={`text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Pending</span>
                       </div>
-                      <span className={`text-sm ${isDarkMode ? 'text-white/80' : 'text-gray-600'} bg-black/10 px-2 py-0.5 rounded-full`}>{savedClients.filter(client => client.paymentStatus !== 'cleared').length}</span>
+                      <span className={`text-sm ${isDarkMode ? 'text-white/80' : 'text-gray-600'} bg-black/10 px-2 py-0.5 rounded-full`}>{countNonMergedClientsWithStatus('pending')}</span>
                     </button>
                     <button
                       onClick={() => {
@@ -1424,7 +1445,7 @@ const ClientList = () => {
                         <div className={`w-3 h-3 rounded-full ${activeFilter === 'cleared' ? 'bg-white' : 'bg-sky-500'} mr-2`}></div>
                         <span className={`text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Cleared</span>
                       </div>
-                      <span className={`text-sm ${isDarkMode ? 'text-white/80' : 'text-gray-600'} bg-black/10 px-2 py-0.5 rounded-full`}>{savedClients.filter(client => client.paymentStatus === 'cleared').length}</span>
+                      <span className={`text-sm ${isDarkMode ? 'text-white/80' : 'text-gray-600'} bg-black/10 px-2 py-0.5 rounded-full`}>{countNonMergedClientsWithStatus('cleared')}</span>
                     </button>
 
                     {/* Order Status Filter Section */}
@@ -1447,7 +1468,7 @@ const ClientList = () => {
                             <div className={`w-3 h-3 rounded-full ${orderStatusFilter === 'all' ? 'bg-white' : 'bg-emerald-500'} mr-2`}></div>
                             <span className={`text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>All Types</span>
                           </div>
-                          <span className={`text-sm ${isDarkMode ? 'text-white/80' : 'text-gray-600'} bg-black/10 px-2 py-0.5 rounded-full`}>{savedClients.length}</span>
+                          <span className={`text-sm ${isDarkMode ? 'text-white/80' : 'text-gray-600'} bg-black/10 px-2 py-0.5 rounded-full`}>{countNonMergedClients()}</span>
                         </button>
                         <button
                           onClick={() => {
@@ -1463,7 +1484,7 @@ const ClientList = () => {
                             <div className={`w-3 h-3 rounded-full ${orderStatusFilter === 'sell' ? 'bg-white' : 'bg-blue-500'} mr-2`}></div>
                             <span className={`text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Sell</span>
                           </div>
-                          <span className={`text-sm ${isDarkMode ? 'text-white/80' : 'text-gray-600'} bg-black/10 px-2 py-0.5 rounded-full`}>{savedClients.filter(client => client.orderStatus === 'sell').length}</span>
+                          <span className={`text-sm ${isDarkMode ? 'text-white/80' : 'text-gray-600'} bg-black/10 px-2 py-0.5 rounded-full`}>{countNonMergedClientsWithStatus('sell')}</span>
                         </button>
                         <button
                           onClick={() => {
@@ -1479,7 +1500,7 @@ const ClientList = () => {
                             <div className={`w-3 h-3 rounded-full ${orderStatusFilter === 'purchased' ? 'bg-white' : 'bg-purple-500'} mr-2`}></div>
                             <span className={`text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Purchased</span>
                           </div>
-                          <span className={`text-sm ${isDarkMode ? 'text-white/80' : 'text-gray-600'} bg-black/10 px-2 py-0.5 rounded-full`}>{savedClients.filter(client => client.orderStatus === 'purchased').length}</span>
+                          <span className={`text-sm ${isDarkMode ? 'text-white/80' : 'text-gray-600'} bg-black/10 px-2 py-0.5 rounded-full`}>{countNonMergedClientsWithStatus('purchased')}</span>
                         </button>
                       </div>
                     </div>
@@ -2752,7 +2773,7 @@ const ClientList = () => {
                 ? "bg-purple-600 text-white hover:bg-purple-700"
                 : `${isDarkMode ? "bg-slate-700 text-white hover:bg-slate-600" : "bg-white text-purple-600 hover:bg-purple-50"}`
               } transition-all duration-300 group`}
-            title={showMergedOnly ? "Show All Orders" : "Show Merged Only"}
+            title={showMergedOnly ? "Show Normal Orders" : "Show Merged Cards Only"}
           >
             {showMergedOnly ? (
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -2764,7 +2785,7 @@ const ClientList = () => {
               </svg>
             )}
             <span className="absolute -top-2 -right-2 px-1.5 py-0.5 text-[10px] rounded-full bg-purple-600 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
-              {showMergedOnly ? "Show All" : "Merged Only"}
+              {showMergedOnly ? "Show Normal Orders" : "Merged Cards Only"}
             </span>
           </button>
         </div>

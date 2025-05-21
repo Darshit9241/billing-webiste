@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchAllClients, updateClient } from './firebase/clientsFirebase';
+import { fetchAllClients, updateClient, deleteClient } from './firebase/clientsFirebase';
 import { useTheme } from './context/ThemeContext';
 import ThemeToggle from './components/ThemeToggle';
 
@@ -33,6 +33,14 @@ const ClientNameOrders = () => {
   const [showMergeConfirm, setShowMergeConfirm] = useState(false);
   const [mergedOrder, setMergedOrder] = useState(null);
   const [mergeLoading, setMergeLoading] = useState(false);
+  
+  // State for delete confirmation
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  
+  // State for summary visibility
+  const [showSummary, setShowSummary] = useState(false);
   
   useEffect(() => {
     // Decode the client name from URL parameter
@@ -323,6 +331,67 @@ const ClientNameOrders = () => {
     setMergedOrder(null);
   };
 
+  const handleDeleteClick = (e, order) => {
+    e.stopPropagation(); // Prevent row click event
+    setOrderToDelete(order);
+    setShowDeleteConfirm(true);
+  };
+  
+  const confirmDeleteOrder = async () => {
+    if (!orderToDelete) return;
+    
+    setDeleteLoading(true);
+    try {
+      // Delete the order from Firebase
+      await deleteClient(orderToDelete.id);
+      
+      // Update local state
+      setOrders(prev => prev.filter(order => order.id !== orderToDelete.id));
+      
+      // Show success message
+      setError('Order successfully deleted!');
+      setTimeout(() => setError(''), 3000);
+      
+      // Recalculate totals
+      const updatedOrders = orders.filter(order => order.id !== orderToDelete.id);
+      let total = 0;
+      let pending = 0;
+      let paid = 0;
+      
+      updatedOrders.forEach(order => {
+        if (order.mergedFrom) return;
+        
+        const orderTotal = parseFloat(order.grandTotal) || 0;
+        const orderPaid = parseFloat(order.amountPaid) || 0;
+        
+        total += orderTotal;
+        paid += orderPaid;
+        pending += Math.max(0, orderTotal - orderPaid);
+      });
+      
+      setTotalAmount(total);
+      setPaidAmount(paid);
+      setPendingAmount(pending);
+    } catch (err) {
+      setError(`Failed to delete order: ${err.message}`);
+      setTimeout(() => setError(''), 5000);
+    } finally {
+      setDeleteLoading(false);
+      setShowDeleteConfirm(false);
+      setOrderToDelete(null);
+    }
+  };
+  
+  const cancelDelete = () => {
+    setShowDeleteConfirm(false);
+    setOrderToDelete(null);
+  };
+
+  // Toggle summary visibility
+  const toggleSummary = () => {
+    setShowSummary(prev => !prev);
+  };
+
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-gray-100 to-white'} py-8 px-4 sm:px-6 lg:px-8 transition-colors duration-200`}>
       <div className="max-w-7xl mx-auto">
@@ -348,6 +417,17 @@ const ClientNameOrders = () => {
             </div>
             
             <div className="flex items-center gap-2">
+              {/* Info button for summary */}
+              <button 
+                onClick={toggleSummary}
+                className={`p-1.5 rounded-lg ${isDarkMode ? 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'} transition-colors flex items-center`}
+                aria-label="Toggle summary"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+              
               {/* Merge orders button/controls */}
               {!isSelectionMode ? (
                 <button 
@@ -478,39 +558,41 @@ const ClientNameOrders = () => {
         )}
         
         {/* Stats Section */}
-        <div className="mb-6">
-          <div className={`backdrop-blur-md ${isDarkMode ? 'bg-white/5' : 'bg-white'} rounded-xl border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} shadow-md p-5`}>
-            <h2 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              Summary for {decodedClientName}
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-4 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
-                <p className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Total Orders</p>
-                <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{orders.length}</p>
-              </div>
+        {showSummary && (
+          <div className="mb-6">
+            <div className={`backdrop-blur-md ${isDarkMode ? 'bg-white/5' : 'bg-white'} rounded-xl border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} shadow-md p-5`}>
+              <h2 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                Summary for {decodedClientName}
+              </h2>
               
-              <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-4 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
-                <p className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Total Amount</p>
-                <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>₹{totalAmount.toFixed(2)}</p>
-              </div>
-              
-              <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-4 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Paid</p>
-                    <p className={`text-xl font-bold text-emerald-500`}>₹{paidAmount.toFixed(2)}</p>
-                  </div>
-                  
-                  <div className="text-right">
-                    <p className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Pending</p>
-                    <p className={`text-xl font-bold text-amber-500`}>₹{pendingAmount.toFixed(2)}</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-4 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
+                  <p className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Total Orders</p>
+                  <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{orders.length}</p>
+                </div>
+                
+                <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-4 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
+                  <p className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Total Amount</p>
+                  <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>₹{totalAmount.toFixed(2)}</p>
+                </div>
+                
+                <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-4 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Paid</p>
+                      <p className={`text-xl font-bold text-emerald-500`}>₹{paidAmount.toFixed(2)}</p>
+                    </div>
+                    
+                    <div className="text-right">
+                      <p className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Pending</p>
+                      <p className={`text-xl font-bold text-amber-500`}>₹{pendingAmount.toFixed(2)}</p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
         
         {/* Orders list */}
         {loading ? (
@@ -674,6 +756,7 @@ const ClientNameOrders = () => {
                         <th scope="col" className={`px-6 py-3 text-center text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} uppercase tracking-wider`}>Balance</th>
                         <th scope="col" className={`px-6 py-3 text-center text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} uppercase tracking-wider`}>Status</th>
                         <th scope="col" className={`px-6 py-3 text-center text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} uppercase tracking-wider`}>Type</th>
+                        <th scope="col" className={`px-6 py-3 text-center text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} uppercase tracking-wider`}>Actions</th>
                       </tr>
                     </thead>
                     <tbody className={`divide-y ${isDarkMode ? 'divide-white/10' : 'divide-gray-200'}`}>
@@ -730,6 +813,17 @@ const ClientNameOrders = () => {
                                   {order.orderStatus === 'sell' ? 'Sell' : 'Purchase'}
                                 </span>
                               )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                              <button
+                                onClick={(e) => handleDeleteClick(e, order)}
+                                className={`p-1.5 rounded-full ${isDarkMode ? 'bg-red-500/20 text-red-300 hover:bg-red-500/30' : 'bg-red-100 text-red-700 hover:bg-red-200'} transition-colors`}
+                                aria-label="Delete order"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
                             </td>
                           </tr>
                         );
@@ -902,6 +996,87 @@ const ClientNameOrders = () => {
                     </>
                   ) : (
                     'Confirm Merge'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && orderToDelete && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className={`w-full max-w-md rounded-xl shadow-2xl ${isDarkMode ? 'bg-slate-800' : 'bg-white'} p-6`}>
+              <h3 className={`text-xl font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                Confirm Delete Order
+              </h3>
+              
+              <div className="space-y-4 mb-6">
+                <p className={`${isDarkMode ? 'text-slate-300' : 'text-gray-700'}`}>
+                  Are you sure you want to delete this order? This action cannot be undone.
+                </p>
+                
+                <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
+                  <h4 className={`font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Order Details:</h4>
+                  <ul className="space-y-2">
+                    <li className="flex justify-between">
+                      <span className={`${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Order ID:</span>
+                      <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>#{orderToDelete.id.substring(0, 8)}</span>
+                    </li>
+                    <li className="flex justify-between">
+                      <span className={`${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Date:</span>
+                      <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatDate(orderToDelete.timestamp)}</span>
+                    </li>
+                    <li className="flex justify-between">
+                      <span className={`${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Total Amount:</span>
+                      <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>₹{parseFloat(orderToDelete.grandTotal || 0).toFixed(2)}</span>
+                    </li>
+                  </ul>
+                </div>
+                
+                <div className={`${isDarkMode ? 'bg-red-500/10 border-red-500/30 text-red-300' : 'bg-red-50 border-red-200 text-red-800'} p-3 rounded-lg border`}>
+                  <div className="flex items-start">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-sm">
+                      This will permanently delete the order and all its associated data.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3">
+                <button 
+                  onClick={cancelDelete}
+                  disabled={deleteLoading}
+                  className={`px-4 py-2 rounded-lg ${
+                    isDarkMode 
+                      ? 'bg-white/10 text-white hover:bg-white/20' 
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  } transition-colors`}
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={confirmDeleteOrder}
+                  disabled={deleteLoading}
+                  className={`px-4 py-2 rounded-lg flex items-center ${
+                    isDarkMode 
+                      ? 'bg-red-500 text-white hover:bg-red-600' 
+                      : 'bg-red-500 text-white hover:bg-red-600'
+                  } transition-colors`}
+                >
+                  {deleteLoading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Deleting...
+                    </>
+                  ) : (
+                    'Delete Order'
                   )}
                 </button>
               </div>

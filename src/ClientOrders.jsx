@@ -386,7 +386,7 @@ const ClientOrders = () => {
                 <tbody className={`divide-y divide-gray-200 dark:divide-gray-700 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
                   {filteredClients.slice(0, displayCount).map((client) => (
                     <tr key={client.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-left">
                         <button
                           onClick={() => handleOrderClick(client.id)}
                           className={`text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors`}
@@ -394,7 +394,7 @@ const ClientOrders = () => {
                           {client.id}
                         </button>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-left">
                         {client.clientName}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-center">

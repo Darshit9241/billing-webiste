@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchAllClients } from './firebase/clientsFirebase';
+import { fetchAllClients, deleteClient } from './firebase/clientsFirebase';
 import { useTheme } from './context/ThemeContext';
 import ThemeToggle from './components/ThemeToggle';
 
@@ -24,6 +24,12 @@ const ClientNames = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [showMergedClients, setShowMergedClients] = useState(false);
+  
+  // New state variables for delete functionality
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [clientToDelete, setClientToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
   
   useEffect(() => {
     fetchClientNames();
@@ -204,6 +210,48 @@ const ClientNames = () => {
     navigate(`/client-name/${encodeURIComponent(clientName)}`, { 
       state: { clientIds } 
     });
+  };
+  
+  // Delete handlers
+  const handleDeleteClick = (e, client) => {
+    e.stopPropagation(); // Prevent triggering the row click
+    setClientToDelete(client);
+    setShowDeleteModal(true);
+    setDeleteError('');
+  };
+  
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setClientToDelete(null);
+  };
+  
+  const handleConfirmDelete = async () => {
+    if (!clientToDelete) return;
+    
+    setIsDeleting(true);
+    setDeleteError('');
+    
+    try {
+      // Delete all client orders with the client IDs
+      for (const clientId of clientToDelete.clientIds) {
+        await deleteClient(clientId);
+      }
+      
+      // Update local state to remove the deleted client
+      const updatedClients = clientsData.filter(
+        client => client.clientName !== clientToDelete.clientName
+      );
+      setClientsData(updatedClients);
+      
+      // Close the modal
+      setShowDeleteModal(false);
+      setClientToDelete(null);
+    } catch (err) {
+      console.error("Error deleting client:", err);
+      setDeleteError("Failed to delete client. Please try again.");
+    } finally {
+      setIsDeleting(false);
+    }
   };
   
   const formatDate = (timestamp) => {
@@ -533,16 +581,27 @@ const ClientNames = () => {
                   >
                     <div className="p-3 sm:p-5">
                       <div className="flex flex-col gap-3">
-                        <div>
-                          <h3 className={`font-semibold text-base sm:text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-gray-900'} hover:text-emerald-500 transition-colors`}>
-                            {client.clientName}
-                            {client.hasMergedClient && (
-                              <span className="ml-2 text-xs bg-emerald-500 text-white px-2 py-0.5 rounded-full">Merged</span>
-                            )}
-                          </h3>
-                          <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mt-1`}>
-                            Last order: {formatDate(client.lastOrderDate)}
-                          </p>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className={`font-semibold text-base sm:text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-gray-900'} hover:text-emerald-500 transition-colors`}>
+                              {client.clientName}
+                              {client.hasMergedClient && (
+                                <span className="ml-2 text-xs bg-emerald-500 text-white px-2 py-0.5 rounded-full">Merged</span>
+                              )}
+                            </h3>
+                            <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mt-1`}>
+                              Last order: {formatDate(client.lastOrderDate)}
+                            </p>
+                          </div>
+                          <button
+                            onClick={(e) => handleDeleteClick(e, client)}
+                            className={`p-1.5 rounded-full ${isDarkMode ? 'bg-red-500/10 hover:bg-red-500/20 text-red-300' : 'bg-red-50 hover:bg-red-100 text-red-500'} transition-colors`}
+                            title="Delete client"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
                         </div>
                         
                         <div className="flex flex-wrap gap-2 sm:gap-3">
@@ -580,6 +639,7 @@ const ClientNames = () => {
                         <th scope="col" className={`px-3 sm:px-6 py-2 sm:py-3 text-center text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} uppercase tracking-wider`}>Total Value</th>
                         <th scope="col" className={`px-3 sm:px-6 py-2 sm:py-3 text-center text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} uppercase tracking-wider`}>Pending</th>
                         <th scope="col" className={`px-3 sm:px-6 py-2 sm:py-3 text-right text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} uppercase tracking-wider`}>Last Order</th>
+                        <th scope="col" className={`px-3 sm:px-6 py-2 sm:py-3 text-right text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} uppercase tracking-wider`}>Action</th>
                       </tr>
                     </thead>
                     <tbody className={`divide-y ${isDarkMode ? 'divide-white/10' : 'divide-gray-200'}`}>
@@ -601,6 +661,17 @@ const ClientNames = () => {
                             {client.pendingAmount > 0 ? `₹${client.pendingAmount.toFixed(2)}` : '-'}
                           </td>
                           <td className={`px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-right ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>{formatDate(client.lastOrderDate)}</td>
+                          <td className={`px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-right`}>
+                            <button
+                              onClick={(e) => handleDeleteClick(e, client)}
+                              className={`p-1.5 rounded-full ${isDarkMode ? 'bg-red-500/10 hover:bg-red-500/20 text-red-300' : 'bg-red-50 hover:bg-red-100 text-red-500'} transition-colors`}
+                              title="Delete client"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -678,6 +749,71 @@ const ClientNames = () => {
                 </div>
               </div>
             )}
+          </div>
+        )}
+        
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && clientToDelete && (
+          <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+              {/* Background overlay */}
+              <div className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity" aria-hidden="true"></div>
+              
+              {/* Modal panel */}
+              <div className="inline-block align-bottom rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div className={`${isDarkMode ? 'bg-slate-800' : 'bg-white'} px-4 pt-5 pb-4 sm:p-6 sm:pb-4`}>
+                  <div className="sm:flex sm:items-start">
+                    <div className={`mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full ${isDarkMode ? 'bg-red-900/50' : 'bg-red-100'} sm:mx-0 sm:h-10 sm:w-10`}>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                      <h3 className={`text-lg leading-6 font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`} id="modal-title">
+                        Delete Client
+                      </h3>
+                      <div className="mt-2">
+                        <p className={`text-sm ${isDarkMode ? 'text-slate-300' : 'text-gray-500'}`}>
+                          Are you sure you want to delete <span className="font-semibold">{clientToDelete.clientName}</span>? This will permanently delete all {clientToDelete.orderCount} orders associated with this client. This action cannot be undone.
+                        </p>
+                        
+                        {deleteError && (
+                          <div className="mt-3 p-2 rounded-md bg-red-900/50 border border-red-500/50 text-red-200 text-sm">
+                            {deleteError}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className={`${isDarkMode ? 'bg-slate-800/80 border-t border-white/10' : 'bg-gray-50 border-t border-gray-200'} px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse`}>
+                  <button
+                    type="button"
+                    disabled={isDeleting}
+                    onClick={handleConfirmDelete}
+                    className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 ${isDeleting ? 'bg-red-400' : 'bg-red-600 hover:bg-red-700'} text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm transition-colors`}
+                  >
+                    {isDeleting ? (
+                      <span className="flex items-center">
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Deleting...
+                      </span>
+                    ) : "Delete Client"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isDeleting}
+                    onClick={handleCancelDelete}
+                    className={`mt-3 w-full inline-flex justify-center rounded-md border ${isDarkMode ? 'border-white/10 bg-white/5 text-slate-300 hover:bg-white/10' : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'} shadow-sm px-4 py-2 text-base font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors`}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

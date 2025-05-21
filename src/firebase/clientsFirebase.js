@@ -60,11 +60,18 @@ export const fetchAllClients = async () => {
 
 // Delete client
 export const deleteClient = async (id) => {
+  if (!id) {
+    throw new Error('Client ID is required for deletion');
+  }
+  
   try {
+    console.log(`Deleting client with ID: ${id}`);
     await remove(ref(database, `${CLIENTS_COLLECTION}/${id}`));
+    console.log(`Successfully deleted client with ID: ${id}`);
     return true;
   } catch (error) {
-    throw new Error(`Failed to delete order: ${error.message}`);
+    console.error(`Error deleting client with ID ${id}:`, error);
+    throw new Error(`Failed to delete client: ${error.message}`);
   }
 };
 

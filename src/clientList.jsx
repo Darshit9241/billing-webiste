@@ -2393,22 +2393,6 @@ const ClientList = () => {
                       // Prevent negative values
                       if (parseFloat(value) < 0) return;
                       
-                      // When editing a payment, the remaining balance calculation should include the current payment amount
-                      let remainingBalance = (editingClient?.grandTotal || 0) - (parseFloat(editFormData.amountPaid) || 0);
-                      
-                      // If editing, add back the original payment amount to the remaining balance
-                      if (editingPayment !== null && editFormData.paymentHistory && editFormData.paymentHistory[editingPayment]) {
-                        const originalAmount = parseFloat(editFormData.paymentHistory[editingPayment].amount) || 0;
-                        remainingBalance += originalAmount;
-                      }
-
-                      // Now check if the new value exceeds the adjusted remaining balance
-                      if (parseFloat(value) > remainingBalance && editingPayment === null) {
-                        setError(`Payment amount cannot exceed remaining balance of ₹${remainingBalance.toFixed(2)}`);
-                        setTimeout(() => setError(''), 3000);
-                        return;
-                      }
-                      
                       setNewPayment(value);
                     }}
                     min="0"

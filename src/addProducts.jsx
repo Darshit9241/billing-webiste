@@ -748,6 +748,10 @@ const AddProducts = () => {
     navigate('/dashboard');
   };
 
+  const handleExpensses = () => {
+    navigate('/expenses');
+  };
+
 
   const grandTotal = products.reduce((sum, product) => {
     // Make sure we're adding numeric values
@@ -1013,23 +1017,7 @@ const AddProducts = () => {
                 <p className="text-indigo-100 text-xs sm:text-sm mt-0.5 sm:mt-1">Billing System</p>
               </div>
             </div>
-            <div className="grid grid-cols-4 gap-2 sm:flex sm:flex-wrap sm:gap-3 w-full sm:w-auto">
-              {/* Dark mode toggle button */}
-              <button
-                onClick={toggleDarkMode}
-                className="flex items-center justify-center px-2 sm:px-4 py-2 sm:py-2.5 bg-white bg-opacity-20 text-white text-xs sm:text-sm rounded-xl hover:bg-opacity-30 transition-all duration-300 font-medium backdrop-blur-sm shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
-              >
-                {darkMode ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
-                  </svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
-                  </svg>
-                )}
-                <span className="hidden sm:inline">{darkMode ? 'Light' : 'Dark'}</span>
-              </button>
+            <div className="grid grid-cols-5 gap-2 sm:flex sm:flex-wrap sm:gap-3 w-full sm:w-auto">
               <button
                 onClick={() => navigate('/clients')}
                 className="flex items-center justify-center px-2 sm:px-4 py-2 sm:py-2.5 bg-white bg-opacity-20 text-white text-xs sm:text-sm rounded-xl hover:bg-opacity-30 transition-all duration-300 font-medium backdrop-blur-sm shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
@@ -1038,6 +1026,16 @@ const AddProducts = () => {
                   <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
                 </svg>
                 <span className="hidden sm:inline">Clients</span>
+              </button>
+              <button
+                onClick={handleDashboard}
+                className="flex items-center justify-center px-2 sm:px-4 py-2 sm:py-2.5 bg-[#2563EB] bg-opacity-90 text-white text-xs sm:text-sm rounded-xl hover:bg-opacity-100 transition-all duration-300 font-medium shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h4v4H4V6zM10 6h10v4H10V6zM4 12h10v6H4v-6zM16 12h4v6h-4v-6z" />
+                </svg>
+
+                <span className="hidden sm:inline">dashboard</span>
               </button>
               <button
                 onClick={handleLogout}
@@ -1050,14 +1048,27 @@ const AddProducts = () => {
                 <span className="hidden sm:inline">Logout</span>
               </button>
               <button
-                onClick={handleDashboard}
-                className="flex items-center justify-center px-2 sm:px-4 py-2 sm:py-2.5 bg-[#2563EB] bg-opacity-90 text-white text-xs sm:text-sm rounded-xl hover:bg-opacity-100 transition-all duration-300 font-medium shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+                onClick={handleExpensses}
+                className="flex items-center justify-center px-2 sm:px-4 py-2 sm:py-2.5 bg-green-500 bg-opacity-90 text-white text-xs sm:text-sm rounded-xl hover:bg-opacity-100 transition-all duration-300 font-medium shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h4v4H4V6zM10 6h10v4H10V6zM4 12h10v6H4v-6zM16 12h4v6h-4v-6z" />
-</svg>
-
-                <span className="hidden sm:inline">dashboard</span>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H9a2 2 0 00-2 2v2m10 0V7a2 2 0 00-2-2H9a2 2 0 00-2 2v2m10 0a2 2 0 012 2v4a2 2 0 01-2 2m0 0v2a2 2 0 01-2 2H9a2 2 0 01-2-2v-2m10 0H7" />
+                </svg>
+              </button>
+               {/* Dark mode toggle button */}
+              <button
+                onClick={toggleDarkMode}
+                className="flex items-center justify-center px-2 sm:px-4 py-2 sm:py-2.5 bg-white bg-opacity-20 text-white text-xs sm:text-sm rounded-xl hover:bg-opacity-30 transition-all duration-300 font-medium backdrop-blur-sm shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+              >
+                {darkMode ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                  </svg>
+                )}
               </button>
             </div>
           </div>
@@ -1068,16 +1079,16 @@ const AddProducts = () => {
           {billMode === 'existing' && (
             <div className="mb-6">
               <div className={`p-4 rounded-xl ${billMode === 'existing'
-                  ? darkMode
-                    ? 'bg-indigo-900 border-indigo-700 shadow-lg transform scale-105 transition-all duration-300'
-                    : 'bg-indigo-100 border-indigo-300 shadow-lg transform scale-105 transition-all duration-300'
-                  : darkMode
-                    ? 'bg-gray-700 border-gray-600'
-                    : 'bg-indigo-50 border-indigo-100'
+                ? darkMode
+                  ? 'bg-indigo-900 border-indigo-700 shadow-lg transform scale-105 transition-all duration-300'
+                  : 'bg-indigo-100 border-indigo-300 shadow-lg transform scale-105 transition-all duration-300'
+                : darkMode
+                  ? 'bg-gray-700 border-gray-600'
+                  : 'bg-indigo-50 border-indigo-100'
                 } border`}>
                 <h3 className={`text-sm sm:text-base font-medium mb-3 ${billMode === 'existing'
-                    ? darkMode ? 'text-indigo-300' : 'text-indigo-800'
-                    : darkMode ? 'text-white' : 'text-gray-700'
+                  ? darkMode ? 'text-indigo-300' : 'text-indigo-800'
+                  : darkMode ? 'text-white' : 'text-gray-700'
                   }`}>
                   {billMode === 'existing'
                     ? 'Search for Existing Order to Add Products'
@@ -1089,12 +1100,12 @@ const AddProducts = () => {
                       type="text"
                       id="orderId"
                       className={`block w-full px-4 py-3 border ${billMode === 'existing'
-                          ? darkMode
-                            ? 'border-indigo-500 bg-gray-800 text-white focus:ring-indigo-300 focus:border-indigo-300 border-2'
-                            : 'border-indigo-400 bg-white text-gray-800 focus:ring-indigo-500 focus:border-indigo-500 border-2'
-                          : darkMode
-                            ? 'border-gray-600 bg-gray-800 text-white focus:ring-indigo-400 focus:border-indigo-400'
-                            : 'border-gray-300 bg-white text-gray-800 focus:ring-indigo-500 focus:border-indigo-500'
+                        ? darkMode
+                          ? 'border-indigo-500 bg-gray-800 text-white focus:ring-indigo-300 focus:border-indigo-300 border-2'
+                          : 'border-indigo-400 bg-white text-gray-800 focus:ring-indigo-500 focus:border-indigo-500 border-2'
+                        : darkMode
+                          ? 'border-gray-600 bg-gray-800 text-white focus:ring-indigo-400 focus:border-indigo-400'
+                          : 'border-gray-300 bg-white text-gray-800 focus:ring-indigo-500 focus:border-indigo-500'
                         } rounded-xl transition-all duration-200`}
                       value={orderId}
                       onChange={handleOrderIdChange}
@@ -1106,10 +1117,10 @@ const AddProducts = () => {
                   <button
                     onClick={fetchOrderById}
                     className={`px-4 py-3 min-h-[48px] w-full sm:w-auto ${isLoading
-                        ? 'bg-gray-400 cursor-not-allowed'
-                        : billMode === 'existing'
-                          ? 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 transform hover:scale-105'
-                          : 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700'
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : billMode === 'existing'
+                        ? 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 transform hover:scale-105'
+                        : 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700'
                       } text-white rounded-xl transition-all duration-300 shadow-md flex items-center justify-center`}
                     disabled={isLoading}
                   >
@@ -1151,8 +1162,8 @@ const AddProducts = () => {
                   <button
                     onClick={() => setBillMode('full')}
                     className={`flex-1 min-w-0 px-3 sm:px-8 py-3 rounded-xl transition-all duration-300 flex items-center justify-center space-x-1 sm:space-x-2 m-1 ${billMode === 'full'
-                        ? `${darkMode ? 'bg-gray-800 text-indigo-400 shadow-lg' : 'bg-white text-indigo-600 shadow-md'} transform scale-105`
-                        : `${darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-800'}`
+                      ? `${darkMode ? 'bg-gray-800 text-indigo-400 shadow-lg' : 'bg-white text-indigo-600 shadow-md'} transform scale-105`
+                      : `${darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-800'}`
                       }`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 sm:h-5 sm:w-5 ${billMode === 'full' ? 'text-indigo-500' : ''}`} viewBox="0 0 20 20" fill="currentColor">
@@ -1163,8 +1174,8 @@ const AddProducts = () => {
                   <button
                     onClick={() => setBillMode('half')}
                     className={`flex-1 min-w-0 px-3 sm:px-8 py-3 rounded-xl transition-all duration-300 flex items-center justify-center space-x-1 sm:space-x-2 m-1 ${billMode === 'half'
-                        ? `${darkMode ? 'bg-gray-800 text-indigo-400 shadow-lg' : 'bg-white text-indigo-600 shadow-md'} transform scale-105`
-                        : `${darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-800'}`
+                      ? `${darkMode ? 'bg-gray-800 text-indigo-400 shadow-lg' : 'bg-white text-indigo-600 shadow-md'} transform scale-105`
+                      : `${darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-800'}`
                       }`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 sm:h-5 sm:w-5 ${billMode === 'half' ? 'text-indigo-500' : ''}`} viewBox="0 0 20 20" fill="currentColor">
@@ -1195,8 +1206,8 @@ const AddProducts = () => {
                       }, 100);
                     }}
                     className={`flex-1 min-w-0 px-3 sm:px-8 py-3 rounded-xl transition-all duration-300 flex items-center justify-center space-x-1 sm:space-x-2 m-1 ${billMode === 'existing'
-                        ? `${darkMode ? 'bg-gray-800 text-indigo-400 shadow-lg' : 'bg-white text-indigo-600 shadow-md'} transform scale-105`
-                        : `${darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-800'}`
+                      ? `${darkMode ? 'bg-gray-800 text-indigo-400 shadow-lg' : 'bg-white text-indigo-600 shadow-md'} transform scale-105`
+                      : `${darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-800'}`
                       }`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 sm:h-5 sm:w-5 ${billMode === 'existing' ? 'text-indigo-500' : ''}`} viewBox="0 0 20 20" fill="currentColor">
@@ -1416,8 +1427,8 @@ const AddProducts = () => {
               <div>
                 <button
                   className={`flex items-center justify-center p-2 min-h-[40px] ${billMode === 'existing' && currentOrderId
-                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 px-3'
-                      : 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700'
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 px-3'
+                    : 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700'
                     } text-white rounded-xl transition-all duration-300 shadow-md`}
                   onClick={addProduct}
                 >
@@ -1844,15 +1855,15 @@ const AddProducts = () => {
                   <div className="mt-3 text-center">
                     <div className="flex flex-wrap justify-center gap-2">
                       <span className={`inline-block px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm ${paymentStatus === 'pending'
-                          ? (darkMode ? 'bg-yellow-800 text-yellow-200 border border-yellow-700' : 'bg-yellow-100 text-yellow-800 border border-yellow-200')
-                          : (darkMode ? 'bg-green-800 text-green-200 border border-green-700' : 'bg-green-100 text-green-800 border border-green-200')
+                        ? (darkMode ? 'bg-yellow-800 text-yellow-200 border border-yellow-700' : 'bg-yellow-100 text-yellow-800 border border-yellow-200')
+                        : (darkMode ? 'bg-green-800 text-green-200 border border-green-700' : 'bg-green-100 text-green-800 border border-green-200')
                         } border`}>
                         {paymentStatus === 'pending' ? '⏳ Payment Pending' : '✓ Payment Cleared'}
                       </span>
 
                       <span className={`inline-block px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm ${orderStatus === 'sell'
-                          ? (darkMode ? 'bg-blue-800 text-blue-200 border border-blue-700' : 'bg-blue-100 text-blue-800 border border-blue-200')
-                          : (darkMode ? 'bg-purple-800 text-purple-200 border border-purple-700' : 'bg-purple-100 text-purple-800 border border-purple-200')
+                        ? (darkMode ? 'bg-blue-800 text-blue-200 border border-blue-700' : 'bg-blue-100 text-blue-800 border border-blue-200')
+                        : (darkMode ? 'bg-purple-800 text-purple-200 border border-purple-700' : 'bg-purple-100 text-purple-800 border border-purple-200')
                         } border`}>
                         {orderStatus === 'sell' ? '📤 Sell' : '📥 Purchased'}
                       </span>
@@ -1866,8 +1877,8 @@ const AddProducts = () => {
           {/* Status message with animation */}
           {saveStatus && (
             <div className={`mt-6 p-4 ${saveStatus.includes('Error')
-                ? (darkMode ? 'bg-red-900 text-red-200 border-red-800' : 'bg-red-100 text-red-800 border-red-200')
-                : (darkMode ? 'bg-green-900 text-green-200 border-green-800' : 'bg-green-100 text-green-800 border-green-200')
+              ? (darkMode ? 'bg-red-900 text-red-200 border-red-800' : 'bg-red-100 text-red-800 border-red-200')
+              : (darkMode ? 'bg-green-900 text-green-200 border-green-800' : 'bg-green-100 text-green-800 border-green-200')
               } rounded-xl text-center animate-pulse border shadow-md`}>
               {saveStatus.includes('Error') ? (
                 <div className="flex items-center justify-center">

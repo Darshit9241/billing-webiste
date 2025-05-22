@@ -389,9 +389,7 @@ const ClientList = () => {
     setLoading(true);
     setError('');
     try {
-      console.log("Starting to fetch clients");
       const data = await fetchAllClients();
-      console.log("Client data received:", data);
       setSavedClients(data);
     } catch (err) {
       console.error("Error in fetchClients:", err);
@@ -928,8 +926,6 @@ const ClientList = () => {
   useEffect(() => {
     // Check for merged clients and log them
     const mergedClients = savedClients.filter(client => client.merged === true);
-    console.log('Total clients:', savedClients.length);
-    console.log('Merged clients count:', mergedClients.length);
     if (mergedClients.length > 0) {
       console.log('Found merged clients:', mergedClients.map(c => c.id));
     }

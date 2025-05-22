@@ -167,7 +167,6 @@ const ClientList = () => {
     setLoading(true);
     setError('');
     try {
-      console.log("Starting to fetch clients");
       const data = await fetchAllClients();
       console.log("Client data received:", data);
       setSavedClients(data);

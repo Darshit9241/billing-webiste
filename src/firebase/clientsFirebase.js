@@ -15,13 +15,11 @@ const CLIENTS_COLLECTION = 'clients';
 // Fetch all clients
 export const fetchAllClients = async () => {
   try {
-    console.log("Fetching clients from:", CLIENTS_COLLECTION);
-    
+  
     // Use a simpler query first
     const clientsRef = ref(database, CLIENTS_COLLECTION);
     
     const snapshot = await get(clientsRef);
-    console.log("Snapshot exists:", snapshot.exists());
     
     if (!snapshot.exists()) {
       console.log("No data found in clients collection");
@@ -32,7 +30,6 @@ export const fetchAllClients = async () => {
     // Convert firebase object to array
     snapshot.forEach((childSnapshot) => {
       const childData = childSnapshot.val();
-      console.log("Client data:", childSnapshot.key, childData);
       
       data.push({
         id: childSnapshot.key,
@@ -50,7 +47,6 @@ export const fetchAllClients = async () => {
       return timestampB - timestampA;
     });
     
-    console.log("Sorted data:", sortedData.length, "clients");
     return sortedData;
   } catch (error) {
     console.error("Firebase fetch error:", error);

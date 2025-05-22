@@ -93,10 +93,7 @@ const ClientNames = () => {
     setLoading(true);
     try {
       const allClients = await fetchAllClients();
-      
-      // Debug: Log client count to check all clients are retrieved
-      console.log(`Retrieved ${allClients.length} clients from database`);
-      
+            
       // Group by client name and count orders
       const clientMap = new Map();
       
@@ -159,7 +156,6 @@ const ClientNames = () => {
       const mergedClients = clientArray.filter(client => 
         client.clientIds.some(id => id && id.startsWith('merged_'))
       );
-      console.log(`Found ${mergedClients.length} clients with merged IDs in final array`);
       
       setClientsData(clientArray);
       setFilteredClients(clientArray);
@@ -177,7 +173,6 @@ const ClientNames = () => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredClients.slice(startIndex, startIndex + itemsPerPage);
   }, [filteredClients, currentPage, itemsPerPage]);
-  console.log("sdasdasd",filteredClients)
   
   // Calculate total pages
   const totalPages = useMemo(() => {

@@ -58,7 +58,6 @@ const ClientNameOrders = () => {
   useEffect(() => {
     try {
       localStorage.setItem('viewMode', viewMode);
-      console.log('viewMode saved:', viewMode);
     } catch (error) {
       console.error("Error saving viewMode to localStorage:", error);
     }
@@ -535,7 +534,6 @@ const ClientNameOrders = () => {
         {slideDownKeyframes}
       </style>
       
-      {console.log('Rendering with viewMode:', viewMode, 'defaultViewMode:', defaultViewMode, 'localStorage value:', localStorage.getItem('viewMode'))}
       
       <div className="max-w-7xl mx-auto">
         {/* Header */}

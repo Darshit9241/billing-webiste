@@ -19,7 +19,7 @@ const ClientNames = () => {
   const [sortDirection, setSortDirection] = useState('asc');
   const [viewMode, setViewMode] = useState(() => {
     // Initialize from localStorage or default to 'card'
-    return localStorage.getItem('clientsViewMode') || 'card';
+    return localStorage.getItem('clientsViewMode') || 'compact';
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);

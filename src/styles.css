@@ -1,0 +1,74 @@
+/* Custom responsive utilities */
+@media (min-width: 400px) {
+  .xs\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Custom scrollbar for better mobile experience */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 20px;
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-thumb {
+  background-color: rgba(75, 85, 99, 0.5);
+}
+
+/* Responsive chart containers */
+@media (max-width: 640px) {
+  .recharts-responsive-container {
+    font-size: 12px;
+  }
+  
+  .recharts-cartesian-axis-tick-value {
+    font-size: 10px;
+  }
+}
+
+/* Improve mobile touch targets */
+@media (max-width: 640px) {
+  button, 
+  [role="button"],
+  a {
+    min-height: 36px;
+    min-width: 36px;
+  }
+}
+
+/* Fix for mobile overflow issues */
+.overflow-x-hidden {
+  overflow-x: hidden;
+}
+
+/* Better responsive font sizes */
+@media (max-width: 640px) {
+  .text-responsive {
+    font-size: 0.875rem;
+  }
+}
+
+/* Responsive padding for small devices */
+@media (max-width: 640px) {
+  .p-responsive {
+    padding: 0.75rem;
+  }
+}
+
+/* Fix for notification dropdown on small screens */
+@media (max-width: 480px) {
+  .notification-dropdown {
+    width: calc(100vw - 32px);
+    right: -16px;
+  }
+} 

@@ -649,7 +649,7 @@ const ClientNames = () => {
                           onClick={() => handleClientClick(client.clientName, client.clientIds)}
                           className={`${index % 2 === 0 ? (isDarkMode ? 'bg-white/5' : 'bg-white') : (isDarkMode ? 'bg-white/[0.02]' : 'bg-gray-50')} cursor-pointer hover:bg-emerald-500/10 ${client.hasMergedClient ? (isDarkMode ? 'border-l-4 border-l-emerald-500' : 'border-l-4 border-l-emerald-500') : ''}`}
                         >
-                          <td className={`px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                          <td className={`px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-left ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                             {client.clientName}
                             {client.hasMergedClient && (
                               <span className="ml-2 text-xs bg-emerald-500 text-white px-1.5 py-0.5 rounded-full">Merged</span>

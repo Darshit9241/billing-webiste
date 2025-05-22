@@ -1073,10 +1073,10 @@ const ClientNameOrders = () => {
                                 </div>
                               </td>
                             )}
-                            <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                            <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium text-left ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                               {order.merged ? '🔄 ' : ''}#{order.id.substring(0, 8)}
                             </td>
-                            <td className={`px-6 py-4 whitespace-nowrap text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>{formatDate(order.timestamp)}</td>
+                            <td className={`px-6 py-4 whitespace-nowrap text-sm text-left ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>{formatDate(order.timestamp)}</td>
                             <td className={`px-6 py-4 whitespace-nowrap text-sm text-center ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>₹{parseFloat(order.grandTotal || 0).toFixed(2)}</td>
                             <td className={`px-6 py-4 whitespace-nowrap text-sm text-center text-emerald-500 font-medium`}>₹{parseFloat(order.amountPaid || 0).toFixed(2)}</td>
                             <td className={`px-6 py-4 whitespace-nowrap text-sm text-center ${balanceDue <= 0 ? 'text-sky-500' : 'text-amber-500'} font-medium`}>₹{balanceDue.toFixed(2)}</td>

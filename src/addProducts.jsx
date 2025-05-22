@@ -750,6 +750,11 @@ const AddProducts = () => {
     navigate('/login');
   };
 
+  const handleDashboard = () => {
+    navigate('/dashboard');
+  };
+
+
   const grandTotal = products.reduce((sum, product) => {
     // Make sure we're adding numeric values
     return sum + (typeof product.total === 'number' ? product.total : 0);
@@ -1014,7 +1019,7 @@ const AddProducts = () => {
                 <p className="text-indigo-100 text-xs sm:text-sm mt-0.5 sm:mt-1">Billing System</p>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-3 w-full sm:w-auto">
+            <div className="grid grid-cols-4 gap-2 sm:flex sm:flex-wrap sm:gap-3 w-full sm:w-auto">
               {/* Dark mode toggle button */}
               <button
                 onClick={toggleDarkMode}
@@ -1049,6 +1054,16 @@ const AddProducts = () => {
                   <path d="M4 9h8v2H4V9z" />
                 </svg>
                 <span className="hidden sm:inline">Logout</span>
+              </button>
+              <button
+                onClick={handleDashboard}
+                className="flex items-center justify-center px-2 sm:px-4 py-2 sm:py-2.5 bg-[#2563EB] bg-opacity-90 text-white text-xs sm:text-sm rounded-xl hover:bg-opacity-100 transition-all duration-300 font-medium shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h4v4H4V6zM10 6h10v4H10V6zM4 12h10v6H4v-6zM16 12h4v6h-4v-6z" />
+</svg>
+
+                <span className="hidden sm:inline">dashboard</span>
               </button>
             </div>
           </div>

@@ -47,7 +47,7 @@ const ClientNameOrders = () => {
     try {
       // Get saved view mode from localStorage or use default 'card'
       const savedMode = localStorage.getItem('viewMode');
-      return savedMode || defaultViewMode || 'card';
+      return savedMode || defaultViewMode || 'compact';
     } catch (error) {
       console.error("Error reading viewMode from localStorage:", error);
       return 'card'; // Fallback to 'card' if there's an error

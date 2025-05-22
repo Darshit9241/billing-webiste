@@ -48,12 +48,12 @@ const ClientNameOrders = () => {
   const [sortDirection, setSortDirection] = useState('desc');
   const [viewMode, setViewMode] = useState(() => {
     try {
-      // Get saved view mode from localStorage or use default 'card'
+      // Get saved view mode from localStorage or use default
       const savedMode = localStorage.getItem('viewMode');
-      return savedMode || defaultViewMode || 'compact';
+      return savedMode || defaultViewMode;
     } catch (error) {
       console.error("Error reading viewMode from localStorage:", error);
-      return 'card'; // Fallback to 'card' if there's an error
+      return defaultViewMode; // Fallback to defaultViewMode if there's an error
     }
   });
   
@@ -122,10 +122,32 @@ const ClientNameOrders = () => {
     try {
       const allClients = await fetchAllClients();
       
-      // Filter clients by name (case insensitive)
-      const matchingOrders = allClients.filter(
-        client => client.clientName && client.clientName.toLowerCase() === name.toLowerCase()
+      // First try exact match with trimmed lowercase
+      let matchingOrders = allClients.filter(
+        client => client.clientName && client.clientName.toLowerCase().trim() === name.toLowerCase().trim()
       );
+      
+      // If no matches found, try a more flexible approach
+      if (matchingOrders.length === 0) {
+        console.log("No exact matches found, trying flexible matching...");
+        // Try to match by removing extra spaces and normalizing case
+        const normalizedName = name.toLowerCase().replace(/\s+/g, ' ').trim();
+        matchingOrders = allClients.filter(client => {
+          if (!client.clientName) return false;
+          const normalizedClientName = client.clientName.toLowerCase().replace(/\s+/g, ' ').trim();
+          return normalizedClientName === normalizedName;
+        });
+        
+        // If still no matches, try substring matching as a last resort
+        if (matchingOrders.length === 0 && normalizedName.length > 2) {
+          console.log("No normalized matches found, trying substring matching...");
+          matchingOrders = allClients.filter(client => {
+            if (!client.clientName) return false;
+            const normalizedClientName = client.clientName.toLowerCase().replace(/\s+/g, ' ').trim();
+            return normalizedClientName.includes(normalizedName) || normalizedName.includes(normalizedClientName);
+          });
+        }
+      }
       
       setOrders(matchingOrders);
       
@@ -149,6 +171,12 @@ const ClientNameOrders = () => {
       setTotalAmount(total);
       setPaidAmount(paid);
       setPendingAmount(pending);
+      
+      // Log for debugging
+      console.log(`Found ${matchingOrders.length} orders for client "${name}"`);
+      if (matchingOrders.length === 0) {
+        console.log("All available clients:", allClients.map(c => c.clientName));
+      }
     } catch (err) {
       console.error("Error fetching orders by client name:", err);
       setError("Failed to load orders. Please try again.");

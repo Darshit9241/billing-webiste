@@ -69,7 +69,6 @@ const ClientOrders = () => {
   const fetchClients = async () => {
     try {
       const data = await fetchAllClients();
-      console.log("sasasasa", data)
       setClients(data);
     } catch (err) {
       setError('Error loading client orders. Please try again.');

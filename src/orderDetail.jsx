@@ -48,14 +48,12 @@ const OrderDetail = () => {
   const fetchOrder = useCallback(async () => {
     setLoading(true);
     try {
-      console.log("Fetching order details for ID:", id);
       
       // Use Firebase Realtime Database reference
       const orderRef = ref(database, `clients/${id}`);
       const snapshot = await get(orderRef);
       
       if (!snapshot.exists()) {
-        console.log("Order not found in database");
         throw new Error('Order not found');
       }
 
@@ -73,7 +71,6 @@ const OrderDetail = () => {
       defaultDueDate.setDate(defaultDueDate.getDate() + 30); // Add 30 days by default
       
       setDueDate(data.dueDate ? new Date(data.dueDate) : defaultDueDate);
-      console.log("Order data received:", data);
       setOrderData(data);
       setError('');
     } catch (err) {

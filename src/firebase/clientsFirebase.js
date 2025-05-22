@@ -22,7 +22,6 @@ export const fetchAllClients = async () => {
     const snapshot = await get(clientsRef);
     
     if (!snapshot.exists()) {
-      console.log("No data found in clients collection");
       return [];
     }
     
@@ -61,9 +60,7 @@ export const deleteClient = async (id) => {
   }
   
   try {
-    console.log(`Deleting client with ID: ${id}`);
     await remove(ref(database, `${CLIENTS_COLLECTION}/${id}`));
-    console.log(`Successfully deleted client with ID: ${id}`);
     return true;
   } catch (error) {
     console.error(`Error deleting client with ID ${id}:`, error);
@@ -134,7 +131,6 @@ export const createClient = async (client) => {
     const newClientRef = ref(database, `${CLIENTS_COLLECTION}/${generateRandomId()}`);
     
     await set(newClientRef, clientWithTimestamp);
-    console.log("Client created with ID:", newClientRef.key);
     
     // Get the newly created document to return
     const snapshot = await get(newClientRef);

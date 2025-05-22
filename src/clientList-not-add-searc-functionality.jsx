@@ -168,7 +168,6 @@ const ClientList = () => {
     setError('');
     try {
       const data = await fetchAllClients();
-      console.log("Client data received:", data);
       setSavedClients(data);
     } catch (err) {
       console.error("Error in fetchClients:", err);

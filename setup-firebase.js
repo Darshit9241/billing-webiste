@@ -5,7 +5,6 @@ const { exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-console.log('Setting up Firebase user for Siyaram application...');
 
 // Check if the file exists
 const createUserPath = path.join(__dirname, 'src', 'firebase', 'createUser.js');
@@ -21,7 +20,6 @@ require('esbuild-register');
 require('./src/firebase/createUser.js');
 `);
 
-console.log('Running user creation script...');
 
 // Execute the temporary file
 exec(`node ${tempFile}`, (error, stdout, stderr) => {
@@ -33,15 +31,8 @@ exec(`node ${tempFile}`, (error, stdout, stderr) => {
     return;
   }
   
-  console.log(stdout);
   
   if (stderr) {
     console.error('Script errors:', stderr);
   }
-  
-  console.log('\nSetup completed!');
-  console.log('If you saw "User created successfully" message, the setup was successful.');
-  console.log('You can now log in with:');
-  console.log('- Email: siyaram@gmail.com');
-  console.log('- Password: siyaram@');
 }); 

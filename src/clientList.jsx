@@ -192,7 +192,6 @@ const ClientList = () => {
     } else {
       // When "Merged Only" filter is active, only show merged cards
       filtered = filtered.filter(client => client.merged === true);
-      console.log('Showing only merged clients:', filtered.length);
     }
 
     // First filter by payment status
@@ -926,9 +925,6 @@ const ClientList = () => {
   useEffect(() => {
     // Check for merged clients and log them
     const mergedClients = savedClients.filter(client => client.merged === true);
-    if (mergedClients.length > 0) {
-      console.log('Found merged clients:', mergedClients.map(c => c.id));
-    }
   }, [savedClients]);
 
   // Update the setSearchQuery function to also update URL

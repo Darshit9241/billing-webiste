@@ -104,10 +104,7 @@ const ClientNames = () => {
         const name = client.clientName.trim();
         if (!name) return;
         
-        // Debug: Log client ID and name if ID starts with merged_
-        if (client.id && client.id.startsWith('merged_')) {
-          console.log(`Found merged client: ID=${client.id}, Name=${name}`);
-        }
+    
         
         // Process all clients regardless of ID prefix
         if (clientMap.has(name)) {
@@ -200,7 +197,6 @@ const ClientNames = () => {
   }, [clientsData, showMergedClients]);
   
   const handleClientClick = (clientName, clientIds) => {
-    console.log(`Navigating to client: ${clientName}, IDs: ${clientIds.join(', ')}`);
     // Pass both the client name and the array of client IDs
     navigate(`/client-name/${encodeURIComponent(clientName)}`, { 
       state: { clientIds } 

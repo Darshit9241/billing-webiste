@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import ThemeToggle from './components/ThemeToggle';
 import { useTheme } from './context/ThemeContext';
 import { fetchAllClients, deleteClient, clearClientPayment, updateClient } from './firebase/clientsFirebase';
+import { BsCurrencyRupee } from "react-icons/bs";
 
 // Custom CSS for animations
 const customStyles = `
@@ -2534,7 +2535,9 @@ const ClientList = () => {
                     </div>
                     <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} backdrop-blur-md rounded-lg p-2.5 sm:p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} transform transition-all hover:scale-105`}>
                       <p className={`text-[10px] sm:text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Amount Paid:</p>
-                      <p className="font-medium text-emerald-500 text-xs sm:text-sm md:text-base truncate">₹{typeof client.amountPaid === 'number' ? client.amountPaid.toFixed(2) : '0.00'}</p>
+                      {/* <p className="font-medium text-emerald-500 text-xs sm:text-sm md:text-base truncate">₹{typeof client.amountPaid === 'number' ? client.amountPaid.toFixed(2) : '0.00'}</p> */}
+
+                      <p className="font-medium text-emerald-500 text-xs sm:text-sm md:text-base truncate flex items-center justify-center"><BsCurrencyRupee />{typeof client.amountPaid === 'number' ? client.amountPaid.toFixed(2) : '0.00'}</p>
                     </div>
                     <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} backdrop-blur-md rounded-lg p-2.5 sm:p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} transform transition-all hover:scale-105 xs:col-span-2 sm:col-span-1`}>
                       <p className={`text-[10px] sm:text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Balance Due:</p>

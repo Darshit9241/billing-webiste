@@ -2251,42 +2251,7 @@ const ClientList = () => {
             </div>
             <p className="ml-6 text-lg text-slate-300 font-medium">Loading orders...</p>
           </div>
-        ) : filteredClients.length === 0 ? (
-          <div className="text-center py-20 bg-white/5 rounded-xl border border-white/10 shadow-2xl backdrop-blur-md">
-            <div className="mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-20 w-20 mx-auto text-slate-600 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-semibold text-white mb-3">
-              {savedClients.length === 0
-                ? 'No orders found'
-                : showMergedOnly
-                  ? 'No merged cards found'
-                  : `No ${activeFilter === 'pending' ? 'pending payment' : activeFilter === 'cleared' ? 'cleared payment' : ''} orders found`}
-            </h2>
-            <p className="text-slate-400 max-w-lg mx-auto mb-8">
-              {savedClients.length === 0
-                ? 'You haven\'t created any orders yet. Get started by creating your first order.'
-                : showMergedOnly
-                  ? 'There are no merged cards in the system yet. You can merge cards by searching and selecting multiple clients.'
-                  : activeFilter !== 'all'
-                    ? `There are no orders with ${activeFilter === 'pending' ? 'pending' : 'cleared'} payment status.`
-                    : 'You haven\'t created any orders yet.'}
-            </p>
-            {savedClients.length === 0 && (
-              <Link
-                to="/"
-                className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-lg shadow-lg hover:shadow-emerald-500/30"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-                </svg>
-                Create First Order
-              </Link>
-            )}
-          </div>
-        ) : viewMode === 'list' ? (
+        )  : viewMode === 'list' ? (
           <div className="space-y-4">
             {filteredClients.map((client) => (
               <div

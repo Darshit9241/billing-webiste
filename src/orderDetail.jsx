@@ -673,7 +673,7 @@ const OrderDetail = () => {
                 </svg>
               </div>
               <div className="text-center sm:text-left">
-                {/* <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 text-left">Siyaram Lace</h1> */}
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 text-left">Siyaram Lace</h1>
                 <p className="text-gray-500 text-xs sm:text-sm mt-1 text-left">Jay Industrial Estate, IND 79, Anjana, 1, Anjana, Surat, Gujarat 395003</p>
                 <p className="text-gray-500 text-xs sm:text-sm mt-1 text-left">Contact Number :- 98794 43940</p>
                 {/* <p className="text-gray-500 text-xs sm:text-sm mt-1 text-left">Email :- siyaram@gmail.com</p> */}

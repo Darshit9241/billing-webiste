@@ -14,8 +14,6 @@ import {
   FiAlertTriangle, FiCheckCircle, FiInfo, FiX
 } from 'react-icons/fi';
 
-// Add custom CSS for responsive design
-import './styles.css';
 
 // Utility functions
 const formatCurrency = (amount) => {

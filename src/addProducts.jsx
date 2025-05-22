@@ -704,12 +704,6 @@ const AddProducts = () => {
         setSaveStatus('');
         setIsLoading(false);
       }, 3000);
-
-      // Auto-hide the success modal after 3 seconds and redirect to clients page
-      setTimeout(() => {
-        setShowSuccessModal(false);
-        navigate('/clients');
-      }, 3000);
     } catch (error) {
       setSaveStatus(`Error: ${error.message}`);
       setIsLoading(false);
@@ -2024,9 +2018,17 @@ const AddProducts = () => {
                 <button
                   onClick={() => {
                     setShowSuccessModal(false);
-                    navigate('/clients');
                   }}
                   className="flex-1 inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:text-sm transition-colors duration-200"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    setShowSuccessModal(false);
+                    navigate('/clients');
+                  }}
+                  className="flex-1 inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm transition-colors duration-200"
                 >
                   Go to Clients
                 </button>

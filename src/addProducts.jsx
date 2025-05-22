@@ -748,7 +748,7 @@ const AddProducts = () => {
     navigate('/dashboard');
   };
 
-  const handleExpensses = () => {
+  const handleExpenss = () => {
     navigate('/expenses');
   };
 
@@ -1055,7 +1055,6 @@ const AddProducts = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H9a2 2 0 00-2 2v2m10 0V7a2 2 0 00-2-2H9a2 2 0 00-2 2v2m10 0a2 2 0 012 2v4a2 2 0 01-2 2m0 0v2a2 2 0 01-2 2H9a2 2 0 01-2-2v-2m10 0H7" />
                 </svg>
               </button>
-               {/* Dark mode toggle button */}
               <button
                 onClick={toggleDarkMode}
                 className="flex items-center justify-center px-2 sm:px-4 py-2 sm:py-2.5 bg-white bg-opacity-20 text-white text-xs sm:text-sm rounded-xl hover:bg-opacity-30 transition-all duration-300 font-medium backdrop-blur-sm shadow-sm hover:shadow-md transform hover:-translate-y-0.5"

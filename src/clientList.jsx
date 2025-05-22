@@ -148,11 +148,11 @@ const ClientList = () => {
     setStartDate(params.startDate);
     setEndDate(params.endDate);
     setIsDateFilterActive(params.dateFilter);
-    
+
     // Get view mode from localStorage, fall back to URL param, then default to 'card'
     const savedViewMode = localStorage.getItem('viewMode');
     setViewMode(savedViewMode || params.viewMode || 'card');
-    
+
     setShowMergedOnly(params.mergedOnly);
 
     // Add window resize listener for responsive behavior
@@ -1143,14 +1143,6 @@ const ClientList = () => {
 
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => navigate(`/clientorders`)}
-                  className={`p-2 rounded-lg ${isDarkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'} transition-colors hidden sm:flex`}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${isDarkMode ? 'text-white' : 'text-gray-700'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6M9 8h6m2-6H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2V4a2 2 0 00-2-2z" />
-                  </svg>
-                </button>
-                <button
                   onClick={() => navigate(`/client-names`)}
                   className={`p-2 rounded-lg ${isDarkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'} transition-colors hidden sm:flex relative group`}
                 >
@@ -1160,6 +1152,14 @@ const ClientList = () => {
                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap pointer-events-none z-10">
                     View Client List
                   </div>
+                </button>
+                <button
+                  onClick={() => navigate(`/clientorders`)}
+                  className={`p-2 rounded-lg ${isDarkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'} transition-colors hidden sm:flex`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${isDarkMode ? 'text-white' : 'text-gray-700'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6M9 8h6m2-6H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2V4a2 2 0 00-2-2z" />
+                  </svg>
                 </button>
                 <button
                   onClick={() => setIsInfoOpen(!isInfoOpen)}
@@ -1562,8 +1562,8 @@ const ClientList = () => {
                       }
                     }}
                     className={`mr-3 px-2 py-1 rounded-md text-xs font-medium ${filteredClients.length > 0 && filteredClients.every(client => selectedClientsForMerge.includes(client.id))
-                        ? `${isDarkMode ? 'bg-emerald-500/80 text-white' : 'bg-emerald-100 text-emerald-700'}`
-                        : `${isDarkMode ? 'bg-white/10 text-slate-300 hover:bg-white/20' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`
+                      ? `${isDarkMode ? 'bg-emerald-500/80 text-white' : 'bg-emerald-100 text-emerald-700'}`
+                      : `${isDarkMode ? 'bg-white/10 text-slate-300 hover:bg-white/20' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`
                       } transition-colors`}
                   >
                     {filteredClients.length > 0 && filteredClients.every(client => selectedClientsForMerge.includes(client.id))
@@ -1576,8 +1576,8 @@ const ClientList = () => {
                     onClick={handleMergeButtonClick}
                     disabled={selectedClientsForMerge.length < 2}
                     className={`flex items-center pr-3 pl-3 ${selectedClientsForMerge.length < 2
-                        ? `${isDarkMode ? 'text-slate-500' : 'text-gray-400'} cursor-not-allowed`
-                        : `${isDarkMode ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-500'} cursor-pointer`
+                      ? `${isDarkMode ? 'text-slate-500' : 'text-gray-400'} cursor-not-allowed`
+                      : `${isDarkMode ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-500'} cursor-pointer`
                       }`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1676,8 +1676,8 @@ const ClientList = () => {
                     }
                   }}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium ${filteredClients.every(client => selectedClientsForMerge.includes(client.id))
-                      ? `${isDarkMode ? 'bg-emerald-500/80 text-white' : 'bg-emerald-100 text-emerald-800'}`
-                      : `${isDarkMode ? 'bg-white/10 text-white' : 'bg-gray-100 text-gray-800'}`
+                    ? `${isDarkMode ? 'bg-emerald-500/80 text-white' : 'bg-emerald-100 text-emerald-800'}`
+                    : `${isDarkMode ? 'bg-white/10 text-white' : 'bg-gray-100 text-gray-800'}`
                     } transition-colors flex items-center`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -2037,8 +2037,8 @@ const ClientList = () => {
                       </div>
                       <div className="mt-2 flex items-center">
                         <span className={`px-2 py-1 text-xs rounded-md ${editFormData.orderStatus === 'sell'
-                            ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                            : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                          ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                          : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
                           }`}>
                           {editFormData.orderStatus === 'sell' ? '📤 Sell' : '📥 Purchased'}
                         </span>
@@ -2358,8 +2358,8 @@ const ClientList = () => {
                       </span>
                       {client.orderStatus && (
                         <span className={`text-xs px-3 py-1 rounded-full font-medium ${client.orderStatus === 'sell'
-                            ? `${isDarkMode ? 'bg-blue-500/20' : 'bg-blue-100'} ${isDarkMode ? 'text-blue-300' : 'text-blue-700'} border ${isDarkMode ? 'border-blue-500/30' : 'border-blue-200'}`
-                            : `${isDarkMode ? 'bg-purple-500/20' : 'bg-purple-100'} ${isDarkMode ? 'text-purple-300' : 'text-purple-700'} border ${isDarkMode ? 'border-purple-500/30' : 'border-purple-200'}`
+                          ? `${isDarkMode ? 'bg-blue-500/20' : 'bg-blue-100'} ${isDarkMode ? 'text-blue-300' : 'text-blue-700'} border ${isDarkMode ? 'border-blue-500/30' : 'border-blue-200'}`
+                          : `${isDarkMode ? 'bg-purple-500/20' : 'bg-purple-100'} ${isDarkMode ? 'text-purple-300' : 'text-purple-700'} border ${isDarkMode ? 'border-purple-500/30' : 'border-purple-200'}`
                           }`}>
                           {client.orderStatus === 'sell' ? '📤 Sell' : '📥 Purchased'}
                         </span>
@@ -2556,8 +2556,8 @@ const ClientList = () => {
                       </span>
                       {client.orderStatus && (
                         <span className={`text-xs px-3 py-1 rounded-full font-medium ${client.orderStatus === 'sell'
-                            ? `${isDarkMode ? 'bg-blue-500/20' : 'bg-blue-100'} ${isDarkMode ? 'text-blue-300' : 'text-blue-700'} border ${isDarkMode ? 'border-blue-500/30' : 'border-blue-200'}`
-                            : `${isDarkMode ? 'bg-purple-500/20' : 'bg-purple-100'} ${isDarkMode ? 'text-purple-300' : 'text-purple-700'} border ${isDarkMode ? 'border-purple-500/30' : 'border-purple-200'}`
+                          ? `${isDarkMode ? 'bg-blue-500/20' : 'bg-blue-100'} ${isDarkMode ? 'text-blue-300' : 'text-blue-700'} border ${isDarkMode ? 'border-blue-500/30' : 'border-blue-200'}`
+                          : `${isDarkMode ? 'bg-purple-500/20' : 'bg-purple-100'} ${isDarkMode ? 'text-purple-300' : 'text-purple-700'} border ${isDarkMode ? 'border-purple-500/30' : 'border-purple-200'}`
                           }`}>
                           {client.orderStatus === 'sell' ? '📤 Sell' : '📥 Purchased'}
                         </span>
@@ -2770,8 +2770,8 @@ const ClientList = () => {
           <button
             onClick={toggleMergedOnly}
             className={`flex items-center justify-center p-3 sm:p-4 rounded-full shadow-lg ${showMergedOnly
-                ? "bg-purple-600 text-white hover:bg-purple-700"
-                : `${isDarkMode ? "bg-slate-700 text-white hover:bg-slate-600" : "bg-white text-purple-600 hover:bg-purple-50"}`
+              ? "bg-purple-600 text-white hover:bg-purple-700"
+              : `${isDarkMode ? "bg-slate-700 text-white hover:bg-slate-600" : "bg-white text-purple-600 hover:bg-purple-50"}`
               } transition-all duration-300 group`}
             title={showMergedOnly ? "Show Normal Orders" : "Show Merged Cards Only"}
           >

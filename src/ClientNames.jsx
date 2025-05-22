@@ -341,7 +341,7 @@ const ClientNames = () => {
               
               <h1 className={`text-base sm:text-lg md:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} flex items-center`}>
                 <span className="bg-gradient-to-r from-emerald-500 to-teal-400 inline-block text-transparent bg-clip-text font-bold">
-                  Client Directory
+                  All Clients
                 </span>
               </h1>
             </div>

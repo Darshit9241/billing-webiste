@@ -34,6 +34,9 @@ const ClientNameOrders = () => {
   const [totalAmount, setTotalAmount] = useState(0);
   const [pendingAmount, setPendingAmount] = useState(0);
   const [paidAmount, setPaidAmount] = useState(0);
+  const [filteredTotalAmount, setFilteredTotalAmount] = useState(0);
+  const [filteredPendingAmount, setFilteredPendingAmount] = useState(0);
+  const [filteredPaidAmount, setFilteredPaidAmount] = useState(0);
   
   // Date filter states
   const [fromDate, setFromDate] = useState('');
@@ -526,6 +529,30 @@ const ClientNameOrders = () => {
     setShowSummary(prev => !prev);
   };
 
+  // Update filtered totals whenever filteredOrders changes
+  useEffect(() => {
+    // Calculate totals for filtered orders
+    let total = 0;
+    let pending = 0;
+    let paid = 0;
+    
+    filteredOrders.forEach(order => {
+      // Skip if this order is part of a merged order
+      if (order.mergedFrom) return;
+      
+      const orderTotal = parseFloat(order.grandTotal) || 0;
+      const orderPaid = parseFloat(order.amountPaid) || 0;
+      
+      total += orderTotal;
+      paid += orderPaid;
+      pending += Math.max(0, orderTotal - orderPaid);
+    });
+    
+    setFilteredTotalAmount(total);
+    setFilteredPaidAmount(paid);
+    setFilteredPendingAmount(pending);
+  }, [filteredOrders]);
+
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-gray-100 to-white'} py-8 px-4 sm:px-6 lg:px-8 transition-colors duration-200`}>
       {/* Inject CSS keyframes */}
@@ -945,29 +972,52 @@ const ClientNameOrders = () => {
             <div className={`backdrop-blur-md ${isDarkMode ? 'bg-white/5' : 'bg-white'} rounded-xl border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} shadow-md p-5`}>
               <h2 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                 Summary for {decodedClientName}
+                {(searchTerm || isDateFilterActive) && (
+                  <span className={`ml-2 text-sm font-normal ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                    (Filtered)
+                  </span>
+                )}
               </h2>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-4 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
                   <p className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Total Orders</p>
-                  <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{orders.length}</p>
+                  <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    {(searchTerm || isDateFilterActive) ? filteredOrders.length : orders.length}
+                    {(searchTerm || isDateFilterActive) && orders.length > 0 && (
+                      <span className={`text-sm ml-2 ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                        of {orders.length}
+                      </span>
+                    )}
+                  </p>
                 </div>
                 
                 <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-4 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
                   <p className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Total Amount</p>
-                  <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>₹{totalAmount.toFixed(2)}</p>
+                  <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    ₹{(searchTerm || isDateFilterActive) ? filteredTotalAmount.toFixed(2) : totalAmount.toFixed(2)}
+                    {(searchTerm || isDateFilterActive) && orders.length > 0 && (
+                      <span className={`text-sm ml-2 ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                        of ₹{totalAmount.toFixed(2)}
+                      </span>
+                    )}
+                  </p>
                 </div>
                 
                 <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-4 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
                   <div className="flex justify-between items-center">
                     <div>
                       <p className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Paid</p>
-                      <p className={`text-xl font-bold text-emerald-500`}>₹{paidAmount.toFixed(2)}</p>
+                      <p className={`text-xl font-bold text-emerald-500`}>
+                        ₹{(searchTerm || isDateFilterActive) ? filteredPaidAmount.toFixed(2) : paidAmount.toFixed(2)}
+                      </p>
                     </div>
                     
                     <div className="text-right">
                       <p className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Pending</p>
-                      <p className={`text-xl font-bold text-amber-500`}>₹{pendingAmount.toFixed(2)}</p>
+                      <p className={`text-xl font-bold text-amber-500`}>
+                        ₹{(searchTerm || isDateFilterActive) ? filteredPendingAmount.toFixed(2) : pendingAmount.toFixed(2)}
+                      </p>
                     </div>
                   </div>
                 </div>

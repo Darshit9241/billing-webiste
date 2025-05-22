@@ -1048,7 +1048,7 @@ const AddProducts = () => {
                 <span className="hidden sm:inline">Logout</span>
               </button>
               <button
-                onClick={handleExpensses}
+                onClick={handleExpenss}
                 className="flex items-center justify-center px-2 sm:px-4 py-2 sm:py-2.5 bg-green-500 bg-opacity-90 text-white text-xs sm:text-sm rounded-xl hover:bg-opacity-100 transition-all duration-300 font-medium shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -24,6 +24,9 @@ const ClientNameOrders = () => {
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
   
+    // Default view mode
+  const defaultViewMode = 'card';
+  
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -32,15 +35,34 @@ const ClientNameOrders = () => {
   const [pendingAmount, setPendingAmount] = useState(0);
   const [paidAmount, setPaidAmount] = useState(0);
   
+  // Date filter states
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [isDateFilterActive, setIsDateFilterActive] = useState(false);
+  
   // New state variables for enhanced functionality
   const [sortField, setSortField] = useState('timestamp');
   const [sortDirection, setSortDirection] = useState('desc');
   const [viewMode, setViewMode] = useState(() => {
-    // Get saved view mode from localStorage or use default 'card'
-    return localStorage.getItem('viewMode') || 'card';
+    try {
+      // Get saved view mode from localStorage or use default 'card'
+      const savedMode = localStorage.getItem('viewMode');
+      return savedMode || defaultViewMode || 'card';
+    } catch (error) {
+      console.error("Error reading viewMode from localStorage:", error);
+      return 'card'; // Fallback to 'card' if there's an error
+    }
   });
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  
+  // Save viewMode to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('viewMode', viewMode);
+      console.log('viewMode saved:', viewMode);
+    } catch (error) {
+      console.error("Error saving viewMode to localStorage:", error);
+    }
+  }, [viewMode]);
   
   // Search functionality
   const [searchTerm, setSearchTerm] = useState('');
@@ -69,11 +91,6 @@ const ClientNameOrders = () => {
     
     fetchOrdersByClientName(decoded);
   }, [clientName]);
-  
-  // Save viewMode to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('viewMode', viewMode);
-  }, [viewMode]);
   
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -150,22 +167,64 @@ const ClientNameOrders = () => {
   // Handle search term change
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
-    setCurrentPage(1); // Reset to first page on search
   };
   
   // Handle search field change
   const handleSearchFieldChange = (value) => {
     setSearchField(value);
-    setCurrentPage(1); // Reset to first page on search field change
+  };
+  
+  // Date filter handlers
+  const handleFromDateChange = (e) => {
+    setFromDate(e.target.value);
+    setIsDateFilterActive(!!e.target.value || !!toDate);
+  };
+  
+  const handleToDateChange = (e) => {
+    setToDate(e.target.value);
+    setIsDateFilterActive(!!e.target.value || !!fromDate);
+  };
+  
+  const clearDateFilter = () => {
+    setFromDate('');
+    setToDate('');
+    setIsDateFilterActive(false);
   };
   
   // Filter orders based on search term and field
   const filteredOrders = useMemo(() => {
-    if (!searchTerm.trim()) return orders;
+    let filtered = orders;
+    
+    // Apply date filter if active
+    if (isDateFilterActive) {
+      filtered = filtered.filter(order => {
+        const orderDate = new Date(order.timestamp);
+        
+        // Check if order date is after fromDate (if fromDate is set)
+        if (fromDate && new Date(fromDate) > orderDate) {
+          return false;
+        }
+        
+        // Check if order date is before toDate (if toDate is set)
+        // Add one day to toDate to include the entire day
+        if (toDate) {
+          const toDateObj = new Date(toDate);
+          toDateObj.setDate(toDateObj.getDate() + 1);
+          if (toDateObj < orderDate) {
+            return false;
+          }
+        }
+        
+        return true;
+      });
+    }
+    
+    // Apply search term filter
+    if (!searchTerm.trim()) return filtered;
     
     const term = searchTerm.toLowerCase().trim();
     
-    return orders.filter(order => {
+    return filtered.filter(order => {
       switch (searchField) {
         case 'id':
           return order.id.toLowerCase().includes(term);
@@ -192,7 +251,7 @@ const ClientNameOrders = () => {
           );
       }
     });
-  }, [orders, searchTerm, searchField]);
+  }, [orders, searchTerm, searchField, isDateFilterActive, fromDate, toDate]);
 
   // Sort orders
   const sortedOrders = useMemo(() => {
@@ -230,17 +289,6 @@ const ClientNameOrders = () => {
     });
   }, [filteredOrders, sortField, sortDirection]);
   
-  // Paginate the sorted orders
-  const paginatedOrders = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return sortedOrders.slice(startIndex, startIndex + itemsPerPage);
-  }, [sortedOrders, currentPage, itemsPerPage]);
-  
-  // Calculate total pages
-  const totalPages = useMemo(() => {
-    return Math.ceil(sortedOrders.length / itemsPerPage);
-  }, [sortedOrders, itemsPerPage]);
-  
   const handleOrderClick = (orderId) => {
     navigate(`/order/${orderId}`);
   };
@@ -263,19 +311,15 @@ const ClientNameOrders = () => {
   
   // Pagination handlers
   const handlePageChange = (page) => {
-    setCurrentPage(page);
+    // This function is no longer needed as we're removing pagination
   };
   
   const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(prev => prev - 1);
-    }
+    // This function is no longer needed as we're removing pagination
   };
   
   const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(prev => prev + 1);
-    }
+    // This function is no longer needed as we're removing pagination
   };
   
   // SortButton Component
@@ -491,6 +535,8 @@ const ClientNameOrders = () => {
         {slideDownKeyframes}
       </style>
       
+      {console.log('Rendering with viewMode:', viewMode, 'defaultViewMode:', defaultViewMode, 'localStorage value:', localStorage.getItem('viewMode'))}
+      
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
@@ -572,7 +618,7 @@ const ClientNameOrders = () => {
               <div className={`p-1 rounded-lg flex ${isDarkMode ? 'bg-white/5' : 'bg-gray-100'}`}>
                 <button 
                   onClick={() => setViewMode('card')} 
-                  className={`p-1.5 rounded-md ${viewMode === 'card' ? (isDarkMode ? 'bg-slate-700' : 'bg-white shadow-sm') : ''}`}
+                  className={`p-1.5 rounded-md ${(viewMode || defaultViewMode) === 'card' ? (isDarkMode ? 'bg-slate-700' : 'bg-white shadow-sm') : ''}`}
                   aria-label="Card view"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${isDarkMode ? 'text-white' : 'text-gray-700'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -581,7 +627,7 @@ const ClientNameOrders = () => {
                 </button>
                 <button 
                   onClick={() => setViewMode('compact')} 
-                  className={`p-1.5 rounded-md ${viewMode === 'compact' ? (isDarkMode ? 'bg-slate-700' : 'bg-white shadow-sm') : ''}`}
+                  className={`p-1.5 rounded-md ${(viewMode || defaultViewMode) === 'compact' ? (isDarkMode ? 'bg-slate-700' : 'bg-white shadow-sm') : ''}`}
                   aria-label="Compact view"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${isDarkMode ? 'text-white' : 'text-gray-700'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -596,172 +642,225 @@ const ClientNameOrders = () => {
         
         {/* Search bar */}
         <div className="mb-6">
-          <div className={`flex flex-col sm:flex-row gap-3 ${isDarkMode ? 'bg-white/5' : 'bg-white'} p-4 rounded-xl border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} shadow-sm`}>
-            <div className="relative flex-grow">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${isDarkMode ? 'text-slate-400' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={handleSearchChange}
-                placeholder="Search orders..."
-                className={`block w-full pl-10 pr-3 py-2 rounded-lg ${
-                  isDarkMode 
-                    ? 'bg-white/10 border-white/10 text-white placeholder-slate-400 focus:border-emerald-500' 
-                    : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-emerald-500'
-                } border focus:ring-2 focus:ring-emerald-500/30 outline-none transition-colors`}
-              />
-            </div>
-            <div className="sm:w-48">
-              <div className="relative search-field-dropdown">
-                <button
-                  type="button"
-                  onClick={() => setSearchFieldDropdownOpen(prev => !prev)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Escape') {
-                      setSearchFieldDropdownOpen(false);
-                    } else if (e.key === 'ArrowDown' && !searchFieldDropdownOpen) {
-                      setSearchFieldDropdownOpen(true);
-                    }
-                  }}
-                  aria-haspopup="listbox"
-                  aria-expanded={searchFieldDropdownOpen}
-                  className={`flex items-center justify-between w-full px-3 py-2 rounded-lg ${
-                    isDarkMode 
-                      ? 'bg-white/10 border-white/10 text-white' 
-                      : 'bg-gray-50 border-gray-300 text-gray-900'
-                  } border focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition-colors`}
-                >
-                  <span className="flex items-center">
-                    {searchField === 'all' && (
-                      <>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                        </svg>
-                        All Fields
-                      </>
-                    )}
-                    {searchField === 'id' && (
-                      <>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
-                        </svg>
-                        Order ID
-                      </>
-                    )}
-                    {searchField === 'amount' && (
-                      <>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Amount
-                      </>
-                    )}
-                    {searchField === 'status' && (
-                      <>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Payment Status
-                      </>
-                    )}
-                    {searchField === 'orderType' && (
-                      <>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                        </svg>
-                        Order Type
-                      </>
-                    )}
-                    {searchField === 'date' && (
-                      <>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        Date
-                      </>
-                    )}
-                  </span>
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    className={`h-4 w-4 transition-transform duration-200 ${searchFieldDropdownOpen ? 'transform rotate-180' : ''}`} 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke="currentColor"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          <div className={`flex flex-col gap-3 ${isDarkMode ? 'bg-white/5' : 'bg-white'} p-4 rounded-xl border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} shadow-sm`}>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-grow">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${isDarkMode ? 'text-slate-400' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
-                </button>
-                
-                {searchFieldDropdownOpen && (
-                  <div 
-                    role="listbox"
-                    tabIndex={-1}
+                </div>
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  placeholder="Search orders..."
+                  className={`block w-full pl-10 pr-3 py-2 rounded-lg ${
+                    isDarkMode 
+                      ? 'bg-white/10 border-white/10 text-white placeholder-slate-400 focus:border-emerald-500' 
+                      : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-emerald-500'
+                  } border focus:ring-2 focus:ring-emerald-500/30 outline-none transition-colors`}
+                />
+              </div>
+              <div className="sm:w-48">
+                <div className="relative search-field-dropdown">
+                  <button
+                    type="button"
+                    onClick={() => setSearchFieldDropdownOpen(prev => !prev)}
                     onKeyDown={(e) => {
                       if (e.key === 'Escape') {
                         setSearchFieldDropdownOpen(false);
+                      } else if (e.key === 'ArrowDown' && !searchFieldDropdownOpen) {
+                        setSearchFieldDropdownOpen(true);
                       }
                     }}
-                    className={`absolute z-10 mt-1 w-full rounded-lg shadow-lg ${
+                    aria-haspopup="listbox"
+                    aria-expanded={searchFieldDropdownOpen}
+                    className={`flex items-center justify-between w-full px-3 py-2 rounded-lg ${
                       isDarkMode 
-                        ? 'bg-slate-800 border border-white/10' 
-                        : 'bg-white border border-gray-200'
-                    } py-1 overflow-hidden animate-fadeIn`}
-                    style={{
-                      animation: 'fadeIn 0.15s ease-out, slideDown 0.15s ease-out'
-                    }}
+                        ? 'bg-white/10 border-white/10 text-white' 
+                        : 'bg-gray-50 border-gray-300 text-gray-900'
+                    } border focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition-colors`}
                   >
-                    <div className="max-h-60 overflow-auto">
-                      {[
-                        { value: 'all', label: 'All Fields', icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg> },
-                        { value: 'id', label: 'Order ID', icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" /></svg> },
-                        { value: 'amount', label: 'Amount', icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
-                        { value: 'status', label: 'Payment Status', icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
-                        { value: 'orderType', label: 'Order Type', icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg> },
-                        { value: 'date', label: 'Date', icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> }
-                      ].map((option, index) => (
-                        <div
-                          key={option.value}
-                          role="option"
-                          aria-selected={searchField === option.value}
-                          tabIndex={0}
-                          onClick={() => {
-                            handleSearchFieldChange(option.value);
-                            setSearchFieldDropdownOpen(false);
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                              e.preventDefault();
+                    <span className="flex items-center">
+                      {searchField === 'all' && (
+                        <>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                          </svg>
+                          All Fields
+                        </>
+                      )}
+                      {searchField === 'id' && (
+                        <>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                          </svg>
+                          Order ID
+                        </>
+                      )}
+                      {searchField === 'amount' && (
+                        <>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Amount
+                        </>
+                      )}
+                      {searchField === 'status' && (
+                        <>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Payment Status
+                        </>
+                      )}
+                      {searchField === 'orderType' && (
+                        <>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                          </svg>
+                          Order Type
+                        </>
+                      )}
+                      {searchField === 'date' && (
+                        <>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          Date
+                        </>
+                      )}
+                    </span>
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      className={`h-4 w-4 transition-transform duration-200 ${searchFieldDropdownOpen ? 'transform rotate-180' : ''}`} 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  
+                  {searchFieldDropdownOpen && (
+                    <div 
+                      role="listbox"
+                      tabIndex={-1}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          setSearchFieldDropdownOpen(false);
+                        }
+                      }}
+                      className={`absolute z-10 mt-1 w-full rounded-lg shadow-lg ${
+                        isDarkMode 
+                          ? 'bg-slate-800 border border-white/10' 
+                          : 'bg-white border border-gray-200'
+                      } py-1 overflow-hidden animate-fadeIn`}
+                      style={{
+                        animation: 'fadeIn 0.15s ease-out, slideDown 0.15s ease-out'
+                      }}
+                    >
+                      <div className="max-h-60 overflow-auto">
+                        {[
+                          { value: 'all', label: 'All Fields', icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg> },
+                          { value: 'id', label: 'Order ID', icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" /></svg> },
+                          { value: 'amount', label: 'Amount', icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
+                          { value: 'status', label: 'Payment Status', icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
+                          { value: 'orderType', label: 'Order Type', icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg> },
+                          { value: 'date', label: 'Date', icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> }
+                        ].map((option, index) => (
+                          <div
+                            key={option.value}
+                            role="option"
+                            aria-selected={searchField === option.value}
+                            tabIndex={0}
+                            onClick={() => {
                               handleSearchFieldChange(option.value);
                               setSearchFieldDropdownOpen(false);
-                            } else if (e.key === 'ArrowDown') {
-                              e.preventDefault();
-                              const nextElement = e.currentTarget.nextElementSibling;
-                              if (nextElement) nextElement.focus();
-                            } else if (e.key === 'ArrowUp') {
-                              e.preventDefault();
-                              const prevElement = e.currentTarget.previousElementSibling;
-                              if (prevElement) prevElement.focus();
-                            }
-                          }}
-                          className={`px-4 py-2 cursor-pointer flex items-center ${
-                            searchField === option.value
-                              ? isDarkMode
-                                ? 'bg-emerald-500/20 text-emerald-300'
-                                : 'bg-emerald-50 text-emerald-700'
-                              : isDarkMode
-                                ? 'text-white hover:bg-white/5'
-                                : 'text-gray-900 hover:bg-gray-100'
-                          } transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-emerald-500/50`}
-                        >
-                          <span className="mr-2">{option.icon}</span>
-                          {option.label}
-                        </div>
-                      ))}
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                handleSearchFieldChange(option.value);
+                                setSearchFieldDropdownOpen(false);
+                              } else if (e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                const nextElement = e.currentTarget.nextElementSibling;
+                                if (nextElement) nextElement.focus();
+                              } else if (e.key === 'ArrowUp') {
+                                e.preventDefault();
+                                const prevElement = e.currentTarget.previousElementSibling;
+                                if (prevElement) prevElement.focus();
+                              }
+                            }}
+                            className={`px-4 py-2 cursor-pointer flex items-center ${
+                              searchField === option.value
+                                ? isDarkMode
+                                  ? 'bg-emerald-500/20 text-emerald-300'
+                                  : 'bg-emerald-50 text-emerald-700'
+                                : isDarkMode
+                                  ? 'text-white hover:bg-white/5'
+                                  : 'text-gray-900 hover:bg-gray-100'
+                            } transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-emerald-500/50`}
+                          >
+                            <span className="mr-2">{option.icon}</span>
+                            {option.label}
+                          </div>
+                        ))}
+                      </div>
                     </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            {/* Date filter section */}
+            <div className="flex flex-col sm:flex-row gap-3 pt-2 border-t border-gray-200 dark:border-white/10">
+              <div className="flex flex-1 flex-col sm:flex-row gap-3">
+                <div className="flex-1">
+                  <label htmlFor="fromDate" className={`block text-xs mb-1 ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>From Date</label>
+                  <input
+                    type="date"
+                    id="fromDate"
+                    value={fromDate}
+                    onChange={handleFromDateChange}
+                    className={`block w-full px-3 py-2 rounded-lg ${
+                      isDarkMode 
+                        ? 'bg-white/10 border-white/10 text-white focus:border-emerald-500' 
+                        : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-emerald-500'
+                    } border focus:ring-2 focus:ring-emerald-500/30 outline-none transition-colors`}
+                  />
+                </div>
+                <div className="flex-1">
+                  <label htmlFor="toDate" className={`block text-xs mb-1 ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>To Date</label>
+                  <input
+                    type="date"
+                    id="toDate"
+                    value={toDate}
+                    onChange={handleToDateChange}
+                    className={`block w-full px-3 py-2 rounded-lg ${
+                      isDarkMode 
+                        ? 'bg-white/10 border-white/10 text-white focus:border-emerald-500' 
+                        : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-emerald-500'
+                    } border focus:ring-2 focus:ring-emerald-500/30 outline-none transition-colors`}
+                  />
+                </div>
+                {isDateFilterActive && (
+                  <div className="flex items-end">
+                    <button
+                      onClick={clearDateFilter}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium ${
+                        isDarkMode 
+                          ? 'bg-red-500/20 text-red-300 hover:bg-red-500/30' 
+                          : 'bg-red-100 text-red-700 hover:bg-red-200'
+                      } transition-colors flex items-center`}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      Clear
+                    </button>
                   </div>
                 )}
               </div>
@@ -917,10 +1016,10 @@ const ClientNameOrders = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Orders in Card or Compact View */}
-            {viewMode === 'card' ? (
-              <div className="space-y-4">
-                {paginatedOrders.map((order) => {
+            {/* Orders in Card or Compact View with scrollable container */}
+            {(viewMode || defaultViewMode) === 'card' ? (
+              <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin' }}>
+                {sortedOrders.map((order) => {
                   const isSelected = selectedOrders.some(o => o.id === order.id);
                   return (
                   <div 
@@ -1023,11 +1122,11 @@ const ClientNameOrders = () => {
                 })}
               </div>
             ) : (
-              // Compact View
+              // Compact View with scrollable container
               <div className={`overflow-hidden rounded-xl border ${isDarkMode ? 'border-white/10 bg-white/5' : 'border-gray-200 bg-white'}`}>
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto max-h-[70vh] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
                   <table className="min-w-full divide-y divide-gray-700">
-                    <thead className={isDarkMode ? 'bg-slate-800/50' : 'bg-gray-50'}>
+                    <thead className={`sticky top-0 z-10 ${isDarkMode ? 'bg-slate-800/90' : 'bg-gray-50/90'} backdrop-blur-sm`}>
                       <tr>
                         {isSelectionMode && (
                           <th scope="col" className={`px-4 py-3 text-center ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
@@ -1045,7 +1144,7 @@ const ClientNameOrders = () => {
                       </tr>
                     </thead>
                     <tbody className={`divide-y ${isDarkMode ? 'divide-white/10' : 'divide-gray-200'}`}>
-                      {paginatedOrders.map((order, index) => {
+                      {sortedOrders.map((order, index) => {
                         const balanceDue = (parseFloat(order.grandTotal) || 0) - (parseFloat(order.amountPaid) || 0);
                         const isSelected = selectedOrders.some(o => o.id === order.id);
                         return (
@@ -1085,7 +1184,7 @@ const ClientNameOrders = () => {
                                 ? `${isDarkMode ? 'bg-sky-500/20 text-sky-300' : 'bg-sky-100 text-sky-700'}`
                                 : `${isDarkMode ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-100 text-amber-700'}`
                                 }`}>
-                                {order.paymentStatus === 'cleared' ? 'Paid' : 'Pending'}
+                                {order.paymentStatus === 'cleared' ? 'cleared' : 'Pending'}
                               </span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -1119,75 +1218,7 @@ const ClientNameOrders = () => {
               </div>
             )}
             
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <div className="mt-6 flex justify-between items-center">
-                <div className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
-                  Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, sortedOrders.length)} of {sortedOrders.length} orders
-                </div>
-                
-                <div className="flex space-x-1">
-                  <button
-                    onClick={handlePrevPage}
-                    disabled={currentPage === 1}
-                    className={`p-2 rounded-lg ${
-                      currentPage === 1 
-                        ? (isDarkMode ? 'bg-white/5 text-slate-600' : 'bg-gray-100 text-gray-400') 
-                        : (isDarkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
-                    } transition-colors`}
-                    aria-label="Previous page"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-                  
-                  {/* Page number buttons */}
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    // Logic to show pages around current page
-                    let pageNum;
-                    if (totalPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (currentPage <= 3) {
-                      pageNum = i + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i;
-                    } else {
-                      pageNum = currentPage - 2 + i;
-                    }
-                    
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => handlePageChange(pageNum)}
-                        className={`w-10 h-10 rounded-lg ${
-                          currentPage === pageNum
-                            ? (isDarkMode ? 'bg-emerald-500 text-white' : 'bg-emerald-500 text-white')
-                            : (isDarkMode ? 'bg-white/5 text-white hover:bg-white/10' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
-                        } transition-colors`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-                  
-                  <button
-                    onClick={handleNextPage}
-                    disabled={currentPage === totalPages}
-                    className={`p-2 rounded-lg ${
-                      currentPage === totalPages 
-                        ? (isDarkMode ? 'bg-white/5 text-slate-600' : 'bg-gray-100 text-gray-400') 
-                        : (isDarkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
-                    } transition-colors`}
-                    aria-label="Next page"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            )}
+            {/* Remove Pagination Controls */}
           </div>
         )}
         

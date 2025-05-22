@@ -9,6 +9,7 @@ import ClientOrders from './ClientOrders';
 import ClientNameOrders from './ClientNameOrders';
 import ClientNames from './ClientNames';
 import Dashboard from './Dashboard';
+import ExpenseTracker from './ExpenseTracker';
 //   import React, { useState, useEffect } from 'react';
 
 // // Simple error boundary component
@@ -100,6 +101,7 @@ function App() {
               <Route path="/clientorders" element={<ClientOrders />} />
               <Route path="/client-name/:clientName" element={<ClientNameOrders />} />
               <Route path="/client-names" element={<ClientNames />} />
+              <Route path="/expenses" element={<ExpenseTracker />} />
             </Route>
             
             {/* Redirect any unknown routes to login */}

@@ -612,8 +612,8 @@ const QuickActions = ({ isDarkMode }) => (
       </div>
     </div>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <ActionButton to="/clients/new" icon={FiUsers} color="blue" text="Add Client" isDarkMode={isDarkMode} />
-      <ActionButton to="/products/new" icon={FiDollarSign} color="green" text="Add Product" isDarkMode={isDarkMode} />
+      <ActionButton to="/" icon={FiUsers} color="blue" text="Add Client" isDarkMode={isDarkMode} />
+      <ActionButton to="/" icon={FiDollarSign} color="green" text="Add Product" isDarkMode={isDarkMode} />
       <ActionButton to="/reports" icon={FiTrendingUp} color="purple" text="View Reports" isDarkMode={isDarkMode} />
       <ActionButton to="/settings" icon={FiCheckSquare} color="yellow" text="Settings" isDarkMode={isDarkMode} />
     </div>
@@ -1313,7 +1313,7 @@ const Dashboard = () => {
 
                 <h1 className={`text-lg sm:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} flex items-center`}>
                   <span className="bg-gradient-to-r from-emerald-500 to-teal-400 inline-block text-transparent bg-clip-text text-xl sm:text-2xl font-bold">
-                    <a href="/clients" className="bg-gradient-to-r from-emerald-500 ml-2 to-teal-400 inline-block text-transparent bg-clip-text text-xl font-bold">
+                    <a href="/dashboard" className="bg-gradient-to-r from-emerald-500 ml-2 to-teal-400 inline-block text-transparent bg-clip-text text-xl font-bold">
                     Dashboard
                     </a>
                     <span className={`ml-2 md:ml-1 px-2 py-1 text-xs font-medium rounded-md ${isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'}`}>
@@ -1474,7 +1474,7 @@ const Dashboard = () => {
 
         {/* Quick Actions and Top Products */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
-          <QuickActions isDarkMode={isDarkMode} />
+          {/* <QuickActions isDarkMode={isDarkMode} /> */}
           <TopProducts products={stats.topProducts} isDarkMode={isDarkMode} />
         </div>
 

@@ -605,45 +605,6 @@ const OrderDetail = () => {
                           WhatsApp
                         </button>
                         
-                        {/* Common WhatsApp Contacts for Quick Selection */}
-                        <div className="pl-7 pt-1 pb-2">
-                          <p className="text-xs text-gray-500 mb-2">Common contacts:</p>
-                          <div className="grid grid-cols-1 gap-1">
-                            <button 
-                              onClick={() => {
-                                // Share with specific client if available
-                                const clientPhone = orderData?.clientPhone;
-                                if (clientPhone) {
-                                  const formattedPhone = clientPhone.replace(/[\s()+\-]/g, "");
-                                  shareViaWhatsApp(formattedPhone);
-                                } else {
-                                  shareViaWhatsApp();
-                                }
-                              }}
-                              className="text-xs text-left py-1.5 px-2 bg-green-50 hover:bg-green-100 rounded text-green-700 flex items-center"
-                            >
-                              <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span>
-                              {orderData?.clientName || 'Client'} 
-                              {orderData?.clientPhone && 
-                                <span className="ml-1 text-gray-500">({orderData.clientPhone.substring(orderData.clientPhone.length - 4)})</span>
-                              }
-                            </button>
-                            
-                            <button 
-                              onClick={() => {
-                                // Owner/accounting contact
-                                const phone = "+919879443940"; // Example fixed number
-                                shareViaWhatsApp(phone);
-                              }}
-                              className="text-xs text-left py-1.5 px-2 bg-green-50 hover:bg-green-100 rounded text-green-700 flex items-center"
-                            >
-                              <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span>
-                              Accounting
-                              <span className="ml-1 text-gray-500">(3940)</span>
-                            </button>
-                          </div>
-                        </div>
-                        
                         <button
                           onClick={shareViaTelegram}
                           className="flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 rounded-md transition-colors"

@@ -57,6 +57,7 @@ const ClientList = () => {
   const [isDateFilterActive, setIsDateFilterActive] = useState(false);
   const [viewMode, setViewMode] = useState('card'); // Add this new state for view mode
   const [showMergedOnly, setShowMergedOnly] = useState(false); // Add state for merged cards filter
+  const [copiedField, setCopiedField] = useState(null); // Add state for copied field
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -1001,6 +1002,18 @@ const ClientList = () => {
       return savedClients.filter(client => !client.merged && client.orderStatus === 'purchased').length;
     }
     return 0;
+  };
+
+  // Add copy to clipboard function
+  const copyToClipboard = (text, fieldName) => {
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        setCopiedField(fieldName);
+        setTimeout(() => setCopiedField(null), 2000);
+      })
+      .catch(err => {
+        console.error('Failed to copy: ', err);
+      });
   };
 
   return (
@@ -2497,7 +2510,22 @@ const ClientList = () => {
                       )}
                       <div>
                         <h3 className={`font-semibold text-left text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'} flex items-center`}>
-                          {client.clientName || 'Unnamed Client'}
+                          <span className="mr-1">{client.clientName || 'Unnamed Client'}</span>
+                          <button
+                            onClick={() => copyToClipboard(client.clientName, `name-${client.id}`)}
+                            className="ml-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                            title="Copy Client Name"
+                          >
+                            {copiedField === `name-${client.id}` ? (
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-emerald-500" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                            ) : (
+                              <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${isDarkMode ? 'text-slate-300' : 'text-gray-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                            )}
+                          </button>
                           {client.merged && (
                             <span className="ml-2 text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full flex items-center group relative">
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -2519,13 +2547,45 @@ const ClientList = () => {
                             </span>
                           )}
                         </h3>
-                        <p className={`text-xs text-left ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mt-1`}>Order ID: {client.id}</p>
+                        <p className={`text-xs text-left ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mt-1 flex items-center`}>
+                          <span>Order ID: {client.id}</span>
+                          <button
+                            onClick={() => copyToClipboard(client.id, `id-${client.id}`)}
+                            className="ml-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                            title="Copy Order ID"
+                          >
+                            {copiedField === `id-${client.id}` ? (
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-emerald-500" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            ) : (
+                              <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${isDarkMode ? 'text-slate-300' : 'text-gray-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                              </svg>
+                            )}
+                          </button>
+                        </p>
                         {client.clientGst && (
                           <p className={`text-xs text-left ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'} mt-1 flex items-center`}>
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
-                            GST: {client.clientGst}
+                            <span>GST: {client.clientGst}</span>
+                            <button
+                              onClick={() => copyToClipboard(client.clientGst, `gst-${client.id}`)}
+                              className="ml-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                              title="Copy GST Number"
+                            >
+                              {copiedField === `gst-${client.id}` ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-emerald-500" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${isDarkMode ? 'text-slate-300' : 'text-gray-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                              )}
+                            </button>
                           </p>
                         )}
                       </div>

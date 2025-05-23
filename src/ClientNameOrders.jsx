@@ -805,7 +805,7 @@ const ClientNameOrders = () => {
                           setSearchFieldDropdownOpen(false);
                         }
                       }}
-                      className={`absolute z-10 mt-1 w-full rounded-lg shadow-lg ${
+                      className={`absolute z-50 mt-1 w-full rounded-lg shadow-lg ${
                         isDarkMode 
                           ? 'bg-slate-800 border border-white/10' 
                           : 'bg-white border border-gray-200'
@@ -814,7 +814,7 @@ const ClientNameOrders = () => {
                         animation: 'fadeIn 0.15s ease-out, slideDown 0.15s ease-out'
                       }}
                     >
-                      <div className="max-h-60 overflow-auto">
+                      <div className="max-h-80 overflow-auto">
                         {[
                           { value: 'all', label: 'All Fields', icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg> },
                           { value: 'id', label: 'Order ID', icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" /></svg> },

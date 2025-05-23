@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiPlus, FiDollarSign, FiTrash2 } from 'react-icons/fi';
+import { FiPlus, FiDollarSign, FiTrash2, FiEdit, FiChevronLeft, FiPieChart, FiCalendar } from 'react-icons/fi';
 import ThemeToggle from './components/ThemeToggle';
 import { useTheme } from './context/ThemeContext';
 import { database } from './firebase/config';
@@ -17,6 +17,9 @@ const ExpenseTracker = () => {
   const [toDate, setToDate] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [editMode, setEditMode] = useState(false);
+  const [currentExpenseId, setCurrentExpenseId] = useState(null);
+  const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     // Fetch expenses when component mounts
@@ -80,10 +83,18 @@ const ExpenseTracker = () => {
         date: new Date().toISOString()
       };
 
-      // Add to Firebase
-      const expensesRef = ref(database, 'expenses');
-      const newExpenseRef = push(expensesRef);
-      await set(newExpenseRef, newExpense);
+      if (editMode && currentExpenseId) {
+        // Update existing expense
+        const expenseRef = ref(database, `expenses/${currentExpenseId}`);
+        await set(expenseRef, newExpense);
+        setEditMode(false);
+        setCurrentExpenseId(null);
+      } else {
+        // Add new expense
+        const expensesRef = ref(database, 'expenses');
+        const newExpenseRef = push(expensesRef);
+        await set(newExpenseRef, newExpense);
+      }
 
       // Clear form
       setReason('');
@@ -91,10 +102,40 @@ const ExpenseTracker = () => {
       setFromDate('');
       setToDate('');
       setError('');
+      
+      // Hide form after successful submission
+      setShowForm(false);
     } catch (err) {
-      console.error("Error adding expense:", err);
-      setError(`Failed to add expense: ${err.message}`);
+      console.error("Error adding/updating expense:", err);
+      setError(`Failed to ${editMode ? 'update' : 'add'} expense: ${err.message}`);
     }
+  };
+
+  const handleEditExpense = (expense) => {
+    setReason(expense.reason);
+    setPrice(expense.price.toString());
+    setFromDate(expense.fromDate);
+    setToDate(expense.toDate || '');
+    setEditMode(true);
+    setCurrentExpenseId(expense.id);
+    setShowForm(true);
+    
+    // Scroll to form
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setReason('');
+    setPrice('');
+    setFromDate('');
+    setToDate('');
+    setEditMode(false);
+    setCurrentExpenseId(null);
+    setError('');
+    setShowForm(false);
   };
 
   const handleRemoveExpense = async (id) => {
@@ -139,203 +180,283 @@ const ExpenseTracker = () => {
   const getTotalExpenses = () => {
     return expenses.reduce((total, expense) => total + expense.price, 0);
   };
+  
   const handleBackClick = () => {
     navigate('/');
   };
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
+    <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
       {/* Header */}
-      <header className={`py-4 px-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-md`}>
+      <header className={`py-4 px-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-md sticky top-0 z-10`}>
         <div className="container mx-auto flex justify-between items-center">
-          {/* <h1 className="text-2xl font-bold">Expense Tracker</h1> */}
-          <div className="flex items-center space-x-1">
+          <div className="flex items-center space-x-3">
             <button
               onClick={handleBackClick}
-              className={`p-2 rounded-lg ${isDarkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'} transition-colors`}
+              className={`p-2 rounded-full ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'} transition-colors flex items-center justify-center`}
               aria-label="Back to clients"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${isDarkMode ? 'text-white' : 'text-gray-700'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
+              <FiChevronLeft className={`h-5 w-5 ${isDarkMode ? 'text-white' : 'text-gray-700'}`} />
             </button>
 
-            <h1 className={`text-lg sm:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} flex items-center`}>
+            <h1 className="font-bold flex items-center">
               <span className="bg-gradient-to-r from-emerald-500 to-teal-400 inline-block text-transparent bg-clip-text text-xl sm:text-2xl font-bold">
-                <a href="/dashboard" className="bg-gradient-to-r from-emerald-500 to-teal-400 inline-block text-transparent bg-clip-text text-xl font-bold">
-                  Expensess
-                </a>
+                Expense Tracker
               </span>
             </h1>
           </div>
-          <div className="flex items-center space-x-4">
+          
+          <div className="flex items-center space-x-3">
+            <div className={`px-4 py-2 rounded-lg ${isDarkMode ? 'bg-indigo-900/50 text-indigo-200' : 'bg-indigo-100 text-indigo-800'} flex items-center`}>
+              <BiRupee className="mr-1" />
+              <span className="font-semibold">{formatCurrency(getTotalExpenses())}</span>
+            </div>
             <ThemeToggle />
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto py-8 px-4">
-        {/* Add Expense Form */}
-        <div className={`rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} p-6 mb-8`}>
-          <h2 className="text-xl font-semibold mb-4">Add New Expense</h2>
+      <main className="container mx-auto py-6 px-4 space-y-6">
+        {/* Action Button */}
+        {!showForm && (
+          <div className="flex justify-center">
+            <button
+              onClick={() => setShowForm(true)}
+              className={`px-5 py-3 rounded-full shadow-lg ${isDarkMode ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-500 hover:bg-emerald-600'} text-white font-medium flex items-center transition-all duration-300 transform hover:scale-105`}
+            >
+              <FiPlus className="mr-2" />
+              {editMode ? 'Edit Expense' : 'Add New Expense'}
+            </button>
+          </div>
+        )}
 
-          {error && (
-            <div className={`p-3 mb-4 rounded-lg ${isDarkMode ? 'bg-red-900 text-red-200' : 'bg-red-100 text-red-800'}`}>
-              {error}
-            </div>
-          )}
+        {/* Add/Edit Expense Form */}
+        {showForm && (
+          <div className={`rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} p-6 mb-8 transition-all duration-300 transform`}>
+            <h2 className="text-xl font-semibold mb-6 flex items-center">
+              {editMode ? (
+                <>
+                  <FiEdit className="mr-2 text-blue-500" />
+                  Edit Expense
+                </>
+              ) : (
+                <>
+                  <FiPlus className="mr-2 text-emerald-500" />
+                  Add New Expense
+                </>
+              )}
+            </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                Expense Reason
-              </label>
-              <input
-                type="text"
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                placeholder="Enter reason for expense"
-                className={`w-full px-4 py-2 rounded-lg border ${isDarkMode
+            {error && (
+              <div className={`p-3 mb-5 rounded-lg ${isDarkMode ? 'bg-red-900/50 text-red-200' : 'bg-red-100 text-red-800'} flex items-center`}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                {error}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Expense Reason
+                </label>
+                <input
+                  type="text"
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="Enter reason for expense"
+                  className={`w-full px-4 py-3 rounded-lg border ${isDarkMode
                     ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
                     : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                  } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-              />
-            </div>
+                  } focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors`}
+                />
+              </div>
 
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                Price
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <BiRupee className={isDarkMode ? 'text-gray-400' : 'text-gray-500'} />                </div>
-                <input
-                  type="number"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  placeholder="Enter price"
-                  min="0"
-                  step="0.01"
-                  className={`w-full pl-10 pr-4 py-2 rounded-lg border ${isDarkMode
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Price
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <BiRupee className={isDarkMode ? 'text-gray-400' : 'text-gray-500'} />
+                  </div>
+                  <input
+                    type="number"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    placeholder="Enter price"
+                    min="0"
+                    step="0.01"
+                    className={`w-full pl-10 pr-4 py-3 rounded-lg border ${isDarkMode
                       ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
                       : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                    } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                />
+                    } focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors`}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  From Date
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FiCalendar className={isDarkMode ? 'text-gray-400' : 'text-gray-500'} />
+                  </div>
+                  <input
+                    type="date"
+                    value={fromDate}
+                    onChange={(e) => setFromDate(e.target.value)}
+                    className={`w-full pl-10 pr-4 py-3 rounded-lg border ${isDarkMode
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                    } focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors`}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  To Date (Optional)
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FiCalendar className={isDarkMode ? 'text-gray-400' : 'text-gray-500'} />
+                  </div>
+                  <input
+                    type="date"
+                    value={toDate}
+                    onChange={(e) => setToDate(e.target.value)}
+                    min={fromDate}
+                    className={`w-full pl-10 pr-4 py-3 rounded-lg border ${isDarkMode
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                    } focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors`}
+                  />
+                </div>
               </div>
             </div>
 
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                From Date
-              </label>
-              <input
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className={`w-full px-4 py-2 rounded-lg border ${isDarkMode
-                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                  } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-              />
-            </div>
-
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                To Date
-              </label>
-              <input
-                type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                min={fromDate}
-                className={`w-full px-4 py-2 rounded-lg border ${isDarkMode
-                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                  } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-              />
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                onClick={handleCancelEdit}
+                className={`px-6 py-3 rounded-lg border ${isDarkMode
+                  ? 'border-gray-600 hover:bg-gray-700'
+                  : 'border-gray-300 hover:bg-gray-100'
+                } font-medium transition duration-200`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddExpense}
+                className={`px-6 py-3 rounded-lg ${editMode
+                  ? isDarkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-600 hover:bg-blue-700'
+                  : isDarkMode ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-500 hover:bg-emerald-600'
+                } text-white font-medium transition duration-200`}
+              >
+                {editMode ? 'Update Expense' : 'Add Expense'}
+              </button>
             </div>
           </div>
+        )}
 
-          <div className="mt-6 flex justify-end">
-            <button
-              onClick={handleAddExpense}
-              className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200"
-            >
-              <FiPlus className="mr-2" />
-              Add Expense
-            </button>
+        {/* Expense Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className={`rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} p-4`}>
+            <h3 className={`text-sm uppercase font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} mb-2`}>Total Expenses</h3>
+            <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{formatCurrency(getTotalExpenses())}</p>
+          </div>
+          
+          <div className={`rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} p-4`}>
+            <h3 className={`text-sm uppercase font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} mb-2`}>Total Records</h3>
+            <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{expenses.length}</p>
+          </div>
+          
+          <div className={`rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} p-4`}>
+            <h3 className={`text-sm uppercase font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} mb-2`}>Avg. Expense</h3>
+            <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+              {expenses.length > 0 ? formatCurrency(getTotalExpenses() / expenses.length) : formatCurrency(0)}
+            </p>
           </div>
         </div>
 
         {/* Expense List */}
         <div className={`rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} p-6`}>
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Expense List</h2>
-            <div className={`px-4 py-2 rounded-lg ${isDarkMode ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800'
-              }`}>
-              Total: {formatCurrency(getTotalExpenses())}
-            </div>
-          </div>
+          <h2 className="text-xl font-semibold mb-6 flex items-center">
+            <FiPieChart className="mr-2 text-indigo-500" />
+            Expense History
+          </h2>
 
           {loading ? (
-            <div className={`flex justify-center items-center py-12 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mr-3"></div>
-              <span>Loading expenses...</span>
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-emerald-500"></div>
+              <span className="ml-3 text-lg">Loading expenses...</span>
             </div>
           ) : expenses.length === 0 ? (
-            <div className={`text-center py-8 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              No expenses added yet. Add your first expense above.
+            <div className={`text-center py-12 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+              </svg>
+              <p className="text-lg mb-2">No expenses recorded yet</p>
+              <p className="mb-6">Add your first expense to start tracking</p>
+              <button
+                onClick={() => setShowForm(true)}
+                className={`inline-flex items-center px-5 py-2 rounded-lg ${isDarkMode ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-500 hover:bg-emerald-600'} text-white font-medium transition duration-200`}
+              >
+                <FiPlus className="mr-2" />
+                Add Your First Expense
+              </button>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead>
-                  <tr>
-                    <th className={`px-6 py-3 text-left text-xs font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                      } uppercase tracking-wider`}>
-                      Date Range
-                    </th>
-                    <th className={`px-6 py-3 text-left text-xs font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                      } uppercase tracking-wider`}>
-                      Reason
-                    </th>
-                    <th className={`px-6 py-3 text-right text-xs font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                      } uppercase tracking-wider`}>
-                      Amount
-                    </th>
-                    <th className={`px-6 py-3 text-right text-xs font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                      } uppercase tracking-wider`}>
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className={`divide-y ${isDarkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
-                  {expenses.map(expense => (
-                    <tr key={expense.id} className={`hover:${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-left">
+              <div className="grid grid-cols-1 gap-4">
+                {expenses.map(expense => (
+                  <div
+                    key={expense.id}
+                    className={`p-4 rounded-lg border flex flex-col md:flex-row md:items-center justify-between ${
+                      isDarkMode ? 'bg-gray-750 border-gray-700 hover:bg-gray-700' : 'bg-white border-gray-200 hover:bg-gray-50'
+                    } transition-colors`}
+                  >
+                    <div className="flex-1 mb-3 md:mb-0">
+                      <h3 className="font-medium">{expense.reason}</h3>
+                      <div className={`text-sm flex items-center ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        <FiCalendar className="mr-1" size={14} />
                         {formatDateRange(expense)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-left">
-                        {expense.reason}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium">
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between md:justify-end w-full md:w-auto">
+                      <span className={`text-lg font-semibold ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
                         {formatCurrency(expense.price)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                      </span>
+                      
+                      <div className="flex ml-4">
+                        <button
+                          onClick={() => handleEditExpense(expense)}
+                          className={`p-2 rounded-full ${isDarkMode
+                            ? 'hover:bg-gray-600 text-blue-400 hover:text-blue-300'
+                            : 'hover:bg-blue-100 text-blue-600'
+                          }`}
+                          aria-label="Edit expense"
+                        >
+                          <FiEdit size={18} />
+                        </button>
                         <button
                           onClick={() => handleRemoveExpense(expense.id)}
                           className={`p-2 rounded-full ${isDarkMode
-                              ? 'hover:bg-gray-600 text-red-400 hover:text-red-300'
-                              : 'hover:bg-red-100 text-red-600'
-                            }`}
+                            ? 'hover:bg-gray-600 text-red-400 hover:text-red-300'
+                            : 'hover:bg-red-100 text-red-600'
+                          }`}
+                          aria-label="Delete expense"
                         >
-                          <FiTrash2 />
+                          <FiTrash2 size={18} />
                         </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

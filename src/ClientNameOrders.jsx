@@ -25,7 +25,7 @@ const ClientNameOrders = () => {
   const navigate = useNavigate();
   
     // Default view mode
-  const defaultViewMode = 'list';
+  const defaultViewMode = 'compact';
   
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);

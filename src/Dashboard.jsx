@@ -46,16 +46,16 @@ const StatCard = ({ icon: Icon, title, value, color }) => {
     } flex items-center shadow-sm hover:shadow-md transition-all duration-300 border ${
       isDarkMode ? 'border-gray-700' : `border-${color}-100`
     }`}>
-      <div className={`p-2 sm:p-3 rounded-full ${
+      <div className={`p-2 sm:p-2.5 rounded-full ${
         isDarkMode 
           ? `bg-${color}-900 bg-opacity-50` 
           : `bg-${color}-100`
       } mr-3 flex items-center justify-center`}>
-        <Icon className={`h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7 ${isDarkMode ? `text-${color}-400` : `text-${color}-600`}`} />
+        <Icon className={`h-5 w-5 sm:h-5 sm:w-5 md:h-6 md:w-6 ${isDarkMode ? `text-${color}-400` : `text-${color}-600`}`} />
       </div>
-      <div>
-        <p className={`text-xs sm:text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{title}</p>
-        <p className="text-base sm:text-lg md:text-xl font-bold mt-0.5 sm:mt-1 truncate">{value}</p>
+      <div className="min-w-0">
+        <p className={`text-xs sm:text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} truncate`}>{title}</p>
+        <p className="text-sm sm:text-base md:text-lg font-bold mt-0.5 truncate">{value}</p>
       </div>
     </div>
   );
@@ -63,105 +63,228 @@ const StatCard = ({ icon: Icon, title, value, color }) => {
 
 // Component for revenue chart
 const RevenueChart = ({ data, isDarkMode }) => (
-  <div className={`p-6 rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border ${isDarkMode ? 'border-gray-700' : 'border-gray-100'} transition-all duration-300 hover:shadow-xl`}>
-    <div className="flex justify-between items-center mb-6">
-      <h2 className="text-xl font-semibold">Monthly Revenue</h2>
+  <div className={`p-4 sm:p-6 rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border ${isDarkMode ? 'border-gray-700' : 'border-gray-100'} transition-all duration-300 hover:shadow-xl`}>
+    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6">
+      <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-0">Monthly Revenue</h2>
       <div className={`px-3 py-1 rounded-full text-xs font-medium ${isDarkMode ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800'}`}>
         Last 6 months
       </div>
     </div>
-    <ResponsiveContainer width="100%" height={300}>
-      <AreaChart
-        data={data}
-        margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-      >
-        <defs>
-          <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor={isDarkMode ? "#4f46e5" : "#4338ca"} stopOpacity={0.8}/>
-            <stop offset="95%" stopColor={isDarkMode ? "#4f46e5" : "#4338ca"} stopOpacity={0}/>
-          </linearGradient>
-        </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#374151' : '#e5e7eb'} />
-        <XAxis 
-          dataKey="name" 
-          stroke={isDarkMode ? '#d1d5db' : '#6b7280'} 
-          tick={{ fontSize: 12 }}
-          axisLine={{ stroke: isDarkMode ? '#4b5563' : '#d1d5db' }}
-        />
-        <YAxis 
-          stroke={isDarkMode ? '#d1d5db' : '#6b7280'} 
-          tickFormatter={(value) => formatCurrency(value).replace('₹', '')}
-          tick={{ fontSize: 12 }}
-          axisLine={{ stroke: isDarkMode ? '#4b5563' : '#d1d5db' }}
-        />
-        <Tooltip 
-          formatter={(value) => [formatCurrency(value), 'Amount']}
-          contentStyle={{ 
-            backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
-            color: isDarkMode ? '#ffffff' : '#000000',
-            border: `1px solid ${isDarkMode ? '#374151' : '#e5e7eb'}`,
-            borderRadius: '0.5rem',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-          }}
-          cursor={{ stroke: isDarkMode ? '#6b7280' : '#9ca3af', strokeWidth: 1 }}
-        />
-        <Area 
-          type="monotone" 
-          dataKey="value" 
-          stroke={isDarkMode ? "#6366f1" : "#4f46e5"} 
-          fillOpacity={1} 
-          fill="url(#colorRevenue)"
-          strokeWidth={2}
-          activeDot={{ 
-            r: 6, 
-            stroke: isDarkMode ? '#818cf8' : '#4f46e5',
-            strokeWidth: 2,
-            fill: isDarkMode ? '#1f2937' : '#ffffff'
-          }}
-          animationDuration={1500}
-          animationEasing="ease-out"
-        />
-      </AreaChart>
-    </ResponsiveContainer>
+    <div className="h-60 sm:h-72 md:h-80 lg:h-[300px]">
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart
+          data={data.total}
+          margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+        >
+          <defs>
+            <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={isDarkMode ? "#4f46e5" : "#4338ca"} stopOpacity={0.8}/>
+              <stop offset="95%" stopColor={isDarkMode ? "#4f46e5" : "#4338ca"} stopOpacity={0}/>
+            </linearGradient>
+            <linearGradient id="colorSellRevenue" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={isDarkMode ? "#3b82f6" : "#2563eb"} stopOpacity={0.8}/>
+              <stop offset="95%" stopColor={isDarkMode ? "#3b82f6" : "#2563eb"} stopOpacity={0}/>
+            </linearGradient>
+            <linearGradient id="colorPurchaseRevenue" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={isDarkMode ? "#8b5cf6" : "#7c3aed"} stopOpacity={0.8}/>
+              <stop offset="95%" stopColor={isDarkMode ? "#8b5cf6" : "#7c3aed"} stopOpacity={0}/>
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#374151' : '#e5e7eb'} />
+          <XAxis 
+            dataKey="name" 
+            stroke={isDarkMode ? '#d1d5db' : '#6b7280'} 
+            tick={{ fontSize: 10 }}
+            axisLine={{ stroke: isDarkMode ? '#4b5563' : '#d1d5db' }}
+            height={50}
+            tickMargin={8}
+            angle={-15}
+            textAnchor="end"
+            minTickGap={0}
+          />
+          <YAxis 
+            stroke={isDarkMode ? '#d1d5db' : '#6b7280'} 
+            tickFormatter={(value) => formatCurrency(value).replace('₹', '')}
+            tick={{ fontSize: 10 }}
+            axisLine={{ stroke: isDarkMode ? '#4b5563' : '#d1d5db' }}
+            width={50}
+          />
+          <Tooltip 
+            formatter={(value) => [formatCurrency(value), 'Amount']}
+            contentStyle={{ 
+              backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+              color: isDarkMode ? '#ffffff' : '#000000',
+              border: `1px solid ${isDarkMode ? '#374151' : '#e5e7eb'}`,
+              borderRadius: '0.5rem',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+            }}
+            cursor={{ stroke: isDarkMode ? '#6b7280' : '#9ca3af', strokeWidth: 1 }}
+            wrapperStyle={{ zIndex: 10 }}
+          />
+          <Legend 
+            wrapperStyle={{ paddingTop: 10, fontSize: 12 }}
+            iconSize={8}
+            verticalAlign="bottom"
+            height={36}
+          />
+          <Area 
+            type="monotone" 
+            dataKey="value" 
+            name="Total Revenue"
+            stroke={isDarkMode ? "#6366f1" : "#4f46e5"} 
+            fillOpacity={0.3}
+            fill="url(#colorRevenue)"
+            strokeWidth={2}
+            activeDot={{ 
+              r: 6, 
+              stroke: isDarkMode ? '#818cf8' : '#4f46e5',
+              strokeWidth: 2,
+              fill: isDarkMode ? '#1f2937' : '#ffffff'
+            }}
+            animationDuration={1500}
+            animationEasing="ease-out"
+          />
+          <Area 
+            type="monotone" 
+            dataKey="value" 
+            data={data.sell}
+            name="Sell Revenue"
+            stroke={isDarkMode ? "#3b82f6" : "#2563eb"} 
+            fillOpacity={0.3}
+            fill="url(#colorSellRevenue)"
+            strokeWidth={2}
+            activeDot={{ 
+              r: 6, 
+              stroke: isDarkMode ? '#60a5fa' : '#3b82f6',
+              strokeWidth: 2,
+              fill: isDarkMode ? '#1f2937' : '#ffffff'
+            }}
+            animationDuration={1500}
+            animationEasing="ease-out"
+          />
+          <Area 
+            type="monotone" 
+            dataKey="value" 
+            data={data.purchase}
+            name="Purchase Revenue"
+            stroke={isDarkMode ? "#8b5cf6" : "#7c3aed"} 
+            fillOpacity={0.3}
+            fill="url(#colorPurchaseRevenue)"
+            strokeWidth={2}
+            activeDot={{ 
+              r: 6, 
+              stroke: isDarkMode ? '#a78bfa' : '#8b5cf6',
+              strokeWidth: 2,
+              fill: isDarkMode ? '#1f2937' : '#ffffff'
+            }}
+            animationDuration={1500}
+            animationEasing="ease-out"
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
   </div>
 );
 
 // Component for payment status chart
-const PaymentStatusChart = ({ clearedPayments, pendingPayments, isDarkMode }) => {
-  const total = clearedPayments + pendingPayments;
-  const clearedPercentage = total > 0 ? Math.round((clearedPayments / total) * 100) : 0;
-  const pendingPercentage = total > 0 ? Math.round((pendingPayments / total) * 100) : 0;
+const PaymentStatusChart = ({ clearedPayments, pendingPayments, sellPayments, purchasePayments, isDarkMode }) => {
+  // State to track which tab is active
+  const [activeTab, setActiveTab] = useState('total'); // 'total', 'sell', or 'purchase'
+  
+  // Calculate values based on active tab
+  let cleared, pending, total;
+  
+  if (activeTab === 'sell') {
+    cleared = sellPayments?.cleared || 0;
+    pending = sellPayments?.pending || 0;
+  } else if (activeTab === 'purchase') {
+    cleared = purchasePayments?.cleared || 0;
+    pending = purchasePayments?.pending || 0;
+  } else {
+    cleared = clearedPayments || 0;
+    pending = pendingPayments || 0;
+  }
+  
+  total = cleared + pending;
+  const clearedPercentage = total > 0 ? Math.round((cleared / total) * 100) : 0;
+  const pendingPercentage = total > 0 ? Math.round((pending / total) * 100) : 0;
   
   return (
-    <div className={`p-6 rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border ${isDarkMode ? 'border-gray-700' : 'border-gray-100'} transition-all duration-300 hover:shadow-xl`}>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">Payment Status</h2>
+    <div className={`p-4 sm:p-6 rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border ${isDarkMode ? 'border-gray-700' : 'border-gray-100'} transition-all duration-300 hover:shadow-xl`}>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4">
+        <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-0">Payment Status</h2>
         <div className={`px-3 py-1 rounded-full text-xs font-medium ${isDarkMode ? 'bg-purple-900 text-purple-200' : 'bg-purple-100 text-purple-800'}`}>
           {total} clients
         </div>
       </div>
       
+      {/* Tabs for switching between total, sell, and purchase */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        <button
+          onClick={() => setActiveTab('total')}
+          className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+            activeTab === 'total' 
+              ? isDarkMode 
+                ? 'bg-gray-700 text-white' 
+                : 'bg-purple-100 text-purple-800'
+              : isDarkMode 
+                ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
+                : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100'
+          }`}
+        >
+          All
+        </button>
+        <button
+          onClick={() => setActiveTab('sell')}
+          className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+            activeTab === 'sell' 
+              ? isDarkMode 
+                ? 'bg-blue-900/50 text-blue-200' 
+                : 'bg-blue-100 text-blue-800'
+              : isDarkMode 
+                ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
+                : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100'
+          }`}
+        >
+          Sell
+        </button>
+        <button
+          onClick={() => setActiveTab('purchase')}
+          className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+            activeTab === 'purchase' 
+              ? isDarkMode 
+                ? 'bg-purple-900/50 text-purple-200' 
+                : 'bg-purple-100 text-purple-800'
+              : isDarkMode 
+                ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
+                : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100'
+          }`}
+        >
+          Purchase
+        </button>
+      </div>
+      
       <div className="flex flex-col md:flex-row items-center">
-        <div className="w-full md:w-3/5">
-          <ResponsiveContainer width="100%" height={220}>
+        <div className="w-full md:w-3/5 h-48 sm:h-56 md:h-60">
+          <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={[
-                  { name: 'Cleared', value: clearedPayments, color: isDarkMode ? '#4ade80' : '#10b981' },
-                  { name: 'Pending', value: pendingPayments, color: isDarkMode ? '#facc15' : '#f59e0b' }
+                  { name: 'Cleared', value: cleared, color: isDarkMode ? '#4ade80' : '#10b981' },
+                  { name: 'Pending', value: pending, color: isDarkMode ? '#facc15' : '#f59e0b' }
                 ]}
                 cx="50%"
                 cy="50%"
-                innerRadius={60}
-                outerRadius={80}
+                innerRadius={45}
+                outerRadius={70}
                 paddingAngle={5}
                 dataKey="value"
                 animationDuration={1500}
                 animationEasing="ease-out"
               >
                 {[
-                  { name: 'Cleared', value: clearedPayments, color: isDarkMode ? '#4ade80' : '#10b981' },
-                  { name: 'Pending', value: pendingPayments, color: isDarkMode ? '#facc15' : '#f59e0b' }
+                  { name: 'Cleared', value: cleared, color: isDarkMode ? '#4ade80' : '#10b981' },
+                  { name: 'Pending', value: pending, color: isDarkMode ? '#facc15' : '#f59e0b' }
                 ].map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} stroke={isDarkMode ? '#374151' : '#f3f4f6'} strokeWidth={2} />
                 ))}
@@ -175,19 +298,28 @@ const PaymentStatusChart = ({ clearedPayments, pendingPayments, isDarkMode }) =>
                   borderRadius: '0.5rem',
                   boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
                 }}
+                wrapperStyle={{ zIndex: 10 }}
+              />
+              <Legend
+                verticalAlign="bottom" 
+                height={36}
+                iconSize={10}
+                iconType="circle"
+                layout="horizontal"
+                wrapperStyle={{ fontSize: 12, paddingTop: 10 }}
               />
             </PieChart>
           </ResponsiveContainer>
         </div>
         
-        <div className="w-full md:w-2/5 mt-6 md:mt-0 space-y-4">
-          <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+        <div className="w-full md:w-2/5 mt-4 md:mt-0 space-y-4">
+          <div className={`p-3 sm:p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
             <div className="flex justify-between items-center">
               <div className="flex items-center">
                 <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-                <span className="font-medium">Cleared</span>
+                <span className="font-medium text-sm sm:text-base">Cleared</span>
               </div>
-              <span className="font-bold">{clearedPercentage}%</span>
+              <span className="font-bold text-sm sm:text-base">{clearedPercentage}%</span>
             </div>
             <div className="mt-2 h-2 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
               <div 
@@ -195,21 +327,27 @@ const PaymentStatusChart = ({ clearedPayments, pendingPayments, isDarkMode }) =>
                 style={{ width: `${clearedPercentage}%` }}
               ></div>
             </div>
+            <div className="mt-1 text-xs text-right text-gray-500 dark:text-gray-400">
+              {cleared} clients
+            </div>
           </div>
           
-          <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+          <div className={`p-3 sm:p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
             <div className="flex justify-between items-center">
               <div className="flex items-center">
                 <div className="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div>
-                <span className="font-medium">Pending</span>
+                <span className="font-medium text-sm sm:text-base">Pending</span>
               </div>
-              <span className="font-bold">{pendingPercentage}%</span>
+              <span className="font-bold text-sm sm:text-base">{pendingPercentage}%</span>
             </div>
             <div className="mt-2 h-2 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
               <div 
                 className="h-full bg-yellow-500 rounded-full" 
                 style={{ width: `${pendingPercentage}%` }}
               ></div>
+            </div>
+            <div className="mt-1 text-xs text-right text-gray-500 dark:text-gray-400">
+              {pending} clients
             </div>
           </div>
         </div>
@@ -218,80 +356,207 @@ const PaymentStatusChart = ({ clearedPayments, pendingPayments, isDarkMode }) =>
   );
 };
 
+// Prepare client growth data
+const prepareClientGrowthData = (clients) => {
+  const clientGrowth = {};
+  const sellClientGrowth = {};
+  const purchaseClientGrowth = {};
+  const currentDate = new Date();
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  
+  // Initialize last 6 months with zero values
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(currentDate);
+    d.setMonth(currentDate.getMonth() - i);
+    const monthKey = `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+    clientGrowth[monthKey] = 0;
+    sellClientGrowth[monthKey] = 0;
+    purchaseClientGrowth[monthKey] = 0;
+  }
+  
+  // Count clients by month of registration
+  clients.forEach(client => {
+    if (!client.timestamp) return;
+    
+    const date = new Date(client.timestamp);
+    const monthKey = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+    
+    // Only include if it's within the last 6 months
+    if (clientGrowth.hasOwnProperty(monthKey)) {
+      clientGrowth[monthKey] += 1;
+      
+      // Separate sell and purchase clients
+      if (client.orderStatus === 'sell') {
+        sellClientGrowth[monthKey] += 1;
+      } else if (client.orderStatus === 'purchased') {
+        purchaseClientGrowth[monthKey] += 1;
+      }
+    }
+  });
+  
+  // Convert to cumulative growth
+  let cumulativeClients = 0;
+  let cumulativeSellClients = 0;
+  let cumulativePurchaseClients = 0;
+  
+  const totalData = Object.entries(clientGrowth).map(([name, count]) => {
+    cumulativeClients += count;
+    return { name, clients: cumulativeClients };
+  });
+  
+  const sellData = Object.entries(sellClientGrowth).map(([name, count]) => {
+    cumulativeSellClients += count;
+    return { name, clients: cumulativeSellClients };
+  });
+  
+  const purchaseData = Object.entries(purchaseClientGrowth).map(([name, count]) => {
+    cumulativePurchaseClients += count;
+    return { name, clients: cumulativePurchaseClients };
+  });
+  
+  return {
+    total: totalData,
+    sell: sellData,
+    purchase: purchaseData
+  };
+};
+
 // Component for client growth chart
 const ClientGrowthChart = ({ data, isDarkMode }) => (
-  <div className={`p-6 rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border ${isDarkMode ? 'border-gray-700' : 'border-gray-100'} transition-all duration-300 hover:shadow-xl`}>
-    <div className="flex justify-between items-center mb-6">
-      <h2 className="text-xl font-semibold">Client Growth</h2>
+  <div className={`p-4 sm:p-6 rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border ${isDarkMode ? 'border-gray-700' : 'border-gray-100'} transition-all duration-300 hover:shadow-xl`}>
+    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6">
+      <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-0">Client Growth</h2>
       <div className={`px-3 py-1 rounded-full text-xs font-medium ${isDarkMode ? 'bg-green-900 text-green-200' : 'bg-green-100 text-green-800'}`}>
-        +{data.length > 0 ? data[data.length - 1].clients - (data[0].clients || 0) : 0} new
+        +{data.total.length > 0 ? data.total[data.total.length - 1].clients - (data.total[0].clients || 0) : 0} new
       </div>
     </div>
-    <ResponsiveContainer width="100%" height={300}>
-      <LineChart
-        data={data}
-        margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-      >
-        <defs>
-          <linearGradient id="colorClients" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor={isDarkMode ? "#10b981" : "#059669"} stopOpacity={0.2}/>
-            <stop offset="95%" stopColor={isDarkMode ? "#10b981" : "#059669"} stopOpacity={0}/>
-          </linearGradient>
-        </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#374151' : '#e5e7eb'} />
-        <XAxis 
-          dataKey="name" 
-          stroke={isDarkMode ? '#d1d5db' : '#6b7280'} 
-          tick={{ fontSize: 12 }}
-          axisLine={{ stroke: isDarkMode ? '#4b5563' : '#d1d5db' }}
-        />
-        <YAxis 
-          stroke={isDarkMode ? '#d1d5db' : '#6b7280'} 
-          tick={{ fontSize: 12 }}
-          axisLine={{ stroke: isDarkMode ? '#4b5563' : '#d1d5db' }}
-        />
-        <Tooltip 
-          contentStyle={{ 
-            backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
-            color: isDarkMode ? '#ffffff' : '#000000',
-            border: `1px solid ${isDarkMode ? '#374151' : '#e5e7eb'}`,
-            borderRadius: '0.5rem',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-          }}
-          cursor={{ stroke: isDarkMode ? '#6b7280' : '#9ca3af', strokeWidth: 1 }}
-        />
-        <Legend 
-          iconType="circle"
-          iconSize={8}
-          wrapperStyle={{
-            paddingTop: 20
-          }}
-        />
-        <Line 
-          type="monotone" 
-          dataKey="clients" 
-          name="Total Clients"
-          stroke={isDarkMode ? "#10b981" : "#059669"} 
-          activeDot={{ 
-            r: 6, 
-            stroke: isDarkMode ? '#34d399' : '#10b981',
-            strokeWidth: 2,
-            fill: isDarkMode ? '#1f2937' : '#ffffff'
-          }}
-          strokeWidth={3}
-          dot={{ 
-            r: 4, 
-            strokeWidth: 2,
-            fill: isDarkMode ? '#1f2937' : '#ffffff',
-            stroke: isDarkMode ? '#10b981' : '#059669'
-          }}
-          animationDuration={1500}
-          animationEasing="ease-out"
-          fillOpacity={1}
-          fill="url(#colorClients)"
-        />
-      </LineChart>
-    </ResponsiveContainer>
+    <div className="h-60 sm:h-72 md:h-80 lg:h-[300px]">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart
+          margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+        >
+          <defs>
+            <linearGradient id="colorClients" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={isDarkMode ? "#10b981" : "#059669"} stopOpacity={0.2}/>
+              <stop offset="95%" stopColor={isDarkMode ? "#10b981" : "#059669"} stopOpacity={0}/>
+            </linearGradient>
+            <linearGradient id="colorSellClients" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={isDarkMode ? "#3b82f6" : "#2563eb"} stopOpacity={0.2}/>
+              <stop offset="95%" stopColor={isDarkMode ? "#3b82f6" : "#2563eb"} stopOpacity={0}/>
+            </linearGradient>
+            <linearGradient id="colorPurchaseClients" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={isDarkMode ? "#ec4899" : "#db2777"} stopOpacity={0.2}/>
+              <stop offset="95%" stopColor={isDarkMode ? "#ec4899" : "#db2777"} stopOpacity={0}/>
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#374151' : '#e5e7eb'} />
+          <XAxis 
+            dataKey="name" 
+            stroke={isDarkMode ? '#d1d5db' : '#6b7280'} 
+            tick={{ fontSize: 10 }}
+            axisLine={{ stroke: isDarkMode ? '#4b5563' : '#d1d5db' }}
+            height={50}
+            tickMargin={8}
+            angle={-15}
+            textAnchor="end"
+            minTickGap={0}
+          />
+          <YAxis 
+            stroke={isDarkMode ? '#d1d5db' : '#6b7280'} 
+            tick={{ fontSize: 10 }}
+            axisLine={{ stroke: isDarkMode ? '#4b5563' : '#d1d5db' }}
+            width={35}
+          />
+          <Tooltip 
+            contentStyle={{ 
+              backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+              color: isDarkMode ? '#ffffff' : '#000000',
+              border: `1px solid ${isDarkMode ? '#374151' : '#e5e7eb'}`,
+              borderRadius: '0.5rem',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+            }}
+            cursor={{ stroke: isDarkMode ? '#6b7280' : '#9ca3af', strokeWidth: 1 }}
+            wrapperStyle={{ zIndex: 10 }}
+          />
+          <Legend 
+            iconType="circle"
+            iconSize={8}
+            wrapperStyle={{
+              paddingTop: 10,
+              fontSize: 12
+            }}
+            verticalAlign="bottom"
+            height={36}
+          />
+          <Line 
+            type="monotone" 
+            dataKey="clients" 
+            name="Total Clients"
+            data={data.total}
+            stroke={isDarkMode ? "#10b981" : "#059669"} 
+            activeDot={{ 
+              r: 6, 
+              stroke: isDarkMode ? '#34d399' : '#10b981',
+              strokeWidth: 2,
+              fill: isDarkMode ? '#1f2937' : '#ffffff'
+            }}
+            strokeWidth={3}
+            dot={{ 
+              r: 4, 
+              strokeWidth: 2,
+              fill: isDarkMode ? '#1f2937' : '#ffffff',
+              stroke: isDarkMode ? '#10b981' : '#059669'
+            }}
+            animationDuration={1500}
+            animationEasing="ease-out"
+          />
+          <Line 
+            type="monotone" 
+            dataKey="clients" 
+            name="Sell Clients"
+            data={data.sell}
+            stroke={isDarkMode ? "#3b82f6" : "#2563eb"} 
+            activeDot={{ 
+              r: 6, 
+              stroke: isDarkMode ? '#60a5fa' : '#3b82f6',
+              strokeWidth: 2,
+              fill: isDarkMode ? '#1f2937' : '#ffffff'
+            }}
+            strokeWidth={2}
+            dot={{ 
+              r: 4, 
+              strokeWidth: 2,
+              fill: isDarkMode ? '#1f2937' : '#ffffff',
+              stroke: isDarkMode ? '#3b82f6' : '#2563eb'
+            }}
+            animationDuration={1500}
+            animationEasing="ease-out"
+          />
+          <Line 
+            type="monotone" 
+            dataKey="clients" 
+            name="Purchase Clients"
+            data={data.purchase}
+            stroke={isDarkMode ? "#ec4899" : "#db2777"} 
+            activeDot={{ 
+              r: 6, 
+              stroke: isDarkMode ? '#f472b6' : '#ec4899',
+              strokeWidth: 2,
+              fill: isDarkMode ? '#1f2937' : '#ffffff'
+            }}
+            strokeWidth={2}
+            dot={{ 
+              r: 4, 
+              strokeWidth: 2,
+              fill: isDarkMode ? '#1f2937' : '#ffffff',
+              stroke: isDarkMode ? '#ec4899' : '#db2777'
+            }}
+            animationDuration={1500}
+            animationEasing="ease-out"
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
   </div>
 );
 
@@ -620,78 +885,185 @@ const QuickActions = ({ isDarkMode }) => (
   </div>
 );
 
+// Get top products
+const getTopProducts = (clients) => {
+  const productCount = {};
+  const sellProductCount = {};
+  const purchaseProductCount = {};
+  
+  clients.forEach(client => {
+    client.products?.forEach(product => {
+      if (product.name) {
+        // Track total products
+        productCount[product.name] = (productCount[product.name] || 0) + product.count;
+        
+        // Track products by order type
+        if (client.orderStatus === 'sell') {
+          sellProductCount[product.name] = (sellProductCount[product.name] || 0) + product.count;
+        } else if (client.orderStatus === 'purchased') {
+          purchaseProductCount[product.name] = (purchaseProductCount[product.name] || 0) + product.count;
+        }
+      }
+    });
+  });
+  
+  // Convert to array format and sort by count
+  const totalProducts = Object.entries(productCount)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
+    
+  const sellProducts = Object.entries(sellProductCount)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
+    
+  const purchaseProducts = Object.entries(purchaseProductCount)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
+  
+  return {
+    total: totalProducts,
+    sell: sellProducts,
+    purchase: purchaseProducts
+  };
+};
+
 // Component for top products
 const TopProducts = ({ products, isDarkMode }) => {
-  // Calculate total units
-  const totalUnits = products.reduce((sum, product) => sum + product.count, 0);
+  // State to track which tab is active
+  const [activeTab, setActiveTab] = useState('total'); // 'total', 'sell', or 'purchase'
+  
+  // Calculate total units for the active tab
+  const activeProducts = products[activeTab] || [];
+  const totalUnits = activeProducts.reduce((sum, product) => sum + product.count, 0);
   
   return (
-    <div className={`p-6 rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border ${isDarkMode ? 'border-gray-700' : 'border-gray-100'} transition-all duration-300 hover:shadow-xl`}>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">Top Products</h2>
+    <div className={`p-4 sm:p-6 rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border ${isDarkMode ? 'border-gray-700' : 'border-gray-100'} transition-all duration-300 hover:shadow-xl`}>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4">
+        <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-0">Top Products</h2>
         <div className={`px-3 py-1 rounded-full text-xs font-medium ${isDarkMode ? 'bg-indigo-900 text-indigo-200' : 'bg-indigo-100 text-indigo-800'}`}>
           {totalUnits} total units
         </div>
       </div>
+      
+      {/* Tabs for switching between total, sell, and purchase */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        <button
+          onClick={() => setActiveTab('total')}
+          className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+            activeTab === 'total' 
+              ? isDarkMode 
+                ? 'bg-gray-700 text-white' 
+                : 'bg-indigo-100 text-indigo-800'
+              : isDarkMode 
+                ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
+                : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100'
+          }`}
+        >
+          All
+        </button>
+        <button
+          onClick={() => setActiveTab('sell')}
+          className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+            activeTab === 'sell' 
+              ? isDarkMode 
+                ? 'bg-blue-900/50 text-blue-200' 
+                : 'bg-blue-100 text-blue-800'
+              : isDarkMode 
+                ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
+                : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100'
+          }`}
+        >
+          Sell
+        </button>
+        <button
+          onClick={() => setActiveTab('purchase')}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            activeTab === 'purchase' 
+              ? isDarkMode 
+                ? 'bg-purple-900/50 text-purple-200' 
+                : 'bg-purple-100 text-purple-800'
+              : isDarkMode 
+                ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
+                : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100'
+          }`}
+        >
+          Purchase
+        </button>
+      </div>
+      
       <div className="space-y-4">
-        {products.map((product, index) => {
-          // Calculate percentage of total
-          const percentage = totalUnits > 0 ? Math.round((product.count / totalUnits) * 100) : 0;
-          
-          // Generate color based on index
-          const getColor = (idx) => {
-            const colors = ['blue', 'green', 'purple', 'indigo', 'pink'];
-            return colors[idx % colors.length];
-          };
-          
-          const color = getColor(index);
-          
-          return (
-            <div 
-              key={index}
-              className={`p-4 rounded-lg ${
-                isDarkMode ? 'bg-gray-700' : 'bg-gray-50'
-              } hover:shadow-md transition-all duration-300`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center">
-                  <div className={`w-8 h-8 rounded-full ${
-                    isDarkMode ? `bg-${color}-900 bg-opacity-50` : `bg-${color}-100`
-                  } flex items-center justify-center mr-3 border ${
-                    isDarkMode ? `border-${color}-800` : `border-${color}-200`
-                  }`}>
-                    <span className={`font-bold ${
-                      isDarkMode ? `text-${color}-400` : `text-${color}-600`
+        {activeProducts.length > 0 ? (
+          activeProducts.map((product, index) => {
+            // Calculate percentage of total
+            const percentage = totalUnits > 0 ? Math.round((product.count / totalUnits) * 100) : 0;
+            
+            // Generate color based on index and active tab
+            const getColor = (idx, tab) => {
+              if (tab === 'sell') return 'blue';
+              if (tab === 'purchase') return 'purple';
+              
+              const colors = ['blue', 'green', 'purple', 'indigo', 'pink'];
+              return colors[idx % colors.length];
+            };
+            
+            const color = getColor(index, activeTab);
+            
+            return (
+              <div 
+                key={index}
+                className={`p-4 rounded-lg ${
+                  isDarkMode ? 'bg-gray-700' : 'bg-gray-50'
+                } hover:shadow-md transition-all duration-300`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center">
+                    <div className={`w-8 h-8 rounded-full ${
+                      isDarkMode ? `bg-${color}-900 bg-opacity-50` : `bg-${color}-100`
+                    } flex items-center justify-center mr-3 border ${
+                      isDarkMode ? `border-${color}-800` : `border-${color}-200`
                     }`}>
-                      {index + 1}
-                    </span>
+                      <span className={`font-bold ${
+                        isDarkMode ? `text-${color}-400` : `text-${color}-600`
+                      }`}>
+                        {index + 1}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-medium">{product.name}</span>
+                      <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        {percentage}% of total
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <span className="font-medium">{product.name}</span>
-                    <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      {percentage}% of total
-                    </p>
-                  </div>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    isDarkMode 
+                      ? `bg-${color}-900 bg-opacity-30 text-${color}-300` 
+                      : `bg-${color}-100 text-${color}-800`
+                  }`}>
+                    {product.count} units
+                  </span>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  isDarkMode 
-                    ? `bg-${color}-900 bg-opacity-30 text-${color}-300` 
-                    : `bg-${color}-100 text-${color}-800`
-                }`}>
-                  {product.count} units
-                </span>
+                <div className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-full mt-2">
+                  <div 
+                    className={`h-full rounded-full ${
+                      isDarkMode ? `bg-${color}-600` : `bg-${color}-500`
+                    }`}
+                    style={{ width: `${percentage}%` }}
+                  ></div>
+                </div>
               </div>
-              <div className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-full mt-2">
-                <div 
-                  className={`h-full rounded-full ${
-                    isDarkMode ? `bg-${color}-600` : `bg-${color}-500`
-                  }`}
-                  style={{ width: `${percentage}%` }}
-                ></div>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })
+        ) : (
+          <div className="text-center py-8">
+            <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              No products found for this category
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -709,7 +1081,7 @@ const DailyRevenueChart = ({ data, isDarkMode }) => (
     <div className="h-60 sm:h-72 md:h-80 lg:h-[300px]">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
-          data={data}
+          data={data.total}
           margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#374151' : '#e5e7eb'} />
@@ -718,13 +1090,15 @@ const DailyRevenueChart = ({ data, isDarkMode }) => (
             stroke={isDarkMode ? '#d1d5db' : '#6b7280'} 
             tick={{ fontSize: 10, fontWeight: 'normal' }}
             axisLine={{ stroke: isDarkMode ? '#4b5563' : '#d1d5db' }}
+            height={50}
+            tickMargin={8}
           />
           <YAxis 
             stroke={isDarkMode ? '#d1d5db' : '#6b7280'} 
             tickFormatter={(value) => formatCurrency(value).replace('₹', '')}
             tick={{ fontSize: 10, fontWeight: 'normal' }}
             axisLine={{ stroke: isDarkMode ? '#4b5563' : '#d1d5db' }}
-            width={40}
+            width={50}
           />
           <Tooltip 
             formatter={(value) => [formatCurrency(value), 'Revenue']}
@@ -736,26 +1110,43 @@ const DailyRevenueChart = ({ data, isDarkMode }) => (
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
             }}
             cursor={{ fill: isDarkMode ? 'rgba(55, 65, 81, 0.4)' : 'rgba(243, 244, 246, 0.8)' }}
+            wrapperStyle={{ zIndex: 10 }}
+          />
+          <Legend 
+            wrapperStyle={{ paddingTop: 10, fontSize: 12 }}
+            iconSize={8}
+            verticalAlign="bottom"
+            height={36}
           />
           <Bar 
             dataKey="value" 
-            name="Daily Revenue"
+            name="Total Revenue"
             fill={isDarkMode ? "#6366f1" : "#4f46e5"}
             radius={[4, 4, 0, 0]}
             animationDuration={1500}
             animationEasing="ease-out"
             minPointSize={3}
-          >
-            {data.map((entry, index) => (
-              <Cell 
-                key={`cell-${index}`} 
-                fill={isDarkMode ? 
-                  index === data.length - 1 ? '#818cf8' : '#6366f1' : 
-                  index === data.length - 1 ? '#6366f1' : '#818cf8'
-                } 
-              />
-            ))}
-          </Bar>
+          />
+          <Bar 
+            dataKey="value" 
+            name="Sell Revenue"
+            data={data.sell}
+            fill={isDarkMode ? "#3b82f6" : "#2563eb"}
+            radius={[4, 4, 0, 0]}
+            animationDuration={1500}
+            animationEasing="ease-out"
+            minPointSize={3}
+          />
+          <Bar 
+            dataKey="value" 
+            name="Purchase Revenue"
+            data={data.purchase}
+            fill={isDarkMode ? "#8b5cf6" : "#7c3aed"}
+            radius={[4, 4, 0, 0]}
+            animationDuration={1500}
+            animationEasing="ease-out"
+            minPointSize={3}
+          />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -764,63 +1155,84 @@ const DailyRevenueChart = ({ data, isDarkMode }) => (
 
 // Component for yearly revenue chart
 const YearlyRevenueChart = ({ data, isDarkMode }) => (
-  <div className={`p-6 rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border ${isDarkMode ? 'border-gray-700' : 'border-gray-100'} transition-all duration-300 hover:shadow-xl`}>
-    <div className="flex justify-between items-center mb-6">
-      <h2 className="text-xl font-semibold">Yearly Revenue</h2>
+  <div className={`p-4 sm:p-6 rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border ${isDarkMode ? 'border-gray-700' : 'border-gray-100'} transition-all duration-300 hover:shadow-xl`}>
+    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6">
+      <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-0">Yearly Revenue</h2>
       <div className={`px-3 py-1 rounded-full text-xs font-medium ${isDarkMode ? 'bg-purple-900 text-purple-200' : 'bg-purple-100 text-purple-800'}`}>
         Last 3 years
       </div>
     </div>
-    <ResponsiveContainer width="100%" height={300}>
-      <BarChart
-        data={data}
-        margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-        barSize={60}
-      >
-        <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#374151' : '#e5e7eb'} />
-        <XAxis 
-          dataKey="year" 
-          stroke={isDarkMode ? '#d1d5db' : '#6b7280'} 
-          tick={{ fontSize: 12 }}
-          axisLine={{ stroke: isDarkMode ? '#4b5563' : '#d1d5db' }}
-        />
-        <YAxis 
-          stroke={isDarkMode ? '#d1d5db' : '#6b7280'} 
-          tickFormatter={(value) => formatCurrency(value).replace('₹', '')}
-          tick={{ fontSize: 12 }}
-          axisLine={{ stroke: isDarkMode ? '#4b5563' : '#d1d5db' }}
-        />
-        <Tooltip 
-          formatter={(value) => [formatCurrency(value), 'Revenue']}
-          contentStyle={{ 
-            backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
-            color: isDarkMode ? '#ffffff' : '#000000',
-            border: `1px solid ${isDarkMode ? '#374151' : '#e5e7eb'}`,
-            borderRadius: '0.5rem',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-          }}
-        />
-        <Bar 
-          dataKey="value" 
-          name="Yearly Revenue"
-          fill={isDarkMode ? "#a855f7" : "#8b5cf6"}
-          radius={[4, 4, 0, 0]}
-          animationDuration={1500}
-          animationEasing="ease-out"
+    <div className="h-60 sm:h-72 md:h-80 lg:h-[300px]">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart
+          data={data.total}
+          margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+          barSize={20}
+          barGap={2}
+          barCategoryGap="20%"
         >
-          {data.map((entry, index) => (
-            <Cell 
-              key={`cell-${index}`} 
-              fill={
-                isDarkMode 
-                  ? `rgba(168, 85, 247, ${0.6 + (index * 0.2)})`
-                  : `rgba(139, 92, 246, ${0.6 + (index * 0.2)})`
-              } 
-            />
-          ))}
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
+          <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#374151' : '#e5e7eb'} />
+          <XAxis 
+            dataKey="year" 
+            stroke={isDarkMode ? '#d1d5db' : '#6b7280'} 
+            tick={{ fontSize: 12 }}
+            axisLine={{ stroke: isDarkMode ? '#4b5563' : '#d1d5db' }}
+            height={50}
+            tickMargin={8}
+          />
+          <YAxis 
+            stroke={isDarkMode ? '#d1d5db' : '#6b7280'} 
+            tickFormatter={(value) => formatCurrency(value).replace('₹', '')}
+            tick={{ fontSize: 12 }}
+            axisLine={{ stroke: isDarkMode ? '#4b5563' : '#d1d5db' }}
+            width={50}
+          />
+          <Tooltip 
+            formatter={(value) => [formatCurrency(value), 'Revenue']}
+            contentStyle={{ 
+              backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+              color: isDarkMode ? '#ffffff' : '#000000',
+              border: `1px solid ${isDarkMode ? '#374151' : '#e5e7eb'}`,
+              borderRadius: '0.5rem',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+            }}
+            wrapperStyle={{ zIndex: 10 }}
+          />
+          <Legend 
+            wrapperStyle={{ paddingTop: 10, fontSize: 12 }}
+            iconSize={8}
+            verticalAlign="bottom"
+            height={36}
+          />
+          <Bar 
+            dataKey="value" 
+            name="Total Revenue"
+            fill={isDarkMode ? "#a855f7" : "#8b5cf6"}
+            radius={[4, 4, 0, 0]}
+            animationDuration={1500}
+            animationEasing="ease-out"
+          />
+          <Bar 
+            dataKey="value" 
+            name="Sell Revenue"
+            data={data.sell}
+            fill={isDarkMode ? "#3b82f6" : "#2563eb"}
+            radius={[4, 4, 0, 0]}
+            animationDuration={1500}
+            animationEasing="ease-out"
+          />
+          <Bar 
+            dataKey="value" 
+            name="Purchase Revenue"
+            data={data.purchase}
+            fill={isDarkMode ? "#ec4899" : "#db2777"}
+            radius={[4, 4, 0, 0]}
+            animationDuration={1500}
+            animationEasing="ease-out"
+          />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
   </div>
 );
 
@@ -860,6 +1272,8 @@ const Dashboard = () => {
   // Prepare monthly revenue data
   const prepareMonthlyData = (clients) => {
     const monthlyRevenue = {};
+    const monthlySellRevenue = {};
+    const monthlyPurchaseRevenue = {};
     const currentDate = new Date();
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     
@@ -869,6 +1283,8 @@ const Dashboard = () => {
       d.setMonth(currentDate.getMonth() - i);
       const monthKey = `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
       monthlyRevenue[monthKey] = 0;
+      monthlySellRevenue[monthKey] = 0;
+      monthlyPurchaseRevenue[monthKey] = 0;
     }
     
     // Populate with actual data
@@ -885,16 +1301,29 @@ const Dashboard = () => {
         }, 0) || 0;
         
         monthlyRevenue[monthKey] += totalAmount;
+        
+        // Separate sell and purchase data
+        if (client.orderStatus === 'sell') {
+          monthlySellRevenue[monthKey] += totalAmount;
+        } else if (client.orderStatus === 'purchased') {
+          monthlyPurchaseRevenue[monthKey] += totalAmount;
+        }
       }
     });
     
     // Convert to array format for chart
-    return Object.entries(monthlyRevenue).map(([name, value]) => ({ name, value }));
+    return {
+      total: Object.entries(monthlyRevenue).map(([name, value]) => ({ name, value })),
+      sell: Object.entries(monthlySellRevenue).map(([name, value]) => ({ name, value })),
+      purchase: Object.entries(monthlyPurchaseRevenue).map(([name, value]) => ({ name, value }))
+    };
   };
 
   // Prepare daily revenue data
   const prepareDailyData = (clients) => {
     const dailyRevenue = {};
+    const dailySellRevenue = {};
+    const dailyPurchaseRevenue = {};
     const currentDate = new Date();
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     
@@ -904,6 +1333,8 @@ const Dashboard = () => {
       d.setDate(currentDate.getDate() - i);
       const dayKey = `${dayNames[d.getDay()]} ${d.getDate()}`;
       dailyRevenue[dayKey] = 0;
+      dailySellRevenue[dayKey] = 0;
+      dailyPurchaseRevenue[dayKey] = 0;
     }
     
     // Populate with actual data
@@ -923,17 +1354,30 @@ const Dashboard = () => {
           }, 0) || 0;
           
           dailyRevenue[dayKey] += totalAmount;
+          
+          // Separate sell and purchase data
+          if (client.orderStatus === 'sell') {
+            dailySellRevenue[dayKey] += totalAmount;
+          } else if (client.orderStatus === 'purchased') {
+            dailyPurchaseRevenue[dayKey] += totalAmount;
+          }
         }
       }
     });
     
     // Convert to array format for chart
-    return Object.entries(dailyRevenue).map(([day, value]) => ({ day, value }));
+    return {
+      total: Object.entries(dailyRevenue).map(([day, value]) => ({ day, value })),
+      sell: Object.entries(dailySellRevenue).map(([day, value]) => ({ day, value })),
+      purchase: Object.entries(dailyPurchaseRevenue).map(([day, value]) => ({ day, value }))
+    };
   };
 
   // Prepare yearly revenue data
   const prepareYearlyData = (clients) => {
     const yearlyRevenue = {};
+    const yearlySellRevenue = {};
+    const yearlyPurchaseRevenue = {};
     const currentDate = new Date();
     const currentYear = currentDate.getFullYear();
     
@@ -941,6 +1385,8 @@ const Dashboard = () => {
     for (let i = 2; i >= 0; i--) {
       const year = currentYear - i;
       yearlyRevenue[year.toString()] = 0;
+      yearlySellRevenue[year.toString()] = 0;
+      yearlyPurchaseRevenue[year.toString()] = 0;
     }
     
     // Populate with actual data
@@ -957,32 +1403,74 @@ const Dashboard = () => {
         }, 0) || 0;
         
         yearlyRevenue[year] += totalAmount;
+        
+        // Separate sell and purchase data
+        if (client.orderStatus === 'sell') {
+          yearlySellRevenue[year] += totalAmount;
+        } else if (client.orderStatus === 'purchased') {
+          yearlyPurchaseRevenue[year] += totalAmount;
+        }
       }
     });
     
     // Convert to array format for chart
-    return Object.entries(yearlyRevenue).map(([year, value]) => ({ year, value }));
+    return {
+      total: Object.entries(yearlyRevenue).map(([year, value]) => ({ year, value })),
+      sell: Object.entries(yearlySellRevenue).map(([year, value]) => ({ year, value })),
+      purchase: Object.entries(yearlyPurchaseRevenue).map(([year, value]) => ({ year, value }))
+    };
   };
 
   // Get top products
   const getTopProducts = (clients) => {
     const productCount = {};
+    const sellProductCount = {};
+    const purchaseProductCount = {};
+    
     clients.forEach(client => {
       client.products?.forEach(product => {
         if (product.name) {
+          // Track total products
           productCount[product.name] = (productCount[product.name] || 0) + product.count;
+          
+          // Track products by order type
+          if (client.orderStatus === 'sell') {
+            sellProductCount[product.name] = (sellProductCount[product.name] || 0) + product.count;
+          } else if (client.orderStatus === 'purchased') {
+            purchaseProductCount[product.name] = (purchaseProductCount[product.name] || 0) + product.count;
+          }
         }
       });
     });
-    return Object.entries(productCount)
+    
+    // Convert to array format and sort by count
+    const totalProducts = Object.entries(productCount)
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
+      
+    const sellProducts = Object.entries(sellProductCount)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+      
+    const purchaseProducts = Object.entries(purchaseProductCount)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+    
+    return {
+      total: totalProducts,
+      sell: sellProducts,
+      purchase: purchaseProducts
+    };
   };
 
   // Prepare client growth data
   const prepareClientGrowthData = (clients) => {
     const clientGrowth = {};
+    const sellClientGrowth = {};
+    const purchaseClientGrowth = {};
     const currentDate = new Date();
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     
@@ -992,6 +1480,8 @@ const Dashboard = () => {
       d.setMonth(currentDate.getMonth() - i);
       const monthKey = `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
       clientGrowth[monthKey] = 0;
+      sellClientGrowth[monthKey] = 0;
+      purchaseClientGrowth[monthKey] = 0;
     }
     
     // Count clients by month of registration
@@ -1004,15 +1494,41 @@ const Dashboard = () => {
       // Only include if it's within the last 6 months
       if (clientGrowth.hasOwnProperty(monthKey)) {
         clientGrowth[monthKey] += 1;
+        
+        // Separate sell and purchase clients
+        if (client.orderStatus === 'sell') {
+          sellClientGrowth[monthKey] += 1;
+        } else if (client.orderStatus === 'purchased') {
+          purchaseClientGrowth[monthKey] += 1;
+        }
       }
     });
     
     // Convert to cumulative growth
     let cumulativeClients = 0;
-    return Object.entries(clientGrowth).map(([name, count]) => {
+    let cumulativeSellClients = 0;
+    let cumulativePurchaseClients = 0;
+    
+    const totalData = Object.entries(clientGrowth).map(([name, count]) => {
       cumulativeClients += count;
       return { name, clients: cumulativeClients };
     });
+    
+    const sellData = Object.entries(sellClientGrowth).map(([name, count]) => {
+      cumulativeSellClients += count;
+      return { name, clients: cumulativeSellClients };
+    });
+    
+    const purchaseData = Object.entries(purchaseClientGrowth).map(([name, count]) => {
+      cumulativePurchaseClients += count;
+      return { name, clients: cumulativePurchaseClients };
+    });
+    
+    return {
+      total: totalData,
+      sell: sellData,
+      purchase: purchaseData
+    };
   };
 
   // Handle click outside notifications dropdown
@@ -1118,6 +1634,40 @@ const Dashboard = () => {
         const pendingClients = nonMergedClients.filter(client => client.paymentStatus !== 'cleared');
         const clearedClients = nonMergedClients.filter(client => client.paymentStatus === 'cleared');
         
+        // Filter clients by order status
+        const sellClients = nonMergedClients.filter(client => client.orderStatus === 'sell');
+        const purchaseClients = nonMergedClients.filter(client => client.orderStatus === 'purchased');
+        
+        // Calculate payment status for sell clients
+        const sellClearedClients = sellClients.filter(client => client.paymentStatus === 'cleared');
+        const sellPendingClients = sellClients.filter(client => client.paymentStatus !== 'cleared');
+        
+        // Calculate payment status for purchase clients
+        const purchaseClearedClients = purchaseClients.filter(client => client.paymentStatus === 'cleared');
+        const purchasePendingClients = purchaseClients.filter(client => client.paymentStatus !== 'cleared');
+        
+        // Calculate sell orders statistics
+        const sellOrdersTotal = sellClients.length;
+        const sellOrdersAmount = sellClients.reduce((sum, client) => {
+          const totalAmount = client.products?.reduce((total, product) => {
+            return total + (product.price * product.count);
+          }, 0) || 0;
+          return sum + totalAmount;
+        }, 0);
+        const sellOrdersPaid = sellClients.reduce((sum, client) => sum + (client.amountPaid || 0), 0);
+        const sellOrdersReceivable = sellOrdersAmount - sellOrdersPaid;
+        
+        // Calculate purchase orders statistics
+        const purchaseOrdersTotal = purchaseClients.length;
+        const purchaseOrdersAmount = purchaseClients.reduce((sum, client) => {
+          const totalAmount = client.products?.reduce((total, product) => {
+            return total + (product.price * product.count);
+          }, 0) || 0;
+          return sum + totalAmount;
+        }, 0);
+        const purchaseOrdersPaid = purchaseClients.reduce((sum, client) => sum + (client.amountPaid || 0), 0);
+        const purchaseOrdersPayable = purchaseOrdersAmount - purchaseOrdersPaid;
+        
         const totalRevenue = nonMergedClients.reduce((sum, client) => {
           const totalAmount = client.products?.reduce((total, product) => {
             return total + (product.price * product.count);
@@ -1137,17 +1687,32 @@ const Dashboard = () => {
           return (b.timestamp || 0) - (a.timestamp || 0);
         });
 
-        // Prepare monthly revenue data
+        // Prepare monthly revenue data with sell/purchase separation
         const monthlyData = prepareMonthlyData(nonMergedClients);
         
-        // Prepare daily revenue data
+        // Prepare daily revenue data with sell/purchase separation
         const dailyRevenue = prepareDailyData(nonMergedClients);
         
-        // Prepare yearly revenue data
+        // Prepare yearly revenue data with sell/purchase separation
         const yearlyRevenue = prepareYearlyData(nonMergedClients);
         
-        // Prepare client growth data
+        // Prepare client growth data with sell/purchase separation
         const clientGrowth = prepareClientGrowthData(nonMergedClients);
+        
+        // Get top products with sell/purchase separation
+        const topProducts = getTopProducts(nonMergedClients);
+        
+        // Log payment status data for debugging
+        console.log('Payment Status Data:', {
+          sell: {
+            cleared: sellClearedClients.length,
+            pending: sellPendingClients.length
+          },
+          purchase: {
+            cleared: purchaseClearedClients.length,
+            pending: purchasePendingClients.length
+          }
+        });
         
         setStats({
           totalClients: nonMergedClients.length,
@@ -1159,8 +1724,36 @@ const Dashboard = () => {
           monthlyData,
           dailyRevenue,
           yearlyRevenue,
-          topProducts: getTopProducts(nonMergedClients),
-          clientGrowth
+          topProducts,
+          clientGrowth,
+          // Add payment status data for sell and purchase
+          paymentStatus: {
+            sell: {
+              cleared: sellClearedClients.length,
+              pending: sellPendingClients.length
+            },
+            purchase: {
+              cleared: purchaseClearedClients.length,
+              pending: purchasePendingClients.length
+            }
+          },
+          // Add new properties for sell and purchase orders
+          sellOrders: {
+            total: sellOrdersTotal,
+            amount: sellOrdersAmount,
+            paid: sellOrdersPaid,
+            receivable: sellOrdersReceivable,
+            cleared: sellClearedClients.length,
+            pending: sellPendingClients.length
+          },
+          purchaseOrders: {
+            total: purchaseOrdersTotal,
+            amount: purchaseOrdersAmount,
+            paid: purchaseOrdersPaid,
+            payable: purchaseOrdersPayable,
+            cleared: purchaseClearedClients.length,
+            pending: purchasePendingClients.length
+          }
         });
         
         setLoading(false);
@@ -1296,29 +1889,29 @@ const Dashboard = () => {
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-800'} overflow-x-hidden`}>
       {/* Modern Header with Search and Notifications */}
-      <header className={`py-4 px-4 sm:px-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg sticky top-0 z-50 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+      <header className={`py-3 sm:py-4 px-3 sm:px-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg sticky top-0 z-50 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
         <div className="container mx-auto">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-1">
                 <button
                   onClick={handleBackClick}
-                  className={`p-2 rounded-lg ${isDarkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'} transition-colors`}
+                  className={`p-1.5 sm:p-2 rounded-lg ${isDarkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'} transition-colors`}
                   aria-label="Back to clients"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${isDarkMode ? 'text-white' : 'text-gray-700'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 sm:h-5 sm:w-5 ${isDarkMode ? 'text-white' : 'text-gray-700'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                   </svg>
                 </button>
 
-                <h1 className={`text-lg sm:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} flex items-center`}>
-                  <span className="bg-gradient-to-r from-emerald-500 to-teal-400 inline-block text-transparent bg-clip-text text-xl sm:text-2xl font-bold">
-                    <a href="/dashboard" className="bg-gradient-to-r from-emerald-500 ml-2 to-teal-400 inline-block text-transparent bg-clip-text text-xl font-bold">
+                <h1 className={`text-base sm:text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} flex items-center`}>
+                  <span className="bg-gradient-to-r from-emerald-500 to-teal-400 inline-block text-transparent bg-clip-text text-lg sm:text-xl font-bold">
+                    <a href="/dashboard" className="bg-gradient-to-r from-emerald-500 ml-1 sm:ml-2 to-teal-400 inline-block text-transparent bg-clip-text text-lg sm:text-xl font-bold">
                     Dashboard
                     </a>
-                    <span className={`ml-2 md:ml-1 px-2 py-1 text-xs font-medium rounded-md ${isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'}`}>
-                  {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                </span>
+                    <span className={`ml-1 md:ml-2 px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs font-medium rounded-md ${isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'}`}>
+                      {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </span>
                   </span>
                 </h1>
               </div>
@@ -1326,16 +1919,16 @@ const Dashboard = () => {
               {/* Mobile menu buttons */}
               <div className="flex items-center space-x-2 sm:hidden">
                 <button 
-                  className={`p-2 rounded-full ${
+                  className={`p-1.5 rounded-full ${
                     isDarkMode 
                       ? 'bg-gray-700 hover:bg-gray-600' 
                       : 'bg-gray-100 hover:bg-gray-200'
                   } transition-colors duration-200 flex items-center justify-center`}
                   onClick={() => setShowNotifications(!showNotifications)}
                 >
-                  <FiBell className="h-5 w-5" />
+                  <FiBell className="h-4 w-4" />
                   {notifications.length > 0 && (
-                    <span className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">
+                    <span className="absolute top-0.5 right-0.5 bg-red-500 text-white rounded-full w-3 h-3 text-[8px] flex items-center justify-center">
                       {notifications.length}
                     </span>
                   )}
@@ -1344,50 +1937,24 @@ const Dashboard = () => {
               </div>
             </div>
             
-            <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
               <div className="relative w-full sm:max-w-xs">
                 <input
                   type="text"
                   placeholder="Search clients..."
                   value={searchQuery}
                   onChange={handleSearch}
-                  className={`w-full pl-10 pr-4 py-2 rounded-lg ${
+                  className={`w-full pl-8 sm:pl-10 pr-4 py-1.5 sm:py-2 rounded-lg ${
                     isDarkMode 
                       ? 'bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:border-blue-500' 
                       : 'bg-gray-100 text-gray-800 placeholder-gray-500 border border-gray-200 focus:border-blue-500'
-                  } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-all duration-200`}
+                  } focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-opacity-50 transition-all duration-200 text-sm`}
                 />
-                <FiSearch className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                <FiSearch className={`absolute left-2.5 sm:left-3 top-1/2 transform -translate-y-1/2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} h-3.5 w-3.5 sm:h-4 sm:w-4`} />
               </div>
               
               {/* Desktop menu buttons */}
               <div className="hidden sm:flex items-center space-x-4">
-                {/* <div className="relative" ref={notificationRef}>
-                  <button 
-                    className={`p-2 rounded-full ${
-                      isDarkMode 
-                        ? 'bg-gray-700 hover:bg-gray-600' 
-                        : 'bg-gray-100 hover:bg-gray-200'
-                    } transition-colors duration-200 flex items-center justify-center`}
-                    onClick={() => setShowNotifications(!showNotifications)}
-                  >
-                    <FiBell className="h-5 w-5" />
-                    {notifications.length > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center border-2 border-white dark:border-gray-800">
-                        {notifications.length}
-                      </span>
-                    )}
-                  </button>
-                  {showNotifications && (
-                    <NotificationsDropdown 
-                      notifications={notifications} 
-                      isDarkMode={isDarkMode} 
-                      onClose={closeNotification}
-                      onClearAll={clearAllNotifications}
-                    />
-                  )}
-                </div> */}
-                
                 <div className="relative">
                   <button 
                     className={`p-2 rounded-full ${
@@ -1398,7 +1965,7 @@ const Dashboard = () => {
                     onClick={() => exportData('json')}
                     title="Export Data"
                   >
-                    <FiDownload className="h-5 w-5" />
+                    <FiDownload className="h-4 w-4 sm:h-5 sm:w-5" />
                   </button>
                 </div>
                 
@@ -1410,7 +1977,7 @@ const Dashboard = () => {
           </div>
           
           {/* Quick Stats Summary */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 sm:gap-6 mt-4 sm:mt-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-6 mt-3 sm:mt-4 md:mt-6">
             <StatCard 
               icon={FiUsers} 
               title="Total Clients" 
@@ -1439,68 +2006,154 @@ const Dashboard = () => {
               color="purple" 
             />
           </div>
+          
+          {/* Order Type Summary Cards */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3 md:gap-6 mt-3 sm:mt-4 md:mt-6">
+            {/* Sell Orders Summary Card */}
+            <div className={`p-3 sm:p-4 md:p-5 rounded-xl ${isDarkMode ? 'bg-blue-900/20' : 'bg-blue-50'} border ${isDarkMode ? 'border-blue-800' : 'border-blue-100'}`}>
+              <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3 flex items-center">
+                <div className="w-2.5 h-2.5 rounded-full bg-blue-500 mr-2"></div>
+                Sell Orders Summary
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
+                <div className={`${isDarkMode ? 'bg-blue-800/30' : 'bg-white'} rounded-xl p-2 sm:p-3 border ${isDarkMode ? 'border-blue-700' : 'border-blue-200'} shadow-sm`}>
+                  <p className={`text-xs ${isDarkMode ? 'text-blue-300' : 'text-blue-700'}`}>Total Orders</p>
+                  <p className="text-sm sm:text-base md:text-lg font-bold mt-0.5 sm:mt-1">
+                    {stats.sellOrders?.total || 0}
+                  </p>
+                </div>
+                
+                <div className={`${isDarkMode ? 'bg-blue-800/30' : 'bg-white'} rounded-xl p-2 sm:p-3 border ${isDarkMode ? 'border-blue-700' : 'border-blue-200'} shadow-sm`}>
+                  <p className={`text-xs ${isDarkMode ? 'text-blue-300' : 'text-blue-700'}`}>Total Amount</p>
+                  <p className="text-sm sm:text-base md:text-lg font-bold mt-0.5 sm:mt-1 truncate">
+                    {formatCurrency(stats.sellOrders?.amount || 0)}
+                  </p>
+                </div>
+                
+                <div className={`${isDarkMode ? 'bg-blue-800/30' : 'bg-white'} rounded-xl p-2 sm:p-3 border ${isDarkMode ? 'border-blue-700' : 'border-blue-200'} shadow-sm`}>
+                  <p className={`text-xs ${isDarkMode ? 'text-blue-300' : 'text-blue-700'}`}>Received</p>
+                  <p className="text-sm sm:text-base md:text-lg font-bold mt-0.5 sm:mt-1 truncate text-emerald-500">
+                    {formatCurrency(stats.sellOrders?.paid || 0)}
+                  </p>
+                </div>
+                
+                <div className={`${isDarkMode ? 'bg-blue-800/30' : 'bg-white'} rounded-xl p-2 sm:p-3 border ${isDarkMode ? 'border-blue-700' : 'border-blue-200'} shadow-sm`}>
+                  <p className={`text-xs ${isDarkMode ? 'text-blue-300' : 'text-blue-700'}`}>To Receive</p>
+                  <p className="text-sm sm:text-base md:text-lg font-bold mt-0.5 sm:mt-1 truncate text-amber-500">
+                    {formatCurrency(stats.sellOrders?.receivable || 0)}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Purchase Orders Summary Card */}
+            <div className={`p-3 sm:p-4 md:p-5 rounded-xl ${isDarkMode ? 'bg-purple-900/20' : 'bg-purple-50'} border ${isDarkMode ? 'border-purple-800' : 'border-purple-100'}`}>
+              <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3 flex items-center">
+                <div className="w-2.5 h-2.5 rounded-full bg-purple-500 mr-2"></div>
+                Purchase Orders Summary
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
+                <div className={`${isDarkMode ? 'bg-purple-800/30' : 'bg-white'} rounded-xl p-2 sm:p-3 border ${isDarkMode ? 'border-purple-700' : 'border-purple-200'} shadow-sm`}>
+                  <p className={`text-xs ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>Total Orders</p>
+                  <p className="text-sm sm:text-base md:text-lg font-bold mt-0.5 sm:mt-1">
+                    {stats.purchaseOrders?.total || 0}
+                  </p>
+                </div>
+                
+                <div className={`${isDarkMode ? 'bg-purple-800/30' : 'bg-white'} rounded-xl p-2 sm:p-3 border ${isDarkMode ? 'border-purple-700' : 'border-purple-200'} shadow-sm`}>
+                  <p className={`text-xs ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>Total Amount</p>
+                  <p className="text-sm sm:text-base md:text-lg font-bold mt-0.5 sm:mt-1 truncate">
+                    {formatCurrency(stats.purchaseOrders?.amount || 0)}
+                  </p>
+                </div>
+                
+                <div className={`${isDarkMode ? 'bg-purple-800/30' : 'bg-white'} rounded-xl p-2 sm:p-3 border ${isDarkMode ? 'border-purple-700' : 'border-purple-200'} shadow-sm`}>
+                  <p className={`text-xs ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>Paid Amount</p>
+                  <p className="text-sm sm:text-base md:text-lg font-bold mt-0.5 sm:mt-1 truncate text-emerald-500">
+                    {formatCurrency(stats.purchaseOrders?.paid || 0)}
+                  </p>
+                </div>
+                
+                <div className={`${isDarkMode ? 'bg-purple-800/30' : 'bg-white'} rounded-xl p-2 sm:p-3 border ${isDarkMode ? 'border-purple-700' : 'border-purple-200'} shadow-sm`}>
+                  <p className={`text-xs ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>To Pay</p>
+                  <p className="text-sm sm:text-base md:text-lg font-bold mt-0.5 sm:mt-1 truncate text-amber-500">
+                    {formatCurrency(stats.purchaseOrders?.payable || 0)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto py-4 sm:py-6 md:py-8 px-4 sm:px-6">
+      <main className="container mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-6">
         {/* Daily and Monthly Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8 mb-4 sm:mb-6 md:mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6 mb-4 sm:mb-6 md:mb-8">
           <DailyRevenueChart data={stats.dailyRevenue} isDarkMode={isDarkMode} />
           <RevenueChart data={stats.monthlyData} isDarkMode={isDarkMode} />
         </div>
 
         {/* Yearly Revenue and Client Growth */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8 mb-4 sm:mb-6 md:mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6 mb-4 sm:mb-6 md:mb-8">
           <YearlyRevenueChart data={stats.yearlyRevenue} isDarkMode={isDarkMode} />
           <ClientGrowthChart data={stats.clientGrowth} isDarkMode={isDarkMode} />
         </div>
 
         {/* Payment Status and Performance Metrics */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8 mb-4 sm:mb-6 md:mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6 mb-4 sm:mb-6 md:mb-8">
           <PaymentStatusChart 
             clearedPayments={stats.clearedPayments} 
-            pendingPayments={stats.pendingPayments} 
+            pendingPayments={stats.pendingPayments}
+            sellPayments={{
+              cleared: stats.sellOrders?.cleared || 0,
+              pending: stats.sellOrders?.pending || 0
+            }}
+            purchasePayments={{
+              cleared: stats.purchaseOrders?.cleared || 0,
+              pending: stats.purchaseOrders?.pending || 0
+            }}
             isDarkMode={isDarkMode} 
           />
           <PerformanceMetrics metrics={performanceMetrics} isDarkMode={isDarkMode} />
         </div>
 
         {/* Recent Activity and Calendar Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 mb-4 sm:mb-6 md:mb-8">
-          <RecentActivity clients={stats.recentClients} isDarkMode={isDarkMode} />
-          <CalendarEvents isDarkMode={isDarkMode} />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6 mb-4 sm:mb-6 md:mb-8">
+          <div className="lg:col-span-2">
+            <RecentActivity clients={stats.recentClients} isDarkMode={isDarkMode} />
+          </div>
+
         </div>
 
-        {/* Quick Actions and Top Products */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
-          {/* <QuickActions isDarkMode={isDarkMode} /> */}
+        {/* Top Products */}
+        <div className="grid grid-cols-1 gap-3 sm:gap-6 mb-4 sm:mb-6 md:mb-8">
           <TopProducts products={stats.topProducts} isDarkMode={isDarkMode} />
         </div>
 
         {/* Export Options */}
-        <div className="mt-6 sm:mt-8 md:mt-10 flex flex-col sm:flex-row justify-center sm:justify-end space-y-3 sm:space-y-0 sm:space-x-4">
+        <div className="mt-4 sm:mt-6 md:mt-8 flex flex-col sm:flex-row justify-center sm:justify-end space-y-3 sm:space-y-0 sm:space-x-4">
           <button
             onClick={() => exportData('csv')}
-            className={`px-5 py-2 rounded-lg flex items-center justify-center ${
+            className={`px-4 sm:px-5 py-2 rounded-lg flex items-center justify-center ${
               isDarkMode 
                 ? 'bg-gray-700 hover:bg-gray-600' 
                 : 'bg-gray-200 hover:bg-gray-300'
             } transition duration-200`}
           >
             <FiDownload className="mr-2" />
-            Export as CSV
+            <span className="text-sm sm:text-base">Export as CSV</span>
           </button>
           <button
             onClick={() => exportData('json')}
-            className={`px-5 py-2 rounded-lg flex items-center justify-center ${
+            className={`px-4 sm:px-5 py-2 rounded-lg flex items-center justify-center ${
               isDarkMode 
                 ? 'bg-blue-600 hover:bg-blue-700' 
                 : 'bg-blue-500 hover:bg-blue-600'
             } text-white transition duration-200`}
           >
             <FiDownload className="mr-2" />
-            Export as JSON
+            <span className="text-sm sm:text-base">Export as JSON</span>
           </button>
         </div>
       </main>

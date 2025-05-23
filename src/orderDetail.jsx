@@ -15,6 +15,8 @@ const OrderDetail = () => {
   const [invoiceDate, setInvoiceDate] = useState(null);
   const [editingInvoiceDate, setEditingInvoiceDate] = useState(false);
   const [savingDates, setSavingDates] = useState(false);
+  const [editingIssuedDate, setEditingIssuedDate] = useState(false);
+  const [issuedDate, setIssuedDate] = useState(null);
   const { id } = useParams();
   const navigate = useNavigate();
   const pdfRef = useRef(null);
@@ -65,6 +67,9 @@ const OrderDetail = () => {
       // Set invoice date - use invoiceDate from data if available, otherwise use timestamp
       const timestamp = data.timestamp || Date.now();
       setInvoiceDate(data.invoiceDate ? new Date(data.invoiceDate) : new Date(timestamp));
+      
+      // Set issued date - use issuedDate from data if available, otherwise use timestamp
+      setIssuedDate(data.issuedDate ? new Date(data.issuedDate) : new Date(timestamp));
       
       // Set due date - use dueDate from data if available, otherwise add 30 days to timestamp
       const defaultDueDate = new Date(timestamp);
@@ -306,6 +311,30 @@ const OrderDetail = () => {
     }
   };
 
+  // Save issued date to database
+  const saveIssuedDate = async () => {
+    try {
+      setSavingDates(true);
+      const orderRef = ref(database, `clients/${id}`);
+      await update(orderRef, {
+        issuedDate: issuedDate.getTime() // Store as timestamp
+      });
+      
+      // Update local state
+      setOrderData({
+        ...orderData,
+        issuedDate: issuedDate.getTime()
+      });
+      
+      setEditingIssuedDate(false);
+    } catch (error) {
+      console.error("Error saving issued date:", error);
+      alert("Failed to save issued date. Please try again.");
+    } finally {
+      setSavingDates(false);
+    }
+  };
+
   // Handle invoice date input change
   const handleInvoiceDateChange = (e) => {
     const newDate = new Date(e.target.value);
@@ -319,6 +348,14 @@ const OrderDetail = () => {
     const newDate = new Date(e.target.value);
     if (!isNaN(newDate.getTime())) {
       setDueDate(newDate);
+    }
+  };
+
+  // Handle issued date input change
+  const handleIssuedDateChange = (e) => {
+    const newDate = new Date(e.target.value);
+    if (!isNaN(newDate.getTime())) {
+      setIssuedDate(newDate);
     }
   };
 
@@ -405,7 +442,6 @@ const OrderDetail = () => {
               <svg className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
-              <span className="font-medium">Back to Orders</span>
             </Link>
             
             {/* Date Editing Controls - Mobile Optimized */}
@@ -531,6 +567,67 @@ const OrderDetail = () => {
                   </div>
                 )}
               </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-white text-xs font-medium">Issued Date:</span>
+                {editingIssuedDate ? (
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="date"
+                      value={formatDateForInput(issuedDate)}
+                      onChange={handleIssuedDateChange}
+                      className="border border-indigo-300 rounded-md p-1 text-xs w-[120px] sm:w-28 bg-white/90 text-gray-800"
+                      disabled={savingDates}
+                    />
+                    <button 
+                      onClick={saveIssuedDate}
+                      className={`${savingDates ? 'bg-green-400' : 'bg-green-500'} text-white p-1 rounded-md flex-shrink-0`}
+                      title="Save issued date"
+                      disabled={savingDates}
+                    >
+                      {savingDates ? (
+                        <svg className="w-3 h-3 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      ) : (
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </button>
+                    <button 
+                      onClick={() => setEditingIssuedDate(false)}
+                      className="bg-red-500 text-white p-1 rounded-md flex-shrink-0"
+                      title="Cancel"
+                      disabled={savingDates}
+                    >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1">
+                    <span className="text-white text-xs bg-white/20 rounded px-2 py-1 truncate max-w-[120px] sm:max-w-none">
+                      {issuedDate ? new Date(issuedDate).toLocaleDateString('en-IN', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                      }) : 'Not set'}
+                    </span>
+                    <button 
+                      onClick={() => setEditingIssuedDate(true)}
+                      className="text-white hover:text-indigo-200 p-1 flex-shrink-0"
+                      title="Edit issued date"
+                    >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
             
             <div className="flex gap-2 sm:gap-3 w-full sm:w-auto justify-end">
@@ -572,7 +669,7 @@ const OrderDetail = () => {
               
               {/* Share Button */}
               <div className="relative">
-                <button
+                {/* <button
                   onClick={() => setShowSharePopup(!showSharePopup)}
                   className="px-3 py-1.5 sm:px-4 sm:py-2 bg-green-500 text-white border border-green-600 rounded-lg flex items-center text-xs sm:text-sm font-medium hover:bg-green-600 transition-colors"
                   aria-label="Share invoice"
@@ -581,7 +678,7 @@ const OrderDetail = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                   </svg>
                   <span className="hidden sm:inline">Share</span>
-                </button>
+                </button> */}
                 
                 {/* Share Popup - Now positioned better for mobile */}
                 {showSharePopup && (
@@ -607,7 +704,7 @@ const OrderDetail = () => {
                           className="flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 rounded-md transition-colors"
                         >
                           <svg className="h-5 w-5 mr-2 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.96 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                            <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.347.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.96 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
                           </svg>
                           Telegram
                         </button>
@@ -671,7 +768,12 @@ const OrderDetail = () => {
               <div className="text-right">
                 <span className="block text-xs text-gray-500 uppercase font-medium">Date Issued</span>
                 <span className="block text-sm font-medium text-gray-900">
-                  {new Date(orderData.timestamp).toLocaleDateString('en-IN', {
+                  {issuedDate ? new Date(issuedDate).toLocaleDateString('en-IN', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    timeZone: 'Asia/Kolkata',
+                  }) : new Date(orderData.timestamp).toLocaleDateString('en-IN', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',

@@ -3162,7 +3162,7 @@ const ClientList = () => {
       <div className="px-6 py-5">
 
         {/* Show a prominent banner when merged filter is active */}
-        {showMergedOnly && (
+        {/* {showMergedOnly && (
           <div className="mt-3 py-2 px-3 bg-purple-500/20 border border-purple-400/30 rounded-lg flex items-center justify-between">
             <div className="flex items-center">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -3181,7 +3181,7 @@ const ClientList = () => {
               </svg>
             </button>
           </div>
-        )}
+        )} */}
       </div>
 
     </div>

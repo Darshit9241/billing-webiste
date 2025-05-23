@@ -1389,61 +1389,60 @@ const ClientList = () => {
               {/* Filters Content */}
               {isFiltersOpen && (
                 <div className={`backdrop-blur-md ${isDarkMode ? 'bg-black/40' : 'bg-white/95'} rounded-b-xl shadow-lg p-4 mb-4 border ${isDarkMode ? 'border-amber-600/40' : 'border-amber-100'} border-t-0 animate-fadeIn`}>
-                  <div className="space-y-3">
-                    <button
-                      onClick={() => {
-                        setActiveFilter('all');
-                        setIsInfoOpen(false);
-                      }}
-                      className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all flex items-center justify-between ${activeFilter === 'all'
-                        ? `${isDarkMode ? 'bg-emerald-500' : 'bg-emerald-600'} text-white shadow-md shadow-emerald-500/20`
-                        : `${isDarkMode ? 'bg-white/5' : 'bg-white'} ${isDarkMode ? 'text-slate-300' : 'text-gray-700'} border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} hover:${isDarkMode ? 'bg-white/10' : 'bg-gray-50'}`
-                        }`}
-                    >
-                      <div className="flex items-center">
-                        <div className={`w-3 h-3 rounded-full ${activeFilter === 'all' ? 'bg-white' : 'bg-emerald-500'} mr-2`}></div>
-                        <span className={`text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>All Orders</span>
-                      </div>
-                      <span className={`text-sm ${isDarkMode ? 'text-white/80' : 'text-gray-600'} bg-black/10 px-2 py-0.5 rounded-full`}>{countNonMergedClients()}</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setActiveFilter('pending');
-                        setIsInfoOpen(false);
-                      }}
-                      className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all flex items-center justify-between ${activeFilter === 'pending'
-                        ? `${isDarkMode ? 'bg-amber-500' : 'bg-amber-600'} text-white shadow-md shadow-amber-500/20`
-                        : `${isDarkMode ? 'bg-white/5' : 'bg-white'} ${isDarkMode ? 'text-slate-300' : 'text-gray-700'} border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} hover:${isDarkMode ? 'bg-white/10' : 'bg-gray-50'}`
-                        }`}
-                    >
-                      <div className="flex items-center">
-                        <div className={`w-3 h-3 rounded-full ${activeFilter === 'pending' ? 'bg-white' : 'bg-amber-500'} mr-2`}></div>
-                        <span className={`text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Pending</span>
-                      </div>
-                      <span className={`text-sm ${isDarkMode ? 'text-white/80' : 'text-gray-600'} bg-black/10 px-2 py-0.5 rounded-full`}>{countNonMergedClientsWithStatus('pending')}</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setActiveFilter('cleared');
-                        setIsInfoOpen(false);
-                      }}
-                      className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all flex items-center justify-between ${activeFilter === 'cleared'
-                        ? `${isDarkMode ? 'bg-sky-500' : 'bg-sky-600'} text-white shadow-md shadow-sky-500/20`
-                        : `${isDarkMode ? 'bg-white/5' : 'bg-white'} ${isDarkMode ? 'text-slate-300' : 'text-gray-700'} border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} hover:${isDarkMode ? 'bg-white/10' : 'bg-gray-50'}`
-                        }`}
-                    >
-                      <div className="flex items-center">
-                        <div className={`w-3 h-3 rounded-full ${activeFilter === 'cleared' ? 'bg-white' : 'bg-sky-500'} mr-2`}></div>
-                        <span className={`text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Cleared</span>
-                      </div>
-                      <span className={`text-sm ${isDarkMode ? 'text-white/80' : 'text-gray-600'} bg-black/10 px-2 py-0.5 rounded-full`}>{countNonMergedClientsWithStatus('cleared')}</span>
-                    </button>
+                  <div className="space-y-3 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
+                    <div className="space-y-3">
+                      <button
+                        onClick={() => {
+                          setActiveFilter('all');
+                          setIsInfoOpen(false);
+                        }}
+                        className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all flex items-center justify-between ${activeFilter === 'all'
+                          ? `${isDarkMode ? 'bg-emerald-500' : 'bg-emerald-600'} text-white shadow-md shadow-emerald-500/20`
+                          : `${isDarkMode ? 'bg-white/5' : 'bg-white'} ${isDarkMode ? 'text-slate-300' : 'text-gray-700'} border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} hover:${isDarkMode ? 'bg-white/10' : 'bg-gray-50'}`
+                          }`}
+                      >
+                        <div className="flex items-center">
+                          <div className={`w-3 h-3 rounded-full ${activeFilter === 'all' ? 'bg-white' : 'bg-emerald-500'} mr-2`}></div>
+                          <span className={`text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>All Orders Status</span>
+                        </div>
+                        <span className={`text-sm ${isDarkMode ? 'text-white/80' : 'text-gray-600'} bg-black/10 px-2 py-0.5 rounded-full`}>{countNonMergedClients()}</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setActiveFilter('pending');
+                          setIsInfoOpen(false);
+                        }}
+                        className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all flex items-center justify-between ${activeFilter === 'pending'
+                          ? `${isDarkMode ? 'bg-amber-500' : 'bg-amber-600'} text-white shadow-md shadow-amber-500/20`
+                          : `${isDarkMode ? 'bg-white/5' : 'bg-white'} ${isDarkMode ? 'text-slate-300' : 'text-gray-700'} border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} hover:${isDarkMode ? 'bg-white/10' : 'bg-gray-50'}`
+                          }`}
+                      >
+                        <div className="flex items-center">
+                          <div className={`w-3 h-3 rounded-full ${activeFilter === 'pending' ? 'bg-white' : 'bg-amber-500'} mr-2`}></div>
+                          <span className={`text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Pending</span>
+                        </div>
+                        <span className={`text-sm ${isDarkMode ? 'text-white/80' : 'text-gray-600'} bg-black/10 px-2 py-0.5 rounded-full`}>{countNonMergedClientsWithStatus('pending')}</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setActiveFilter('cleared');
+                          setIsInfoOpen(false);
+                        }}
+                        className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all flex items-center justify-between ${activeFilter === 'cleared'
+                          ? `${isDarkMode ? 'bg-sky-500' : 'bg-sky-600'} text-white shadow-md shadow-sky-500/20`
+                          : `${isDarkMode ? 'bg-white/5' : 'bg-white'} ${isDarkMode ? 'text-slate-300' : 'text-gray-700'} border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} hover:${isDarkMode ? 'bg-white/10' : 'bg-gray-50'}`
+                          }`}
+                      >
+                        <div className="flex items-center">
+                          <div className={`w-3 h-3 rounded-full ${activeFilter === 'cleared' ? 'bg-white' : 'bg-sky-500'} mr-2`}></div>
+                          <span className={`text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Cleared</span>
+                        </div>
+                        <span className={`text-sm ${isDarkMode ? 'text-white/80' : 'text-gray-600'} bg-black/10 px-2 py-0.5 rounded-full`}>{countNonMergedClientsWithStatus('cleared')}</span>
+                      </button>
+                    </div>
 
                     {/* Order Status Filter Section */}
-                    <div className={`mt-4 pt-4 border-t ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
-                      <h3 className={`text-sm font-medium mb-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                        Order Status Filter
-                      </h3>
+                    <div className={`mt-4 pt-4 md:mt-0 md:pt-0 border-t md:border-t-0 ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
                       <div className="space-y-3">
                         <button
                           onClick={() => {
@@ -2248,7 +2247,7 @@ const ClientList = () => {
             </div>
             <p className="ml-6 text-lg text-slate-300 font-medium">Loading orders...</p>
           </div>
-        )  : viewMode === 'list' ? (
+        ) : viewMode === 'list' ? (
           <div className="space-y-4">
             {filteredClients.map((client) => (
               <div

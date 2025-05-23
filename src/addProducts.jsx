@@ -1625,7 +1625,7 @@ const AddProducts = () => {
                           ₹ {product.total.toFixed(2)}
                         </div>
                       </div>
-                      <div className="hidden md:block md:col-span-2">
+                      <div className="hidden md:block md:col-span-2 lg:flex md:justify-center">
                         <button
                           className="flex items-center p-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all duration-300"
                           onClick={() => removeProduct(product.id)}

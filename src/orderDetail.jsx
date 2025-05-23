@@ -411,7 +411,7 @@ const OrderDetail = () => {
             {/* Date Editing Controls - Mobile Optimized */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 bg-white/10 backdrop-blur-sm rounded-lg p-2 border border-white/20 w-full sm:w-auto">
               <div className="flex items-center gap-2">
-                <span className="text-white text-xs font-medium">Invoice:</span>
+                <span className="text-white text-xs font-medium">From Date:</span>
                 {editingInvoiceDate ? (
                   <div className="flex items-center gap-1">
                     <input
@@ -472,7 +472,7 @@ const OrderDetail = () => {
               </div>
               
               <div className="flex items-center gap-2">
-                <span className="text-white text-xs font-medium">Due:</span>
+                <span className="text-white text-xs font-medium">To Date:</span>
                 {editingDueDate ? (
                   <div className="flex items-center gap-1">
                     <input

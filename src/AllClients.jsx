@@ -34,6 +34,9 @@ const AllClients = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
   
+  // New state variable for copy functionality
+  const [copiedClient, setCopiedClient] = useState(null);
+  
   useEffect(() => {
     fetchClientNames();
   }, []);
@@ -47,6 +50,16 @@ const AllClients = () => {
   useEffect(() => {
     localStorage.setItem('showMergedClients', showMergedClients);
   }, [showMergedClients]);
+  
+  // Reset copied client after 2 seconds
+  useEffect(() => {
+    if (copiedClient) {
+      const timer = setTimeout(() => {
+        setCopiedClient(null);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [copiedClient]);
   
   // Combined filtering and sorting effect
   useEffect(() => {
@@ -321,6 +334,18 @@ const AllClients = () => {
     );
   };
 
+  // Copy client name to clipboard
+  const handleCopyClientName = (e, clientName) => {
+    e.stopPropagation(); // Prevent triggering the row click
+    navigator.clipboard.writeText(clientName)
+      .then(() => {
+        setCopiedClient(clientName);
+      })
+      .catch(err => {
+        console.error('Failed to copy client name: ', err);
+      });
+  };
+
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-gray-100 to-white'} py-4 sm:py-8 px-3 sm:px-6 lg:px-8 transition-colors duration-200`}>
       <div className="max-w-7xl mx-auto">
@@ -579,16 +604,28 @@ const AllClients = () => {
                     <div className="p-3 sm:p-5">
                       <div className="flex flex-col gap-3">
                         <div className="flex justify-between items-start">
-                          <div>
+                          <div className="flex items-center">
                             <h3 className={`font-semibold text-base sm:text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-gray-900'} hover:text-emerald-500 transition-colors`}>
                               {client.clientName}
                               {client.hasMergedClient && (
                                 <span className="ml-2 text-xs bg-emerald-500 text-white px-2 py-0.5 rounded-full">Merged</span>
                               )}
                             </h3>
-                            <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mt-1`}>
-                              Last order: {formatDate(client.lastOrderDate)}
-                            </p>
+                            <button
+                              onClick={(e) => handleCopyClientName(e, client.clientName)}
+                              className={`ml-2 p-1.5 rounded-full ${isDarkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'} transition-colors`}
+                              title="Copy client name"
+                            >
+                              {copiedClient === client.clientName ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-emerald-500" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${isDarkMode ? 'text-slate-300' : 'text-gray-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                              )}
+                            </button>
                           </div>
                           <button
                             onClick={(e) => handleDeleteClick(e, client)}
@@ -647,10 +684,27 @@ const AllClients = () => {
                           className={`${index % 2 === 0 ? (isDarkMode ? 'bg-white/5' : 'bg-white') : (isDarkMode ? 'bg-white/[0.02]' : 'bg-gray-50')} cursor-pointer hover:bg-emerald-500/10 ${client.hasMergedClient ? (isDarkMode ? 'border-l-4 border-l-emerald-500' : 'border-l-4 border-l-emerald-500') : ''}`}
                         >
                           <td className={`px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-left ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                            {client.clientName}
-                            {client.hasMergedClient && (
-                              <span className="ml-2 text-xs bg-emerald-500 text-white px-1.5 py-0.5 rounded-full">Merged</span>
-                            )}
+                            <div className="flex items-center">
+                              <span>{client.clientName}</span>
+                              {client.hasMergedClient && (
+                                <span className="ml-2 text-xs bg-emerald-500 text-white px-1.5 py-0.5 rounded-full">Merged</span>
+                              )}
+                              <button
+                                onClick={(e) => handleCopyClientName(e, client.clientName)}
+                                className={`ml-2 p-1 rounded-full ${isDarkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'} transition-colors`}
+                                title="Copy client name"
+                              >
+                                {copiedClient === client.clientName ? (
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-emerald-500" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                ) : (
+                                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${isDarkMode ? 'text-slate-300' : 'text-gray-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                  </svg>
+                                )}
+                              </button>
+                            </div>
                           </td>
                           <td className={`px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-center ${isDarkMode ? 'text-slate-300' : 'text-gray-700'}`}>{client.orderCount}</td>
                           <td className={`px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-center text-emerald-500 font-medium`}>₹{client.totalAmount.toFixed(2)}</td>

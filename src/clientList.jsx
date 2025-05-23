@@ -852,7 +852,20 @@ const ClientList = () => {
     setSelectedPaymentIndex(null);
   };
   const handleBackClick = () => {
-    navigate('/');
+    // Reset all filters
+    setSearchQuery('');
+    setActiveFilter('all');
+    setOrderStatusFilter('all');
+    setStartDate('');
+    setEndDate('');
+    setIsDateFilterActive(false);
+    setShowMergedOnly(false);
+    
+    // Update URL to remove all query parameters
+    navigate(location.pathname, { replace: true });
+    
+    // Refresh client data
+    fetchClients();
   };
 
   const saveClientChanges = async (e) => {

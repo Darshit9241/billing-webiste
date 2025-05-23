@@ -637,9 +637,6 @@ const OrderDetail = () => {
                 {/* <p className="text-gray-500 text-xs sm:text-sm mt-1 text-left">Email :- siyaram@gmail.com</p> */}
               </div>
             </div>
-            <div className="print:hidden flex flex-row justify-center items-center">
-              <h2 className="text-lg font-semibold text-gray-800">Order Number: {id}</h2>
-            </div>
           </div>
 
           {/* INVOICE STAMP */}
@@ -691,9 +688,7 @@ const OrderDetail = () => {
               <h3 className="text-gray-500 font-medium mb-3 text-xs sm:text-sm uppercase tracking-wider text-left">Client Information</h3>
               <div className="space-y-2">
                 <div className="flex flex-col">
-                  <span className="text-gray-500 text-xs uppercase mb-1 text-left">Bill To:</span>
-                  <span className="text-gray-900 font-semibold text-sm sm:text-base text-left">{orderData.clientName || 'N/A'}</span>
-                  
+                  <span className="text-gray-500 text-xs sm:text-sm uppercase mb-1 text-left">Bill To:  <span className='text-gray-900 font-semibold text-xs sm:text-sm'>{orderData.clientName || 'N/A'}</span></span>                  
                   {orderData.clientAddress && (
                     <span className="text-gray-700 text-xs sm:text-sm mt-1 leading-tight text-left">{orderData.clientAddress}</span>
                   )}
@@ -720,7 +715,7 @@ const OrderDetail = () => {
             <div className="bg-gray-50 rounded-lg p-4 sm:p-6 border border-gray-100 md:w-1/2 print:bg-white print:border print-full-width">
               <h3 className="text-gray-500 font-medium mb-3 text-xs sm:text-sm uppercase tracking-wider">Payment Details</h3>
               <div className="grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
-                <div className="text-gray-500 font-medium text-left">Invoice Date:</div>
+                <div className="text-gray-500 font-medium text-left">From Date:</div>
                 <div className="text-gray-800 font-semibold text-right">
                   {invoiceDate ? new Date(invoiceDate).toLocaleDateString('en-IN', {
                     year: 'numeric',
@@ -730,7 +725,7 @@ const OrderDetail = () => {
                   }) : 'Not set'}
                 </div>
 
-                <div className="text-gray-500 font-medium text-left">Due Date:</div>
+                <div className="text-gray-500 font-medium text-left">To Date:</div>
                 <div className="text-gray-800 font-semibold text-right">
                   {dueDate ? new Date(dueDate).toLocaleDateString('en-IN', {
                     year: 'numeric',
@@ -897,7 +892,7 @@ const OrderDetail = () => {
               </svg>
               <p className="text-sm font-medium text-gray-700">Thank you for your business!</p>
             </div>
-            <p className="text-xs text-gray-500">If you have any questions about this invoice, please contact us.</p>
+            <p className="text-xs text-gray-500">If you have any questions about this Bill, please contact us.</p>
           </div>
         </div>
       </div>

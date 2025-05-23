@@ -807,83 +807,8 @@ const RecentActivity = ({ clients, isDarkMode }) => (
   </div>
 );
 
-// Component for calendar events
-const CalendarEvents = ({ isDarkMode }) => (
-  <div className={`p-6 rounded-lg shadow-md ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-    <h2 className="text-xl font-semibold mb-4">Upcoming Events</h2>
-    <div className="space-y-4">
-      <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-blue-50'}`}>
-        <div className="flex items-center">
-          <FiCalendar className={`h-5 w-5 mr-3 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-          <div>
-            <p className="font-medium">Client Meeting</p>
-            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Today, 2:00 PM
-            </p>
-          </div>
-        </div>
-      </div>
-      <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-green-50'}`}>
-        <div className="flex items-center">
-          <FiCalendar className={`h-5 w-5 mr-3 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`} />
-          <div>
-            <p className="font-medium">Payment Due</p>
-            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Tomorrow, 10:00 AM
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-);
 
-// Component for quick action button
-const ActionButton = ({ to, icon: Icon, color, text, isDarkMode }) => (
-  <Link 
-    to={to} 
-    className={`p-4 rounded-xl ${
-      isDarkMode 
-        ? `bg-gray-700 hover:bg-${color}-900 hover:bg-opacity-50` 
-        : `bg-white hover:bg-${color}-50`
-    } flex items-center transition-all duration-300 border ${
-      isDarkMode ? 'border-gray-600' : 'border-gray-100'
-    } shadow-sm hover:shadow-md group`}
-  >
-    <div className={`p-3 rounded-full ${
-      isDarkMode ? `bg-${color}-900 bg-opacity-50` : `bg-${color}-100`
-    } mr-3 group-hover:scale-110 transition-transform duration-300`}>
-      <Icon className={`h-6 w-6 ${isDarkMode ? `text-${color}-400` : `text-${color}-600`}`} />
-    </div>
-    <div>
-      <span className="font-medium">{text}</span>
-      <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-        {text === 'Add Client' && 'Create new client record'}
-        {text === 'Add Product' && 'Add new product to inventory'}
-        {text === 'View Reports' && 'See detailed analytics'}
-        {text === 'Settings' && 'Configure your account'}
-      </p>
-    </div>
-  </Link>
-);
 
-// Component for quick actions section
-const QuickActions = ({ isDarkMode }) => (
-  <div className={`p-6 rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border ${isDarkMode ? 'border-gray-700' : 'border-gray-100'} transition-all duration-300 hover:shadow-xl`}>
-    <div className="flex justify-between items-center mb-6">
-      <h2 className="text-xl font-semibold">Quick Actions</h2>
-      <div className={`px-3 py-1 rounded-full text-xs font-medium ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-        4 actions
-      </div>
-    </div>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <ActionButton to="/" icon={FiUsers} color="blue" text="Add Client" isDarkMode={isDarkMode} />
-      <ActionButton to="/" icon={FiDollarSign} color="green" text="Add Product" isDarkMode={isDarkMode} />
-      <ActionButton to="/reports" icon={FiTrendingUp} color="purple" text="View Reports" isDarkMode={isDarkMode} />
-      <ActionButton to="/settings" icon={FiCheckSquare} color="yellow" text="Settings" isDarkMode={isDarkMode} />
-    </div>
-  </div>
-);
 
 // Get top products
 const getTopProducts = (clients) => {

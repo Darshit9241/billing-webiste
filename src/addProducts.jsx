@@ -1014,7 +1014,7 @@ const AddProducts = () => {
               </div>
               <div>
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight">Billing System</h1>
-                <p className="text-indigo-100 text-xs sm:text-sm mt-0.5 sm:mt-1">Billing System</p>
+                <p className="text-indigo-100 text-xs sm:text-sm mt-0.5 sm:mt-1">Siyaram Lace</p>
               </div>
             </div>
             <div className="grid grid-cols-5 gap-2 sm:flex sm:flex-wrap sm:gap-3 w-full sm:w-auto">
@@ -1038,22 +1038,14 @@ const AddProducts = () => {
                 <span className="hidden sm:inline">dashboard</span>
               </button>
               <button
-                onClick={handleLogout}
-                className="flex items-center justify-center px-2 sm:px-4 py-2 sm:py-2.5 bg-red-500 bg-opacity-90 text-white text-xs sm:text-sm rounded-xl hover:bg-opacity-100 transition-all duration-300 font-medium shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V4a1 1 0 00-1-1H3zm11 4a1 1 0 10-2 0v4a1 1 0 102 0V7z" clipRule="evenodd" />
-                  <path d="M4 9h8v2H4V9z" />
-                </svg>
-                <span className="hidden sm:inline">Logout</span>
-              </button>
-              <button
                 onClick={handleExpenss}
                 className="flex items-center justify-center px-2 sm:px-4 py-2 sm:py-2.5 bg-green-500 bg-opacity-90 text-white text-xs sm:text-sm rounded-xl hover:bg-opacity-100 transition-all duration-300 font-medium shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H9a2 2 0 00-2 2v2m10 0V7a2 2 0 00-2-2H9a2 2 0 00-2 2v2m10 0a2 2 0 012 2v4a2 2 0 01-2 2m0 0v2a2 2 0 01-2 2H9a2 2 0 01-2-2v-2m10 0H7" />
                 </svg>
+                <span className="hidden sm:inline">Expenses</span>
+
               </button>
               <button
                 onClick={toggleDarkMode}
@@ -1068,6 +1060,16 @@ const AddProducts = () => {
                     <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
                   </svg>
                 )}
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center justify-center px-2 sm:px-4 py-2 sm:py-2.5 bg-red-500 bg-opacity-90 text-white text-xs sm:text-sm rounded-xl hover:bg-opacity-100 transition-all duration-300 font-medium shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V4a1 1 0 00-1-1H3zm11 4a1 1 0 10-2 0v4a1 1 0 102 0V7z" clipRule="evenodd" />
+                  <path d="M4 9h8v2H4V9z" />
+                </svg>
+                <span className="hidden sm:inline">Logout</span>
               </button>
             </div>
           </div>
@@ -1434,7 +1436,7 @@ const AddProducts = () => {
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
                   </svg>
-                  <span className="ml-2 text-sm sm:text-base">{billMode === 'existing' && currentOrderId ? 'Add New Product' : 'Add'}</span>
+                  <span className="text-sm sm:text-base">{billMode === 'existing' && currentOrderId ? 'Add New Product' : ''}</span>
                 </button>
               </div>
             </div>

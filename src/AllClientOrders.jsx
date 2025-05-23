@@ -3,7 +3,7 @@ import { fetchAllClients } from './firebase/clientsFirebase';
 import { useTheme } from './context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 
-const ClientOrders = () => {
+const AllClientOrders = () => {
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
   const [clients, setClients] = useState([]);
@@ -855,4 +855,4 @@ const ClientOrders = () => {
   );
 };
 
-export default ClientOrders; 
+export default AllClientOrders; 

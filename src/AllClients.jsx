@@ -4,7 +4,7 @@ import { fetchAllClients, deleteClient } from './firebase/clientsFirebase';
 import { useTheme } from './context/ThemeContext';
 import ThemeToggle from './components/ThemeToggle';
 
-const ClientNames = () => {
+const AllClients = () => {
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
   
@@ -206,7 +206,7 @@ const ClientNames = () => {
   
   const handleClientClick = (clientName, clientIds) => {
     // Pass both the client name and the array of client IDs
-    navigate(`/client-name/${encodeURIComponent(clientName)}`, { 
+    navigate(`/all-clients/${encodeURIComponent(clientName)}`, { 
       state: { clientIds } 
     });
   };
@@ -818,4 +818,4 @@ const ClientNames = () => {
   );
 };
 
-export default ClientNames; 
+export default AllClients; 

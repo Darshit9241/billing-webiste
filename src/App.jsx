@@ -5,9 +5,9 @@ import ClientList from './clientList';
 import OrderDetail from './orderDetail';
 import Login from './Login';
 import ProtectedRoute from './ProtectedRoute';
-import ClientOrders from './ClientOrders';
+import AllClientOrders from './AllClientOrders';
 import ClientNameOrders from './ClientNameOrders';
-import ClientNames from './ClientNames';
+import AllClients from './AllClients';
 import Dashboard from './Dashboard';
 import ExpenseTracker from './ExpenseTracker';
 //   import React, { useState, useEffect } from 'react';
@@ -98,9 +98,9 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/clients" element={<ClientList />} />
               <Route path="/order/:id" element={<OrderDetail />} />
-              <Route path="/clientorders" element={<ClientOrders />} />
-              <Route path="/client-name/:clientName" element={<ClientNameOrders />} />
-              <Route path="/client-names" element={<ClientNames />} />
+              <Route path="/all-client-orders" element={<AllClientOrders />} />
+              <Route path="/all-clients/:clientName" element={<ClientNameOrders />} />
+              <Route path="/all-clients" element={<AllClients />} />
               <Route path="/expenses" element={<ExpenseTracker />} />
             </Route>
             

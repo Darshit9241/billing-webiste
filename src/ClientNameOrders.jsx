@@ -324,7 +324,7 @@ const ClientNameOrders = () => {
   };
   
   const handleBackClick = () => {
-    navigate('/client-names');
+    navigate('/all-clients');
   };
 
   // Sorting handler

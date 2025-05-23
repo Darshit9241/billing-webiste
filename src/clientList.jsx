@@ -1108,7 +1108,7 @@ const ClientList = () => {
               <div className="flex items-center gap-2 sm:hidden">
                 <div className="flex items-center gap-1">
                   <button
-                    onClick={() => navigate(`/clientorders`)}
+                    onClick={() => navigate(`/all-client-orders`)}
                     className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'} ${isDarkMode ? 'text-white' : 'text-gray-700'}`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1116,7 +1116,7 @@ const ClientList = () => {
                     </svg>
                   </button>
                   <button
-                    onClick={() => navigate(`/client-names`)}
+                    onClick={() => navigate(`/all-clients`)}
                     className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'} ${isDarkMode ? 'text-white' : 'text-gray-700'} relative group`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1162,7 +1162,7 @@ const ClientList = () => {
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => navigate(`/client-names`)}
+                  onClick={() => navigate(`/all-clients`)}
                   className={`p-2 rounded-lg ${isDarkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'} transition-colors hidden sm:flex relative group`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${isDarkMode ? 'text-white' : 'text-gray-700'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1181,7 +1181,7 @@ const ClientList = () => {
                   </svg>
                 </button>
                 <button
-                  onClick={() => navigate(`/clientorders`)}
+                  onClick={() => navigate(`/all-client-orders`)}
                   className={`p-2 rounded-lg ${isDarkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'} transition-colors hidden sm:flex`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${isDarkMode ? 'text-white' : 'text-gray-700'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -69,7 +69,9 @@ const ClientOrders = () => {
   const fetchClients = async () => {
     try {
       const data = await fetchAllClients();
-      setClients(data);
+      // Filter out clients with IDs starting with "merged_"
+      const filteredData = data.filter(client => !client.id.startsWith('merged_'));
+      setClients(filteredData);
     } catch (err) {
       setError('Error loading client orders. Please try again.');
       console.error(err);

@@ -23,7 +23,10 @@ const ClientNames = () => {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [showMergedClients, setShowMergedClients] = useState(false);
+  const [showMergedClients, setShowMergedClients] = useState(() => {
+    // Initialize from localStorage or default to false
+    return localStorage.getItem('showMergedClients') === 'true' || false;
+  });
   
   // New state variables for delete functionality
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -39,6 +42,11 @@ const ClientNames = () => {
   useEffect(() => {
     localStorage.setItem('clientsViewMode', viewMode);
   }, [viewMode]);
+  
+  // Save merged clients preference to localStorage
+  useEffect(() => {
+    localStorage.setItem('showMergedClients', showMergedClients);
+  }, [showMergedClients]);
   
   // Combined filtering and sorting effect
   useEffect(() => {
@@ -439,31 +447,29 @@ const ClientNames = () => {
               isDarkMode={isDarkMode} 
             />
             
-            {mergedClientCount > 0 && (
-              <button
-                onClick={() => setShowMergedClients(!showMergedClients)}
-                className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium flex items-center space-x-1 
-                  ${showMergedClients 
-                    ? (isDarkMode ? 'bg-emerald-500/20 text-emerald-300' : 'bg-emerald-100 text-emerald-700') 
-                    : (isDarkMode ? 'bg-white/5 text-slate-300 hover:bg-white/10' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
-                  } transition-colors`}
-                title={showMergedClients ? "Hide merged clients and their values from stats" : "Show merged clients and include their values in stats"}
-              >
-                <span>
-                  {showMergedClients ? 'Including Merged' : 'Excluding Merged'}
+            <button
+              onClick={() => setShowMergedClients(!showMergedClients)}
+              className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium flex items-center space-x-1 
+                ${showMergedClients 
+                  ? (isDarkMode ? 'bg-emerald-500/20 text-emerald-300' : 'bg-emerald-100 text-emerald-700') 
+                  : (isDarkMode ? 'bg-white/5 text-slate-300 hover:bg-white/10' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
+                } transition-colors`}
+              title={showMergedClients ? "Hide merged clients and their values from stats" : "Show merged clients and include their values in stats"}
+            >
+              <span>
+                {showMergedClients ? 'Including Merged' : 'Excluding Merged'}
+              </span>
+              {showMergedClients && mergedClientCount > 0 && (
+                <span className="ml-1 px-1.5 py-0.5 rounded-full text-xs bg-emerald-500/20">
+                  {mergedClientCount}
                 </span>
-                {showMergedClients && (
-                  <span className="ml-1 px-1.5 py-0.5 rounded-full text-xs bg-emerald-500/20">
-                    {mergedClientCount}
-                  </span>
-                )}
-              </button>
-            )}
+              )}
+            </button>
           </div>
         </div>
         
         {/* Stats Summary */}
-        <div className="mb-4 sm:mb-6">
+        {/* <div className="mb-4 sm:mb-6">
           <div className={`backdrop-blur-md ${isDarkMode ? 'bg-white/5' : 'bg-white'} rounded-xl border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} shadow-md p-3 sm:p-5`}>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5 sm:gap-4">
               <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-2 sm:p-4 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
@@ -507,7 +513,7 @@ const ClientNames = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
         
         {/* Error message */}
         {error && (

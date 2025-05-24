@@ -22,6 +22,16 @@ const customStyles = `
   animation: pulse 2s ease-in-out infinite;
 }
 
+/* Date pulse animation */
+@keyframes datePulse {
+  0% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(217, 119, 6, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0); }
+}
+.date-pulse {
+  animation: datePulse 1s ease-out;
+}
+
 /* Custom scrollbar styles */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
@@ -108,6 +118,9 @@ const ClientList = () => {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [dateSearchActive, setDateSearchActive] = useState(false);
+
+  const [paymentDate, setPaymentDate] = useState('');
 
   // Function to update URL query parameters
   const updateUrlParams = (params) => {
@@ -220,8 +233,10 @@ const ClientList = () => {
       const endDateTime = new Date(endDate).setHours(23, 59, 59, 999);
 
       filtered = filtered.filter(client => {
-        const clientDate = new Date(client.timestamp).getTime();
-        return clientDate >= startDateTime && clientDate <= endDateTime;
+        // Use orderDate if available, otherwise fall back to timestamp
+        const dateValue = client.orderDate ? new Date(client.orderDate).getTime() : 
+                           client.timestamp ? new Date(client.timestamp).getTime() : Date.now();
+        return dateValue >= startDateTime && dateValue <= endDateTime;
       });
     }
 
@@ -260,8 +275,10 @@ const ClientList = () => {
         const searchDateEnd = searchDate.setHours(23, 59, 59, 999);
 
         filtered = filtered.filter(client => {
-          const clientDate = new Date(client.timestamp).getTime();
-          return clientDate >= searchDateStart && clientDate <= searchDateEnd;
+          // Use orderDate if available, otherwise fall back to timestamp
+          const dateValue = client.orderDate ? new Date(client.orderDate).getTime() : 
+                            client.timestamp ? new Date(client.timestamp).getTime() : Date.now();
+          return dateValue >= searchDateStart && dateValue <= searchDateEnd;
         });
       } else {
         // Regular search for other fields
@@ -272,6 +289,18 @@ const ClientList = () => {
         );
       }
     }
+
+    // Sort clients by orderDate (or timestamp) in descending order (newest first)
+    // filtered.sort((a, b) => {
+    //   // Get date values for both clients, preferring orderDate over timestamp
+    //   const dateA = a.orderDate ? new Date(a.orderDate).getTime() : 
+    //                a.timestamp ? new Date(a.timestamp).getTime() : 0;
+    //   const dateB = b.orderDate ? new Date(b.orderDate).getTime() : 
+    //                b.timestamp ? new Date(b.timestamp).getTime() : 0;
+      
+    //   // Sort in descending order (newest first)
+    //   return dateB - dateA;
+    // });
 
     setFilteredClients(filtered);
     setShowMergeButton(filtered.length > 1 && searchQuery.trim() !== '');
@@ -395,6 +424,19 @@ const ClientList = () => {
     setError('');
     try {
       const data = await fetchAllClients();
+      
+      // Sort clients by orderDate or timestamp (newest first) before saving
+      // data.sort((a, b) => {
+      //   // Get date values for both clients, preferring orderDate over timestamp
+      //   const dateA = a.orderDate ? new Date(a.orderDate).getTime() : 
+      //               a.timestamp ? new Date(a.timestamp).getTime() : 0;
+      //   const dateB = b.orderDate ? new Date(b.orderDate).getTime() : 
+      //               b.timestamp ? new Date(b.timestamp).getTime() : 0;
+        
+      //   // Sort in descending order (newest first)
+      //   return dateB - dateA;
+      // });
+      
       setSavedClients(data);
     } catch (err) {
       console.error("Error in fetchClients:", err);
@@ -404,19 +446,20 @@ const ClientList = () => {
     }
   };
 
-  // const formatDate = (timestamp) => {
-  //   return new Date(timestamp).toLocaleString(undefined, 
-  //     isSmallScreen ? { dateStyle: 'short', timeStyle: 'short' } : { dateStyle: 'medium', timeStyle: 'short' }
-  //   );
-  // };
-  const formatDate = (timestamp) => {
-    const options = isSmallScreen
-      ? { dateStyle: 'short', timeStyle: 'short', timeZone: 'Asia/Kolkata' }
-      : { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata' };
-
-    return new Date(timestamp).toLocaleString('en-IN', options);
+  // Update the formatDate function to handle orderDate or timestamp
+  const formatDate = (client) => {
+    // Use orderDate if available, otherwise fall back to timestamp
+    const dateValue = client.orderDate ? new Date(client.orderDate) : new Date(client.timestamp || Date.now());
+    
+    const options = {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'Asia/Kolkata'
+    };
+    
+    return dateValue.toLocaleString('en-IN', options);
   };
-
 
   const deleteOrder = async (id) => {
     try {
@@ -531,10 +574,11 @@ const ClientList = () => {
       clientGst: client.clientGst || '',
       amountPaid: client.amountPaid || '',
       paymentStatus: client.paymentStatus || 'pending',
-      orderStatus: client.orderStatus || 'sell', // Add order status to edit form data
-      products: client.products ? [...client.products] : [],
-      paymentHistory: client.paymentHistory ? [...client.paymentHistory] : [],
-      timestamp: client.timestamp || Date.now() // Add timestamp to edit form data
+      orderStatus: client.orderStatus || 'sell',
+      products: client.products || [],
+      paymentHistory: client.paymentHistory || [],
+      timestamp: client.timestamp || Date.now(),
+      orderDate: client.orderDate || new Date(client.timestamp || Date.now()).toISOString().split('T')[0]
     });
     setActiveTab('general');
   };
@@ -783,7 +827,8 @@ const ClientList = () => {
     if (!newPayment || parseFloat(newPayment) <= 0) return;
 
     const paymentAmount = parseFloat(newPayment);
-    const currentDate = new Date().toISOString();
+    // Use the provided date or current date if not provided
+    const paymentTimestamp = paymentDate ? new Date(paymentDate).toISOString() : new Date().toISOString();
 
     if (editingPayment !== null) {
       // Update existing payment
@@ -791,7 +836,7 @@ const ClientList = () => {
       const oldAmount = parseFloat(updatedPaymentHistory[editingPayment].amount) || 0;
       updatedPaymentHistory[editingPayment] = {
         amount: paymentAmount,
-        date: currentDate
+        date: paymentTimestamp
       };
 
       // Recalculate total paid amount by subtracting the old amount and adding the new amount
@@ -810,7 +855,7 @@ const ClientList = () => {
       // Create new payment entry
       const paymentEntry = {
         amount: paymentAmount,
-        date: currentDate
+        date: paymentTimestamp
       };
 
       // Calculate new total paid amount
@@ -830,12 +875,19 @@ const ClientList = () => {
     // Close modal and reset new payment input
     setShowPaymentModal(false);
     setNewPayment('');
+    setPaymentDate('');
   };
 
   const editPaymentEntry = (index) => {
     if (editFormData.paymentHistory && editFormData.paymentHistory[index]) {
       const payment = editFormData.paymentHistory[index];
       setNewPayment(payment.amount.toString());
+      
+      // Format the date for the datetime-local input
+      const paymentDateTime = new Date(payment.date);
+      const formattedDate = paymentDateTime.toISOString().slice(0, 16); // Format: YYYY-MM-DDThh:mm
+      setPaymentDate(formattedDate);
+      
       setEditingPayment(index);
       setShowPaymentModal(true);
     }
@@ -895,27 +947,21 @@ const ClientList = () => {
     try {
       const updatedClient = {
         id: editingClient.id,
-        timestamp: editFormData.timestamp, // Use the timestamp from edit form
         clientName: editFormData.clientName,
         clientAddress: editFormData.clientAddress,
         clientPhone: editFormData.clientPhone,
         clientGst: editFormData.clientGst,
-        amountPaid: editFormData.amountPaid,
+        products: editFormData.products,
+        grandTotal: grandTotal,
         paymentStatus: editFormData.paymentStatus,
-        orderStatus: editFormData.orderStatus, // Include order status when saving
-        products: editFormData.products.map(product => {
-          // Ensure product has a timestamp
-          if (!product.timestamp) {
-            product.timestamp = Date.now();
-          }
-          // Calculate total if not present
-          if (product.total === undefined) {
-            product.total = product.count * product.price;
-          }
-          return product;
-        }),
-        grandTotal,
-        paymentHistory: editFormData.paymentHistory
+        orderStatus: editFormData.orderStatus,
+        amountPaid: parseFloat(editFormData.amountPaid) || 0,
+        paymentHistory: editFormData.paymentHistory || [],
+        timestamp: editFormData.timestamp,
+        orderDate: editFormData.orderDate, // Save the order date
+        // Preserve any merged data if it exists
+        merged: editingClient.merged || false,
+        mergedFrom: editingClient.mergedFrom || []
       };
 
       await updateClient(updatedClient);
@@ -937,18 +983,17 @@ const ClientList = () => {
   };
 
   // Helper function to format date for datetime-local input
-  const formatDateForInput = (timestamp) => {
-    const date = new Date(timestamp);
-
-    // Get local ISO string parts
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-
-    // Format as YYYY-MM-DDThh:mm (required format for datetime-local)
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  const formatDateForInput = (client) => {
+    const dateValue = client.orderDate ? 
+      new Date(client.orderDate + 'T00:00:00') : // Convert YYYY-MM-DD to Date object
+      new Date(client.timestamp || Date.now());
+    
+    // Format to YYYY-MM-DDT00:00
+    const year = dateValue.getFullYear();
+    const month = String(dateValue.getMonth() + 1).padStart(2, '0');
+    const day = String(dateValue.getDate()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}T00:00`;
   };
 
   // Add this right after the codebase search to help with debugging
@@ -961,12 +1006,48 @@ const ClientList = () => {
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearchQuery(value);
+    
+    // Check for date format in DD/MM/YYYY
+    const dateRegex = /^(\d{2})\/(\d{2})(?:\/(\d{4}))?$/;
+    const dateMatch = value.match(dateRegex);
+    
+    if (dateMatch) {
+      // If it's a valid date format, show a visual indicator or hint
+      const [_, day, month, year] = dateMatch;
+      const currentYear = new Date().getFullYear();
+      const searchYear = year || currentYear;
+      
+      // Validate date
+      const searchDate = new Date(`${searchYear}-${month}-${day}`);
+      
+      // If valid date, apply date filter automatically
+      if (!isNaN(searchDate.getTime())) {
+        setDateSearchActive(true);
+        
+        // Provide visual feedback - pulse the border briefly
+        const input = document.activeElement;
+        if (input.tagName === 'INPUT') {
+          // Add a temporary pulse class
+          input.classList.add('date-pulse');
+          
+          // Remove the class after animation completes
+          setTimeout(() => {
+            input.classList.remove('date-pulse');
+          }, 1000);
+        }
+      } else {
+        setDateSearchActive(false);
+      }
+    } else {
+      setDateSearchActive(false);
+    }
   };
 
   // Add a function to clear the search query
   const clearSearchQuery = () => {
     setSearchQuery('');
     setSelectedClientsForMerge([]);
+    setDateSearchActive(false);
   };
 
   // Add a function to toggle merged only filter
@@ -1058,8 +1139,8 @@ const ClientList = () => {
 
 
       {showModalDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 sm:p-8 transition-all">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm overflow-hidden">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 sm:p-8 transition-all max-h-[90vh] overflow-y-auto">
             <div className="flex items-center space-x-3 mb-5">
               <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1568,11 +1649,20 @@ const ClientList = () => {
               </div>
               <input
                 type="text"
-                placeholder="Search by client name, ID or GST number..."
+                placeholder="Search by name, ID, GST or date (DD/MM/YYYY - searches order date & timestamp)"
                 value={searchQuery}
                 onChange={handleSearchChange}
-                className={`w-full pl-10 pr-24 py-3 ${isDarkMode ? 'bg-white/5' : 'bg-white'} border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} rounded-xl ${isDarkMode ? 'text-white placeholder-slate-400' : 'text-gray-900 placeholder-gray-400'} focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 shadow-sm`}
+                className={`w-full pl-10 pr-24 py-3 ${isDarkMode ? 'bg-white/5' : 'bg-white'} border ${dateSearchActive ? (isDarkMode ? 'border-amber-500/70' : 'border-amber-400') : (isDarkMode ? 'border-white/10' : 'border-gray-200')} rounded-xl ${isDarkMode ? 'text-white placeholder-slate-400' : 'text-gray-900 placeholder-gray-400'} focus:outline-none focus:ring-2 ${dateSearchActive ? 'focus:ring-amber-500/50 focus:border-amber-500' : 'focus:ring-emerald-500/50 focus:border-emerald-500'} shadow-sm transition-colors`}
               />
+              {/* Date format hint */}
+              <div className="absolute top-full left-0 mt-1 flex items-center">
+                <span className={`text-xs flex items-center ${dateSearchActive ? (isDarkMode ? 'text-amber-400' : 'text-amber-600') : 'text-slate-400'}`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  {dateSearchActive ? 'Date filter active (searches order date & timestamp)' : 'Date format: DD/MM/YYYY'}
+                </span>
+              </div>
               {/* Merge buttons */}
               {showMergeButton && (
                 <div className="absolute inset-y-0 right-10 flex items-center">
@@ -1741,8 +1831,8 @@ const ClientList = () => {
 
         {/* Edit Client Modal */}
         {editingClient && (
-          <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-            <div className="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-700 overflow-hidden my-4">
+          <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-hidden">
+            <div className="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-700 overflow-hidden my-4 max-h-[90vh] flex flex-col">
               <div className="p-5 bg-gradient-to-r from-slate-700 to-slate-800 border-b border-slate-600/30 sticky top-0 z-10">
                 <div className="flex justify-between items-center">
                   <h3 className="font-semibold text-lg text-white">Edit Client Order</h3>
@@ -1758,7 +1848,7 @@ const ClientList = () => {
               </div>
 
               {/* Tabs for General Info and Products */}
-              <div className="flex border-b border-slate-700 sticky top-[73px] z-10 bg-slate-800">
+              <div className="flex border-b border-slate-700 z-10 bg-slate-800">
                 <button
                   className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${activeTab === 'general'
                     ? 'bg-white/5 text-white border-b-2 border-emerald-500'
@@ -1792,7 +1882,7 @@ const ClientList = () => {
                 </button>
               </div>
 
-              <form onSubmit={saveClientChanges} className="overflow-y-auto max-h-[calc(100vh-200px)] custom-scrollbar">
+              <form onSubmit={saveClientChanges} className="overflow-y-auto flex-1 custom-scrollbar">
                 {activeTab === 'general' ? (
                   <div className="p-5 space-y-4">
                     <div>
@@ -1843,32 +1933,25 @@ const ClientList = () => {
                     <div>
                       <label className="block text-sm font-medium text-slate-300 mb-1">Order Date</label>
                       <input
-                        type="datetime-local"
-                        name="timestamp"
-                        value={formatDateForInput(editFormData.timestamp)}
+                        type="date"
+                        name="orderDate"
+                        value={editFormData.orderDate || ''}
                         onChange={(e) => {
-                          const localDate = new Date(e.target.value);
+                          const newOrderDate = e.target.value;
+                          
+                          // Update both orderDate and timestamp for backward compatibility
+                          const localDate = new Date(newOrderDate + 'T00:00:00');
                           const newTimestamp = localDate.getTime();
-
-                          // Update the main order timestamp
-                          const updatedFormData = {
+                          
+                          // Update the form data
+                          setEditFormData({
                             ...editFormData,
+                            orderDate: newOrderDate,
                             timestamp: newTimestamp
-                          };
-
-                          // Also update all product timestamps to match the new order timestamp
-                          if (updatedFormData.products && updatedFormData.products.length > 0) {
-                            updatedFormData.products = updatedFormData.products.map(product => ({
-                              ...product,
-                              timestamp: newTimestamp
-                            }));
-                          }
-
-                          setEditFormData(updatedFormData);
+                          });
                         }}
                         className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
                       />
-                      <p className="mt-1 text-xs text-slate-500">Updating this will also update all product timestamps.</p>
                     </div>
 
                     <div>
@@ -2155,7 +2238,7 @@ const ClientList = () => {
                           </div>
 
                           {/* Add timestamp editing field */}
-                          <div>
+                          {/* <div>
                             <label className="block text-sm font-medium text-slate-300 mb-1">Date Added</label>
                             <input
                               type="datetime-local"
@@ -2164,7 +2247,7 @@ const ClientList = () => {
                               className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
                             />
                             <p className="mt-1 text-xs text-slate-500">This controls when the product appears to have been added</p>
-                          </div>
+                          </div> */}
 
                           <div className="flex justify-end gap-2 pt-2">
                             <button
@@ -2213,11 +2296,11 @@ const ClientList = () => {
                                     ₹{(product.count * (typeof product.price === 'number' ? product.price : parseFloat(product.price || 0))).toFixed(2)}
                                   </span>
                                 </div>
-                                {product.timestamp && (
+                                {/* {product.timestamp && (
                                   <div className="mt-1 text-xs text-slate-500">
                                     Added: {formatDate(product.timestamp)}
                                   </div>
-                                )}
+                                )} */}
                               </div>
                               <div className="flex ml-4">
                                 <button
@@ -2409,15 +2492,18 @@ const ClientList = () => {
                       )}
                     </div>
                   </div>
-                  <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mt-3`}>
-                    {formatDate(client.timestamp)}
+                  <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mt-3 flex items-center`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    {formatDate(client)}
                   </p>
                 </div>
 
                 <div className="p-5">
                   {/* If this is a merged card, add a special header */}
                   {client.merged && (
-                    <div className="mb-4 px-3 py-2 rounded-lg bg-purple-500/10 border border-purple-500/30 flex items-center justify-between">
+                    <div className="mb-4 px-3 py-2 rounded-lg bg-purple-500/10 border border-purple-500/30 flex iitems-center justify-between">
                       <div className="flex items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
@@ -2654,8 +2740,11 @@ const ClientList = () => {
                       )}
                     </div>
                   </div>
-                  <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mt-3`}>
-                    {formatDate(client.timestamp)}
+                  <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mt-3 flex items-center`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    {formatDate(client)}
                   </p>
                 </div>
 
@@ -2885,32 +2974,29 @@ const ClientList = () => {
 
       {/* Payment Modal - Updated Design */}
       {showPaymentModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-0 border border-slate-700 overflow-hidden animate-fadeIn">
-            <div className="p-5 bg-gradient-to-r from-slate-700 to-slate-800 border-b border-slate-700">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold text-white flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
-                  </svg>
-                  {editingPayment !== null ? 'Edit Payment' : 'Add Payment'}
-                </h3>
-                <button
-                  onClick={() => {
-                    setShowPaymentModal(false);
-                    setEditingPayment(null);
-                    setNewPayment('');
-                  }}
-                  className="text-slate-400 hover:text-white p-1 rounded-full hover:bg-white/10 transition-all"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                </button>
-              </div>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-hidden">
+          <div className="bg-slate-800 rounded-2xl w-full max-w-md p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+            <div className="mb-4 flex justify-between items-center">
+              <h3 className="text-lg font-medium text-white">
+                {editingPayment !== null ? "Edit Payment" : "Add Payment"}
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowPaymentModal(false);
+                  setEditingPayment(null);
+                  setNewPayment('');
+                  setPaymentDate('');
+                }}
+                className="text-slate-400 hover:text-white transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+              </button>
             </div>
 
-            <div className="p-5">
+            <div>
               <div className="bg-white/5 rounded-xl p-4 mb-5 border border-white/10">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-xs text-slate-400">Order Total:</span>
@@ -2964,13 +3050,25 @@ const ClientList = () => {
                     autoFocus
                   />
                 </div>
+              </div>
+
+              <div className="mb-5">
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Payment Date and Time
+                </label>
+                <input
+                  type="datetime-local"
+                  value={paymentDate}
+                  onChange={(e) => setPaymentDate(e.target.value)}
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
+                />
                 <p className="mt-2 text-xs text-slate-400 flex items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   {editingPayment !== null
-                    ? "Editing this payment will update the payment timestamp to now."
-                    : "Current date and time will be recorded with this payment."}
+                    ? "You can modify the payment date and time."
+                    : "Leave blank to use current date and time."}
                 </p>
               </div>
 
@@ -2981,6 +3079,7 @@ const ClientList = () => {
                     setShowPaymentModal(false);
                     setEditingPayment(null);
                     setNewPayment('');
+                    setPaymentDate('');
                   }}
                   className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors"
                 >
@@ -2989,27 +3088,9 @@ const ClientList = () => {
                 <button
                   type="button"
                   onClick={addNewPayment}
-                  disabled={!newPayment || parseFloat(newPayment) <= 0}
-                  className={`px-4 py-2 rounded-xl transition-colors flex items-center ${!newPayment || parseFloat(newPayment) <= 0
-                    ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white'
-                    }`}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-colors"
                 >
-                  {editingPayment !== null ? (
-                    <>
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      Update Payment
-                    </>
-                  ) : (
-                    <>
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                      Add Payment
-                    </>
-                  )}
+                  {editingPayment !== null ? "Update Payment" : "Add Payment"}
                 </button>
               </div>
             </div>
@@ -3019,7 +3100,7 @@ const ClientList = () => {
 
       {/* Delete Payment Confirmation Modal */}
       {showDeletePaymentModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm overflow-hidden">
           <div className="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 border border-slate-700">
             <div className="flex items-center mb-5">
               <svg className="w-6 h-6 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3060,7 +3141,7 @@ const ClientList = () => {
 
       {/* Delete Product Confirmation Modal */}
       {showDeleteProductModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm overflow-hidden">
           <div className="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 border border-slate-700">
             <div className="flex items-center mb-5">
               <svg className="w-6 h-6 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3098,8 +3179,8 @@ const ClientList = () => {
 
       {/* Merge Preview Modal */}
       {showMergeModal && mergedClient && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm overflow-y-auto py-10">
-          <div className="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-3xl mx-4 border border-slate-700 overflow-hidden animate-fadeIn my-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm overflow-hidden py-10">
+          <div className="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-3xl mx-4 border border-slate-700 overflow-hidden animate-fadeIn my-8 max-h-[90vh] flex flex-col">
             <div className="p-5 bg-gradient-to-r from-slate-700 to-slate-800 border-b border-slate-700 sticky top-0 z-10">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold text-white flex items-center">
@@ -3122,7 +3203,7 @@ const ClientList = () => {
               </div>
             </div>
 
-            <div className="p-5 max-h-[70vh] overflow-y-auto custom-scrollbar">
+            <div className="p-5 overflow-y-auto flex-1 custom-scrollbar">
               {/* Client Details */}
               <div className="mb-6">
                 <h4 className="text-white font-medium text-lg mb-3 flex items-center">
@@ -3321,8 +3402,8 @@ const ClientList = () => {
 
       {/* Password Modal for Delete All */}
       {showPasswordModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 border border-slate-700 animate-fadeIn">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm overflow-hidden">
+          <div className="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 border border-slate-700 animate-fadeIn max-h-[90vh] overflow-y-auto">
             <div className="flex items-center mb-5">
               <svg className="w-6 h-6 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

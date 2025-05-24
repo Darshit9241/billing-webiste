@@ -187,10 +187,9 @@ const ClientNameOrders = () => {
 
   // Format date function - moved up before it's used in filteredOrders
   const formatDate = (timestamp) => {
+    if (!timestamp) return 'N/A';
     return new Date(timestamp).toLocaleString('en-IN', {
       dateStyle: 'medium',
-      timeStyle: 'short',
-      timeZone: 'Asia/Kolkata'
     });
   };
 
@@ -228,7 +227,7 @@ const ClientNameOrders = () => {
     // Apply date filter if active
     if (isDateFilterActive) {
       filtered = filtered.filter(order => {
-        const orderDate = new Date(order.timestamp);
+        const orderDate = new Date(order.orderDate || order.timestamp);
         
         // Check if order date is after fromDate (if fromDate is set)
         if (fromDate && new Date(fromDate) > orderDate) {
@@ -267,7 +266,7 @@ const ClientNameOrders = () => {
           return (order.orderStatus || '').toLowerCase().includes(term);
         case 'date':
           // Search in formatted date
-          const formattedDate = formatDate(order.timestamp).toLowerCase();
+          const formattedDate = formatDate(order.orderDate || order.timestamp).toLowerCase();
           return formattedDate.includes(term);
         case 'all':
         default:
@@ -277,7 +276,7 @@ const ClientNameOrders = () => {
             ((parseFloat(order.grandTotal) || 0).toString().includes(term)) ||
             ((order.paymentStatus || '').toLowerCase().includes(term)) ||
             ((order.orderStatus || '').toLowerCase().includes(term)) ||
-            (formatDate(order.timestamp).toLowerCase().includes(term))
+            (formatDate(order.orderDate || order.timestamp).toLowerCase().includes(term))
           );
       }
     });
@@ -292,7 +291,7 @@ const ClientNameOrders = () => {
       
       switch (sortField) {
         case 'timestamp':
-          comparison = new Date(a.timestamp) - new Date(b.timestamp);
+          comparison = new Date(a.orderDate || a.timestamp) - new Date(b.orderDate || b.timestamp);
           break;
         case 'grandTotal':
           comparison = (parseFloat(a.grandTotal) || 0) - (parseFloat(b.grandTotal) || 0);
@@ -312,7 +311,7 @@ const ClientNameOrders = () => {
           comparison = (a.orderStatus || '').localeCompare(b.orderStatus || '');
           break;
         default:
-          comparison = new Date(a.timestamp) - new Date(b.timestamp);
+          comparison = new Date(a.orderDate || a.timestamp) - new Date(b.orderDate || b.timestamp);
       }
       
       return sortDirection === 'asc' ? comparison : -comparison;
@@ -1132,7 +1131,7 @@ const ClientNameOrders = () => {
                             {order.merged ? '🔄 ' : ''}Order #{order.id.substring(0, 8)}
                           </h3>
                           <p className={`text-xs text-left ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mt-1`}>
-                            {formatDate(order.timestamp)}
+                            {formatDate(order.orderDate || order.timestamp)}
                           </p>
                         </div>
                         <div className="flex flex-col items-end gap-2">
@@ -1221,6 +1220,7 @@ const ClientNameOrders = () => {
                     </thead>
                     <tbody className={`divide-y ${isDarkMode ? 'divide-white/10' : 'divide-gray-200'}`}>
                       {sortedOrders.map((order, index) => {
+                        console.log("order", order);
                         const balanceDue = (parseFloat(order.grandTotal) || 0) - (parseFloat(order.amountPaid) || 0);
                         const isSelected = selectedOrders.some(o => o.id === order.id);
                         return (
@@ -1251,7 +1251,7 @@ const ClientNameOrders = () => {
                             <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium text-left ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                               {order.merged ? '🔄 ' : ''}#{order.id.substring(0, 8)}
                             </td>
-                            <td className={`px-6 py-4 whitespace-nowrap text-sm text-left ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>{formatDate(order.timestamp)}</td>
+                            <td className={`px-6 py-4 whitespace-nowrap text-sm text-left ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>{formatDate(order.orderDate || order.orderDate)}</td>
                             <td className={`px-6 py-4 whitespace-nowrap text-sm text-center ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>₹{parseFloat(order.grandTotal || 0).toFixed(2)}</td>
                             <td className={`px-6 py-4 whitespace-nowrap text-sm text-center text-emerald-500 font-medium`}>₹{parseFloat(order.amountPaid || 0).toFixed(2)}</td>
                             <td className={`px-6 py-4 whitespace-nowrap text-sm text-center ${balanceDue <= 0 ? 'text-sky-500' : 'text-amber-500'} font-medium`}>₹{balanceDue.toFixed(2)}</td>
@@ -1417,7 +1417,7 @@ const ClientNameOrders = () => {
                     </li>
                     <li className="flex justify-between">
                       <span className={`${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Date:</span>
-                      <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatDate(orderToDelete.timestamp)}</span>
+                      <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatDate(orderToDelete.orderDate || orderToDelete.timestamp)}</span>
                     </li>
                     <li className="flex justify-between">
                       <span className={`${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Total Amount:</span>

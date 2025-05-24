@@ -672,12 +672,12 @@ const AllClients = () => {
                         <th scope="col" className={`px-3 sm:px-6 py-2 sm:py-3 text-center text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} uppercase tracking-wider`}>Orders</th>
                         <th scope="col" className={`px-3 sm:px-6 py-2 sm:py-3 text-center text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} uppercase tracking-wider`}>Total Value</th>
                         <th scope="col" className={`px-3 sm:px-6 py-2 sm:py-3 text-center text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} uppercase tracking-wider`}>Pending</th>
-                        <th scope="col" className={`px-3 sm:px-6 py-2 sm:py-3 text-right text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} uppercase tracking-wider`}>Last Order</th>
                         <th scope="col" className={`px-3 sm:px-6 py-2 sm:py-3 text-right text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} uppercase tracking-wider`}>Action</th>
                       </tr>
                     </thead>
                     <tbody className={`divide-y ${isDarkMode ? 'divide-white/10' : 'divide-gray-200'}`}>
                       {paginatedClients.map((client, index) => (
+                        console.log("client", client),
                         <tr 
                           key={client.clientName} 
                           onClick={() => handleClientClick(client.clientName, client.clientIds)}
@@ -711,7 +711,6 @@ const AllClients = () => {
                           <td className={`px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-center ${client.pendingAmount > 0 ? 'text-amber-500 font-medium' : (isDarkMode ? 'text-slate-500' : 'text-gray-500')}`}>
                             {client.pendingAmount > 0 ? `₹${client.pendingAmount.toFixed(2)}` : '-'}
                           </td>
-                          <td className={`px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-right ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>{formatDate(client.lastOrderDate)}</td>
                           <td className={`px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-right`}>
                             <button
                               onClick={(e) => handleDeleteClick(e, client)}

@@ -399,6 +399,7 @@ const AllClientOrders = () => {
                 </thead>
                 <tbody className={`divide-y divide-gray-200 dark:divide-gray-700 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
                   {filteredClients.slice(0, displayCount).map((client) => (
+                    console.log("shdjsahdashda", client),
                     <tr key={client.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                         <div className="flex items-center justify-center">
@@ -759,7 +760,7 @@ const AllClientOrders = () => {
                       {client.clientGst}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                      {new Date(client.timestamp).toLocaleDateString('en-IN')}
+                      {new Date(client.orderDate).toLocaleDateString('en-IN')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600 text-center">
                       {client.grandTotal} ₹

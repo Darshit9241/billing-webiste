@@ -10,6 +10,7 @@ const AddProducts = () => {
   const [clientAddress, setClientAddress] = useState('');
   const [clientPhone, setClientPhone] = useState('');
   const [clientGst, setClientGst] = useState('');
+  const [orderDate, setOrderDate] = useState(new Date().toISOString().split('T')[0]); // Add state for order date
   const [products, setProducts] = useState([
     { id: 1, name: '', count: '', price: '', total: 0 }
   ]);
@@ -39,6 +40,7 @@ const AddProducts = () => {
   const clientAddressRef = useRef(null);
   const clientPhoneRef = useRef(null);
   const clientGstRef = useRef(null);
+  const orderDateRef = useRef(null); // Add ref for order date
   const amountPaidRef = useRef(null);
   const productRefs = useRef({});
   const orderIdRef = useRef(null);
@@ -158,6 +160,7 @@ const AddProducts = () => {
       setClientAddress(orderData.clientAddress || '');
       setClientPhone(orderData.clientPhone || '');
       setClientGst(orderData.clientGst || '');
+      setOrderDate(orderData.orderDate || new Date().toISOString().split('T')[0]); // Set order date from existing order or default to today
       setPaymentStatus(orderData.paymentStatus || 'pending');
       setOrderStatus(orderData.orderStatus || 'sell'); // Set order status from existing order
       setAmountPaid(orderData.amountPaid || '');
@@ -196,11 +199,17 @@ const AddProducts = () => {
     setClientAddress(client.clientAddress || '');
     setClientPhone(client.clientPhone || '');
     setClientGst(client.clientGst || '');
+    // If the client has an order date, use it; otherwise keep the current date
+    // if (client.orderDate) {
+    //   setOrderDate(client.orderDate);
+    // }
     setShowSuggestions(false);
     setShowGstSuggestions(false);
 
     // Focus on next empty field after auto-fill
-    if (!client.clientAddress) {
+    if (!client.orderDate) {
+      orderDateRef.current?.focus();
+    } else if (!client.clientAddress) {
       clientAddressRef.current?.focus();
     } else if (!client.clientPhone) {
       clientPhoneRef.current?.focus();
@@ -225,7 +234,13 @@ const AddProducts = () => {
 
       // Client name field handling
       if (field === 'clientName') {
-        clientAddressRef.current?.focus();
+        orderDateRef.current?.focus(); // Focus on date after name
+        return;
+      }
+
+      // Order date field handling
+      if (field === 'orderDate') {
+        clientAddressRef.current?.focus(); // Focus on address after date
         return;
       }
 
@@ -623,6 +638,7 @@ const AddProducts = () => {
           clientAddress,
           clientPhone,
           clientGst,
+          orderDate, // Include order date in the update
           products: combinedProducts,
           grandTotal: updatedGrandTotal,
           paymentStatus: newAmountPaid >= updatedGrandTotal ? 'cleared' : 'pending',
@@ -649,7 +665,7 @@ const AddProducts = () => {
         if (initialPaymentAmount > 0) {
           paymentHistory.push({
             amount: initialPaymentAmount,
-            date: Date.now()
+            date: new Date(orderDate).getTime() // Use order date timestamp instead of current time
           });
         }
 
@@ -679,6 +695,7 @@ const AddProducts = () => {
           clientAddress,
           clientPhone,
           clientGst,
+          orderDate, // Include order date in new orders
           products: validProducts, // Use the filtered and processed products
           grandTotal: parseFloat(validProducts.reduce((sum, product) => sum + product.total, 0).toFixed(2)),
           paymentStatus: initialPaymentAmount >= grandTotal ? 'cleared' : 'pending',
@@ -720,6 +737,7 @@ const AddProducts = () => {
     setClientAddress('');
     setClientPhone('');
     setClientGst('');
+    setOrderDate(new Date().toISOString().split('T')[0]); // Reset date to today
     setProducts([{ id: 1, name: '', count: '', price: '', total: 0 }]);
     setAmountPaid('');
     setPaymentStatus('pending');
@@ -1262,6 +1280,14 @@ const AddProducts = () => {
                           <span className={`font-medium ${darkMode ? 'text-white group-hover/item:text-indigo-300' : 'text-gray-800 group-hover/item:text-indigo-600'} transition-colors duration-200`}>{client.clientName}</span>
                         </div>
                         <div className="ml-11 mt-2 flex flex-col space-y-1">
+                          {client.orderDate && (
+                            <div className="flex items-center">
+                              <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${darkMode ? 'text-gray-400' : 'text-gray-400'} mr-1`} viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                              </svg>
+                              <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>Date: {client.orderDate}</span>
+                            </div>
+                          )}
                           {client.clientPhone && (
                             <div className="flex items-center">
                               <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${darkMode ? 'text-gray-400' : 'text-gray-400'} mr-1`} viewBox="0 0 20 20" fill="currentColor">
@@ -1283,6 +1309,26 @@ const AddProducts = () => {
                     ))}
                   </div>
                 )}
+              </div>
+
+              {/* Order Date input with enhanced floating label */}
+              <div className="relative group">
+                <input
+                  type="date"
+                  id="orderDate"
+                  className={`block w-full px-4 py-4 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400 placeholder-gray-400' : 'border-gray-300 bg-white text-gray-800 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl transition-all duration-200 peer placeholder-transparent group-hover:border-indigo-300`}
+                  value={orderDate}
+                  onChange={(e) => setOrderDate(e.target.value)}
+                  placeholder="Order Date"
+                  ref={orderDateRef}
+                  onKeyDown={(e) => handleKeyPress(e, null, 'orderDate')}
+                />
+                <label
+                  htmlFor="orderDate"
+                  className={`absolute text-sm ${darkMode ? 'text-gray-400 bg-gray-700 peer-focus:text-indigo-400 group-hover:text-indigo-400' : 'text-gray-500 bg-white peer-focus:text-indigo-600 group-hover:text-indigo-500'} duration-300 transform -translate-y-3 scale-85 top-3 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-85 peer-focus:-translate-y-3 px-1`}
+                >
+                  Order Date
+                </label>
               </div>
 
               {/* Client address input with enhanced floating label */}
@@ -1371,6 +1417,14 @@ const AddProducts = () => {
                           </div>
                         </div>
                         <div className="ml-11 mt-2 flex flex-col space-y-1">
+                          {client.orderDate && (
+                            <div className="flex items-center">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-gray-400 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                              </svg>
+                              <span className="text-xs text-gray-500">Date: {client.orderDate}</span>
+                            </div>
+                          )}
                           {client.clientPhone && (
                             <div className="flex items-center">
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-gray-400 mr-1" viewBox="0 0 20 20" fill="currentColor">
@@ -1405,6 +1459,10 @@ const AddProducts = () => {
                   <div>
                     <span className={`block ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Client:</span>
                     <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-800'}`}>{clientName}</span>
+                  </div>
+                  <div>
+                    <span className={`block ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Date:</span>
+                    <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-800'}`}>{orderDate}</span>
                   </div>
                   <div>
                     <span className={`block ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>GST:</span>
@@ -1791,6 +1849,14 @@ const AddProducts = () => {
                 {clientName && (
                   <div className={`mb-4 p-3 ${darkMode ? 'bg-gray-700 bg-opacity-80' : 'bg-white bg-opacity-80'} backdrop-blur-sm rounded-lg`}>
                     <div className="grid grid-cols-1 gap-2">
+                      {orderDate && (
+                        <div className="flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'} mr-2 flex-shrink-0`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Date: {orderDate}</span>
+                        </div>
+                      )}
                       {clientAddress && (
                         <div className="flex items-start sm:items-center">
                           <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'} mr-2 mt-1 sm:mt-0 flex-shrink-0`} fill="none" viewBox="0 0 24 24" stroke="currentColor">

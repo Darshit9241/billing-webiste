@@ -24,13 +24,30 @@ const formatCurrency = (amount) => {
   }).format(amount);
 };
 
-const formatDate = (timestamp) => {
-  if (!timestamp) return 'N/A';
-  const date = new Date(timestamp);
+// Format date function to handle both client objects and timestamps
+const formatDate = (data) => {
+  if (!data) return 'N/A';
+  
+  // If data is a client object with orderDate or timestamp
+  if (typeof data === 'object') {
+    // Use orderDate if available, otherwise fall back to timestamp
+    const dateValue = data.orderDate ? new Date(data.orderDate) : new Date(data.timestamp || Date.now());
+    
+    return dateValue.toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'Asia/Kolkata'
+    });
+  } 
+  
+  // If data is a timestamp directly
+  const date = new Date(data);
   return date.toLocaleDateString('en-IN', {
     day: 'numeric',
     month: 'short',
-    year: 'numeric'
+    year: 'numeric',
+    timeZone: 'Asia/Kolkata'
   });
 };
 
@@ -376,9 +393,10 @@ const prepareClientGrowthData = (clients) => {
   
   // Count clients by month of registration
   clients.forEach(client => {
-    if (!client.timestamp) return;
+    // Use orderDate if available, otherwise fall back to timestamp
+    if (!client.orderDate && !client.timestamp) return;
     
-    const date = new Date(client.timestamp);
+    const date = client.orderDate ? new Date(client.orderDate) : new Date(client.timestamp);
     const monthKey = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
     
     // Only include if it's within the last 6 months
@@ -775,7 +793,7 @@ const ClientCard = ({ client, isDarkMode }) => {
             <div className="flex items-center mt-0.5 sm:mt-1">
               <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} flex items-center truncate`}>
                 <FiCalendar className="mr-1 h-3 w-3 flex-shrink-0" /> 
-                <span className="truncate">{formatDate(client.timestamp)}</span>
+                <span className="truncate">{formatDate(client)}</span>
               </span>
             </div>
           </div>
@@ -1214,9 +1232,10 @@ const Dashboard = () => {
     
     // Populate with actual data
     clients.forEach(client => {
-      if (!client.timestamp) return;
+      // Use orderDate if available, otherwise fall back to timestamp
+      if (!client.orderDate && !client.timestamp) return;
       
-      const date = new Date(client.timestamp);
+      const date = client.orderDate ? new Date(client.orderDate) : new Date(client.timestamp);
       const monthKey = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
       
       // Only include if it's within the last 6 months
@@ -1264,12 +1283,13 @@ const Dashboard = () => {
     
     // Populate with actual data
     clients.forEach(client => {
-      if (!client.timestamp) return;
+      // Use orderDate if available, otherwise fall back to timestamp
+      if (!client.orderDate && !client.timestamp) return;
       
-      const date = new Date(client.timestamp);
+      const date = client.orderDate ? new Date(client.orderDate) : new Date(client.timestamp);
       const today = new Date();
       
-      // Check if the client timestamp is within the last 7 days
+      // Check if the client date is within the last 7 days
       if ((today - date) <= (7 * 24 * 60 * 60 * 1000)) {
         const dayKey = `${dayNames[date.getDay()]} ${date.getDate()}`;
         
@@ -1316,9 +1336,10 @@ const Dashboard = () => {
     
     // Populate with actual data
     clients.forEach(client => {
-      if (!client.timestamp) return;
+      // Use orderDate if available, otherwise fall back to timestamp
+      if (!client.orderDate && !client.timestamp) return;
       
-      const date = new Date(client.timestamp);
+      const date = client.orderDate ? new Date(client.orderDate) : new Date(client.timestamp);
       const year = date.getFullYear().toString();
       
       // Only include if it's within the last 3 years
@@ -1411,9 +1432,10 @@ const Dashboard = () => {
     
     // Count clients by month of registration
     clients.forEach(client => {
-      if (!client.timestamp) return;
+      // Use orderDate if available, otherwise fall back to timestamp
+      if (!client.orderDate && !client.timestamp) return;
       
-      const date = new Date(client.timestamp);
+      const date = client.orderDate ? new Date(client.orderDate) : new Date(client.timestamp);
       const monthKey = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
       
       // Only include if it's within the last 6 months
@@ -1609,7 +1631,9 @@ const Dashboard = () => {
         
         // Sort clients by timestamp (newest first) and take the first 5
         const sortedClients = [...nonMergedClients].sort((a, b) => {
-          return (b.timestamp || 0) - (a.timestamp || 0);
+          const dateA = a.orderDate ? new Date(a.orderDate).getTime() : (a.timestamp || 0);
+          const dateB = b.orderDate ? new Date(b.orderDate).getTime() : (b.timestamp || 0);
+          return dateB - dateA;
         });
 
         // Prepare monthly revenue data with sell/purchase separation

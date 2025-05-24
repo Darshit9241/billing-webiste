@@ -63,13 +63,15 @@ const OrderDetail = () => {
         id: snapshot.key,
         ...snapshot.val()
       };
+
+      console.log("mmmmm", data);
       
       // Set invoice date - use invoiceDate from data if available, otherwise use timestamp
       const timestamp = data.timestamp || Date.now();
-      setInvoiceDate(data.invoiceDate ? new Date(data.invoiceDate) : new Date(timestamp));
+      setInvoiceDate(data.orderDate ? new Date(data.orderDate) : new Date(timestamp));
       
       // Set issued date - use issuedDate from data if available, otherwise use timestamp
-      setIssuedDate(data.issuedDate ? new Date(data.issuedDate) : new Date(timestamp));
+      setIssuedDate(data.orderDate ? new Date(data.orderDate) : new Date(timestamp));
       
       // Set due date - use dueDate from data if available, otherwise add 30 days to timestamp
       const defaultDueDate = new Date(timestamp);
@@ -876,7 +878,7 @@ const OrderDetail = () => {
                   <th scope="col" className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Qty</th>
                   <th scope="col" className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Price</th>
                   <th scope="col" className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Amount</th>
-                  <th scope="col" className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Date Added</th>
+                  {/* <th scope="col" className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Date Added</th> */}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -889,7 +891,7 @@ const OrderDetail = () => {
                     <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 font-medium text-right">₹{(typeof product.price === 'number' && typeof product.count === 'number' ? 
                       (product.price * product.count).toFixed(2) : 
                       (parseFloat(product.price || 0) * parseFloat(product.count || 0)).toFixed(2))}</td>
-                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 text-right">
+                    {/* <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 text-right">
                       {product.timestamp ? 
                         new Date(product.timestamp).toLocaleString('en-IN', {
                           year: 'numeric',
@@ -897,7 +899,7 @@ const OrderDetail = () => {
                           day: 'numeric',
                           timeZone: 'Asia/Kolkata'
                         }) : 'N/A'}
-                    </td>
+                    </td> */}
                   </tr>
                 ))}
               </tbody>

@@ -1460,19 +1460,19 @@ const ClientList = () => {
                     <div className={`${isDarkMode ? 'bg-white/5' : 'bg-white'} backdrop-blur-md rounded-xl p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} shadow-sm flex items-center`}>
                       <div className="flex-1">
                         <p className={`text-[11px] sm:text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Total Amount</p>
-                        <p className={`text-lg sm:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mt-0.5 sm:mt-1 truncate`}>₹{filteredClients.reduce((total, client) => total + (client.grandTotal || 0), 0).toFixed(2)}</p>
+                        <p className={`text-lg sm:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mt-0.5 sm:mt-1 truncate flex items-center justify-center`}><BsCurrencyRupee />{filteredClients.reduce((total, client) => total + (client.grandTotal || 0), 0).toFixed(2)}</p>
                         <p className={`text-[9px] sm:text-xs ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>Order value</p>
                       </div>
                     </div>
 
                     <div className={`${isDarkMode ? 'bg-white/5' : 'bg-white'} backdrop-blur-md rounded-xl p-2.5 sm:p-4 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} shadow-sm transform transition-all hover:scale-105`}>
-                      <p className="text-lg sm:text-2xl font-bold text-emerald-500 mt-0.5 sm:mt-1 truncate">₹{filteredClients.reduce((total, client) => total + (client.amountPaid || 0), 0).toFixed(2)}</p>
+                      <p className="text-lg sm:text-2xl font-bold text-emerald-500 mt-0.5 sm:mt-1 truncate flex items-center justify-center"><BsCurrencyRupee />{filteredClients.reduce((total, client) => total + (client.amountPaid || 0), 0).toFixed(2)}</p>
                       <p className={`text-[9px] sm:text-xs ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>Total Received Payments</p>
                     </div>
 
                     <div className={`${isDarkMode ? 'bg-white/5' : 'bg-white'} backdrop-blur-md rounded-xl p-2.5 sm:p-4 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} shadow-sm`}>
                       <p className={`text-[11px] sm:text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Pending</p>
-                      <p className="text-lg sm:text-2xl font-bold text-amber-500 mt-0.5 sm:mt-1 truncate">₹{filteredClients.reduce((total, client) => {
+                      <p className="text-lg sm:text-2xl font-bold text-amber-500 mt-0.5 sm:mt-1 truncate flex items-center justify-center"><BsCurrencyRupee />{filteredClients.reduce((total, client) => {
                         const grandTotal = typeof client.grandTotal === 'number' ? client.grandTotal : 0;
                         const amountPaid = typeof client.amountPaid === 'number' ? client.amountPaid : 0;
                         const pendingAmount = grandTotal - amountPaid;
@@ -2290,10 +2290,10 @@ const ClientList = () => {
                                 <p className="text-white text-sm font-medium truncate text-left">{product.name || 'Unnamed Product'}</p>
                                 <div className="flex items-center mt-1">
                                   <span className="text-xs text-slate-400">
-                                    {product.count} × ₹{typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(product.price || 0).toFixed(2)} =
+                                    {product.count} × <span className="inline-flex items-center"><BsCurrencyRupee />{typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(product.price || 0).toFixed(2)}</span> =
                                   </span>
                                   <span className="text-xs text-emerald-400 ml-1 font-medium">
-                                    ₹{(product.count * (typeof product.price === 'number' ? product.price : parseFloat(product.price || 0))).toFixed(2)}
+                                    <span className="inline-flex items-center"><BsCurrencyRupee />{(product.count * (typeof product.price === 'number' ? product.price : parseFloat(product.price || 0))).toFixed(2)}</span>
                                   </span>
                                 </div>
                                 {/* {product.timestamp && (
@@ -2544,19 +2544,18 @@ const ClientList = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-lg p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
                       <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Total:</p>
-                      <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'} text-sm`}>₹{typeof client.grandTotal === 'number' ? client.grandTotal.toFixed(2) : '0.00'}</p>
+                      <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'} text-sm flex items-center`}><BsCurrencyRupee />{typeof client.grandTotal === 'number' ? client.grandTotal.toFixed(2) : '0.00'}</p>
                     </div>
                     <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-lg p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
                       <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Amount Paid:</p>
-                      <p className="font-medium text-emerald-500 text-sm">₹{typeof client.amountPaid === 'number' ? client.amountPaid.toFixed(2) : '0.00'}</p>
+                      <p className="font-medium text-emerald-500 text-sm flex items-center"><BsCurrencyRupee />{typeof client.amountPaid === 'number' ? client.amountPaid.toFixed(2) : '0.00'}</p>
                     </div>
                     <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-lg p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
                       <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Balance Due:</p>
                       <p className={`font-medium text-sm ${((typeof client.grandTotal === 'number' ? client.grandTotal : 0) -
                         (typeof client.amountPaid === 'number' ? client.amountPaid : 0)) <= 0 ? 'text-sky-500' : 'text-amber-500'
                         }`}>
-                        ₹{((typeof client.grandTotal === 'number' ? client.grandTotal : 0) -
-                          (typeof client.amountPaid === 'number' ? client.amountPaid : 0)).toFixed(2)}
+                        <span className="flex items-center"><BsCurrencyRupee />{((typeof client.grandTotal === 'number' ? client.grandTotal : 0) -                          (typeof client.amountPaid === 'number' ? client.amountPaid : 0)).toFixed(2)}</span>
                       </p>
                     </div>
                   </div>
@@ -2587,19 +2586,21 @@ const ClientList = () => {
                           setSelectedClientId(client.id);
                           setShowModal(true);
                         }}
-                        className={`py-3 text-center text-sm font-medium text-emerald-500 hover:${isDarkMode ? 'bg-emerald-500/10' : 'bg-emerald-50'} transition-colors border-r ${isDarkMode ? 'border-slate-700/50' : 'border-gray-200'} flex items-center justify-center`}
+                        className={`py-3 text-center text-sm font-medium text-emerald-500 hover:${isDarkMode ? 'bg-emerald-500/10' : 'bg-emerald-50'} transition-colors border-r ${isDarkMode ? 'border-slate-700/50' : 'border-gray-200'} flex items-center justify-center group`}
+                        onMouseEnter={(e) => e.currentTarget.disabled = true}
+                        onMouseLeave={(e) => e.currentTarget.disabled = false}
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 group-hover:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        Pay
+                        <span className="hidden xs:inline ml-0.5 group-hover:text-gray-400">Pay</span>
                       </button>
                     ) : (
                       <div className={`py-3 text-center text-sm font-medium text-sky-500 ${isDarkMode ? 'bg-sky-500/10' : 'bg-sky-50'} border-r ${isDarkMode ? 'border-slate-700/50' : 'border-gray-200'} flex items-center justify-center opacity-70`}>
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
-                        Paid
+                        <span className="hidden xs:inline ml-0.5">Paid</span>
                       </div>
                     )}
                     <button
@@ -2754,22 +2755,17 @@ const ClientList = () => {
                   <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                     <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} backdrop-blur-md rounded-lg p-2.5 sm:p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} transform transition-all hover:scale-105`}>
                       <p className={`text-[10px] sm:text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Total:</p>
-                      <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'} text-xs sm:text-sm md:text-base truncate`}>₹{typeof client.grandTotal === 'number' ? client.grandTotal.toFixed(2) : '0.00'}</p>
+                                             <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'} text-xs sm:text-sm md:text-base truncate flex items-center justify-center`}><BsCurrencyRupee />{typeof client.grandTotal === 'number' ? client.grandTotal.toFixed(2) : '0.00'}</p>
                     </div>
                     <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} backdrop-blur-md rounded-lg p-2.5 sm:p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} transform transition-all hover:scale-105`}>
                       <p className={`text-[10px] sm:text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Amount Paid:</p>
-                      {/* <p className="font-medium text-emerald-500 text-xs sm:text-sm md:text-base truncate">₹{typeof client.amountPaid === 'number' ? client.amountPaid.toFixed(2) : '0.00'}</p> */}
+                      {/* <p className="font-medium text-emerald-500 text-xs sm:text-sm md:text-base truncate flex items-center justify-center"><BsCurrencyRupee />{typeof client.amountPaid === 'number' ? client.amountPaid.toFixed(2) : '0.00'}</p> */}
 
                       <p className="font-medium text-emerald-500 text-xs sm:text-sm md:text-base truncate flex items-center justify-center"><BsCurrencyRupee />{typeof client.amountPaid === 'number' ? client.amountPaid.toFixed(2) : '0.00'}</p>
                     </div>
                     <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} backdrop-blur-md rounded-lg p-2.5 sm:p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} transform transition-all hover:scale-105 xs:col-span-2 sm:col-span-1`}>
                       <p className={`text-[10px] sm:text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Balance Due:</p>
-                      <p className={`font-medium text-xs sm:text-sm md:text-base truncate ${((typeof client.grandTotal === 'number' ? client.grandTotal : 0) -
-                        (typeof client.amountPaid === 'number' ? client.amountPaid : 0)) <= 0 ? 'text-sky-500' : 'text-amber-500'
-                        }`}>
-                        ₹{((typeof client.grandTotal === 'number' ? client.grandTotal : 0) -
-                          (typeof client.amountPaid === 'number' ? client.amountPaid : 0)).toFixed(2)}
-                      </p>
+                                            <p className={`font-medium text-xs sm:text-sm md:text-base truncate flex items-center justify-center ${((typeof client.grandTotal === 'number' ? client.grandTotal : 0) -                        (typeof client.amountPaid === 'number' ? client.amountPaid : 0)) <= 0 ? 'text-sky-500' : 'text-amber-500'                        }`}>                        <BsCurrencyRupee />{((typeof client.grandTotal === 'number' ? client.grandTotal : 0) -                          (typeof client.amountPaid === 'number' ? client.amountPaid : 0)).toFixed(2)}                      </p>
                     </div>
                   </div>
 
@@ -2859,9 +2855,7 @@ const ClientList = () => {
                                   </span>
                                 </div>
                                 <div className="col-span-3 text-right">
-                                  <span className={`text-xs font-medium ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
-                                    ₹{typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(product.price || 0).toFixed(2)}
-                                  </span>
+                                                                    <span className={`text-xs font-medium ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'} flex items-center justify-end`}>                                    <BsCurrencyRupee />{typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(product.price || 0).toFixed(2)}                                  </span>
                                 </div>
                                 {/* <div className="col-span-3 text-left">
                                   <span className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
@@ -2911,12 +2905,14 @@ const ClientList = () => {
                         setSelectedClientId(client.id);
                         setShowModal(true);
                       }}
-                      className={`py-3 text-center text-xs sm:text-sm font-medium text-emerald-500 hover:${isDarkMode ? 'bg-emerald-500/10' : 'bg-emerald-50'} transition-colors border-r ${isDarkMode ? 'border-slate-700/50' : 'border-gray-200'} flex items-center justify-center`}
+                      className={`py-3 text-center text-xs sm:text-sm font-medium text-emerald-500 hover:${isDarkMode ? 'bg-emerald-500/10' : 'bg-emerald-50'} transition-colors border-r ${isDarkMode ? 'border-slate-700/50' : 'border-gray-200'} flex items-center justify-center group`}
+                      onMouseEnter={(e) => e.currentTarget.disabled = true}
+                      onMouseLeave={(e) => e.currentTarget.disabled = false}
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 group-hover:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <span className="hidden xs:inline ml-0.5">Pay</span>
+                      <span className="hidden xs:inline ml-0.5 group-hover:text-gray-400">Pay</span>
                     </button>
                   ) : (
                     <div className={`py-3 text-center text-xs sm:text-sm font-medium text-sky-500 ${isDarkMode ? 'bg-sky-500/10' : 'bg-sky-50'} border-r ${isDarkMode ? 'border-slate-700/50' : 'border-gray-200'} flex items-center justify-center opacity-70`}>
@@ -3000,11 +2996,11 @@ const ClientList = () => {
               <div className="bg-white/5 rounded-xl p-4 mb-5 border border-white/10">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-xs text-slate-400">Order Total:</span>
-                  <span className="text-sm font-medium text-white">₹{(editingClient?.grandTotal || 0).toFixed(2)}</span>
+                  <span className="text-sm font-medium text-white flex items-center"><BsCurrencyRupee />{(editingClient?.grandTotal || 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-xs text-slate-400">Already Paid:</span>
-                  <span className="text-sm font-medium text-emerald-400">₹{(parseFloat(editFormData.amountPaid) || 0).toFixed(2)}</span>
+                  <span className="text-sm font-medium text-emerald-400 flex items-center"><BsCurrencyRupee />{(parseFloat(editFormData.amountPaid) || 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center pt-2 border-t border-white/10">
                   <span className="text-xs font-medium text-slate-300">Remaining Balance:</span>
@@ -3018,21 +3014,13 @@ const ClientList = () => {
                       <span className="text-xs ml-1 text-slate-400">(including this payment)</span>
                     </span>
                   ) : (
-                    <span className="text-sm font-bold text-amber-400">
-                      ₹{((editingClient?.grandTotal || 0) - (parseFloat(editFormData.amountPaid) || 0)).toFixed(2)}
-                    </span>
+                                        <span className="text-sm font-bold text-amber-400 flex items-center">                      <BsCurrencyRupee />{((editingClient?.grandTotal || 0) - (parseFloat(editFormData.amountPaid) || 0)).toFixed(2)}                    </span>
                   )}
                 </div>
               </div>
 
               <div className="mb-5">
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Payment Amount (₹)
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-slate-400">₹</span>
-                  </div>
+                                  <label className="block text-sm font-medium text-slate-300 mb-2">                    Payment Amount                  </label>                  <div className="relative">                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">                      <span className="text-slate-400"><BsCurrencyRupee /></span>                    </div>
                   <input
                     type="number"
                     value={newPayment}
@@ -3245,17 +3233,16 @@ const ClientList = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                     <p className="text-xs text-slate-400 mb-1">Total Amount</p>
-                    <p className="text-white text-xl font-bold">₹{mergedClient.grandTotal.toFixed(2)}</p>
+                    <p className="text-white text-xl font-bold flex items-center"><BsCurrencyRupee />{mergedClient.grandTotal.toFixed(2)}</p>
                   </div>
                   <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                     <p className="text-xs text-slate-400 mb-1">Amount Paid</p>
-                    <p className="text-emerald-400 text-xl font-bold">₹{mergedClient.amountPaid.toFixed(2)}</p>
+                    <p className="text-emerald-400 text-xl font-bold flex items-center"><BsCurrencyRupee />{mergedClient.amountPaid.toFixed(2)}</p>
                   </div>
                   <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                     <p className="text-xs text-slate-400 mb-1">Balance Due</p>
                     <p className={`text-xl font-bold ${(mergedClient.grandTotal - mergedClient.amountPaid) <= 0 ? 'text-sky-500' : 'text-amber-500'}`}>
-                      ₹{(mergedClient.grandTotal - mergedClient.amountPaid).toFixed(2)}
-                    </p>
+                                            <BsCurrencyRupee />{(mergedClient.grandTotal - mergedClient.amountPaid).toFixed(2)}                    </p>
                   </div>
                 </div>
               </div>
@@ -3288,9 +3275,7 @@ const ClientList = () => {
                                 hour12: true
                               })}
                             </td>
-                            <td className="py-2.5 px-4 text-xs text-right font-medium text-emerald-500">
-                              ₹{parseFloat(payment.amount).toFixed(2)}
-                            </td>
+                                                        <td className="py-2.5 px-4 text-xs text-right font-medium text-emerald-500">                              <span className="flex items-center justify-end"><BsCurrencyRupee />{parseFloat(payment.amount).toFixed(2)}</span>                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -3327,10 +3312,8 @@ const ClientList = () => {
                           <tr key={index} className="text-white hover:bg-white/5">
                             <td className="py-2.5 px-4 text-sm">{product.name}</td>
                             <td className="py-2.5 px-4 text-xs text-right text-slate-300">{product.count}</td>
-                            <td className="py-2.5 px-4 text-xs text-right text-slate-300">₹{parseFloat(product.price).toFixed(2)}</td>
-                            <td className="py-2.5 px-4 text-xs text-right font-medium text-emerald-500">
-                              ₹{(product.count * parseFloat(product.price)).toFixed(2)}
-                            </td>
+                            <td className="py-2.5 px-4 text-xs text-right text-slate-300"><span className="flex items-center justify-end"><BsCurrencyRupee />{parseFloat(product.price).toFixed(2)}</span></td>
+                                                        <td className="py-2.5 px-4 text-xs text-right font-medium text-emerald-500">                              <span className="flex items-center justify-end"><BsCurrencyRupee />{(product.count * parseFloat(product.price)).toFixed(2)}</span>                            </td>
                           </tr>
                         ))}
                       </tbody>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { fetchAllClients } from './firebase/clientsFirebase';
 import { useTheme } from './context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
+import { BsCurrencyRupee } from 'react-icons/bs';
 
 const AllClientOrders = () => {
   const { isDarkMode } = useTheme();
@@ -353,13 +354,19 @@ const AllClientOrders = () => {
               <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-4">
                 <div className="text-sm font-medium text-green-600 dark:text-green-400 mb-1">Total Amount</div>
                 <div className="text-2xl font-bold text-green-700 dark:text-green-300">
-                  ₹{totalFilteredAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                  <div className="flex items-center">
+                    <BsCurrencyRupee className="inline-block mr-1" size={18} />
+                    {totalFilteredAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                  </div>
                 </div>
               </div>
               <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-4">
                 <div className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-1">Average Order Value</div>
                 <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">
-                  ₹{(totalFilteredAmount / (filteredClients.length || 1)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                  <div className="flex items-center">
+                    <BsCurrencyRupee className="inline-block mr-1" size={18} />
+                    {(totalFilteredAmount / (filteredClients.length || 1)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                  </div>
                 </div>
               </div>
             </div>
@@ -453,7 +460,10 @@ const AllClientOrders = () => {
                         {new Date(client.timestamp).toLocaleDateString('en-IN')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600 text-center">
-                        {client.grandTotal} ₹
+                        <div className="flex items-center justify-center">
+                          <BsCurrencyRupee className="inline-block mr-1" size={14} />
+                          {client.grandTotal}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${client.paymentStatus === 'pending'
@@ -760,10 +770,13 @@ const AllClientOrders = () => {
                       {client.clientGst}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                      {new Date(client.orderDate).toLocaleDateString('en-IN')}
+                      {new Date(client.timestamp).toLocaleDateString('en-IN')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600 text-center">
-                      {client.grandTotal} ₹
+                      <div className="flex items-center justify-center">
+                        <BsCurrencyRupee className="inline-block mr-1" size={14} />
+                        {client.grandTotal}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${client.paymentStatus === 'pending'
@@ -836,13 +849,19 @@ const AllClientOrders = () => {
                 <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-4">
                   <div className="text-sm font-medium text-green-600 dark:text-green-400 mb-1">Total Amount</div>
                   <div className="text-2xl font-bold text-green-700 dark:text-green-300">
-                    ₹{totalFilteredAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                    <div className="flex items-center">
+                      <BsCurrencyRupee className="inline-block mr-1" size={18} />
+                      {totalFilteredAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                    </div>
                   </div>
                 </div>
                 <div className="bg-yellow-50 dark:bg-yellow-900/30 rounded-lg p-4">
                   <div className="text-sm font-medium text-yellow-600 dark:text-yellow-400 mb-1">Total Pending Amount</div>
                   <div className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">
-                    ₹{calculateTotalPendingAmount().toFixed(2)}
+                    <div className="flex items-center">
+                      <BsCurrencyRupee className="inline-block mr-1" size={18} />
+                      {calculateTotalPendingAmount().toFixed(2)}
+                    </div>
                   </div>
                 </div>
               </div>

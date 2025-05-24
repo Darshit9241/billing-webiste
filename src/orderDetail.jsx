@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { usePDF } from 'react-to-pdf';
 import { ref, get, update } from 'firebase/database';
 import { database } from './firebase/config';
+import { BsCurrencyRupee } from 'react-icons/bs';
 
 const OrderDetail = () => {
   const [orderData, setOrderData] = useState(null);
@@ -887,10 +888,7 @@ const OrderDetail = () => {
                     <td className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs text-gray-500">{index + 1}</td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium text-gray-900">{product.name || 'Product Item'}</td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 text-right">{product.count}</td>
-                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 text-right">₹{typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(product.price || 0).toFixed(2)}</td>
-                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 font-medium text-right">₹{(typeof product.price === 'number' && typeof product.count === 'number' ? 
-                      (product.price * product.count).toFixed(2) : 
-                      (parseFloat(product.price || 0) * parseFloat(product.count || 0)).toFixed(2))}</td>
+                                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 text-right flex items-center justify-end"><BsCurrencyRupee />{typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(product.price || 0).toFixed(2)}</td>                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 font-medium text-right flex items-center justify-end"><BsCurrencyRupee />{(typeof product.price === 'number' && typeof product.count === 'number' ?                       (product.price * product.count).toFixed(2) :                       (parseFloat(product.price || 0) * parseFloat(product.count || 0)).toFixed(2))}</td>
                     {/* <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 text-right">
                       {product.timestamp ? 
                         new Date(product.timestamp).toLocaleString('en-IN', {
@@ -914,30 +912,7 @@ const OrderDetail = () => {
               <div className="lg:col-span-12">
                 <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border border-gray-100 shadow-sm print:bg-white print:border">
                   <div className="space-y-2">
-                    <div className="flex justify-between text-sm text-gray-600 pb-2">
-                      <span>Subtotal</span>
-                      <span className="font-medium">₹{typeof orderData.grandTotal === 'number' ? orderData.grandTotal.toFixed(2) : '0.00'}</span>
-                    </div>
-                    
-                    <div className="flex justify-between text-sm text-gray-600 pb-2 border-b border-gray-200">
-                      <span>Tax</span>
-                      <span className="font-medium">₹0.00</span>
-                    </div>
-                    
-                    <div className="flex justify-between text-sm font-semibold text-gray-800 pt-2">
-                      <span>Total</span>
-                      <span className="text-lg">₹{typeof orderData.grandTotal === 'number' ? orderData.grandTotal.toFixed(2) : '0.00'}</span>
-                    </div>
-                    
-                    <div className="flex justify-between text-sm text-gray-600 pt-2 pb-2 border-b border-gray-200">
-                      <span>Amount Paid</span>
-                      <span className="font-medium text-green-600">₹{(typeof orderData.amountPaid === 'number' ? orderData.amountPaid.toFixed(2) : '0.00')}</span>
-                    </div>
-                    
-                    <div className="flex justify-between text-base font-bold pt-2">
-                      <span className={isPaid ? 'text-green-600' : 'text-red-600'}>Balance Due</span>
-                      <span className={isPaid ? 'text-green-600' : 'text-red-600'}>₹{Math.max(0, balanceDue).toFixed(2)}</span>
-                    </div>
+                                        <div className="flex justify-between text-sm text-gray-600 pb-2">                      <span>Subtotal</span>                      <span className="font-medium flex items-center"><BsCurrencyRupee />{typeof orderData.grandTotal === 'number' ? orderData.grandTotal.toFixed(2) : '0.00'}</span>                    </div>                                        <div className="flex justify-between text-sm text-gray-600 pb-2 border-b border-gray-200">                      <span>Tax</span>                      <span className="font-medium flex items-center"><BsCurrencyRupee />0.00</span>                    </div>                                        <div className="flex justify-between text-sm font-semibold text-gray-800 pt-2">                      <span>Total</span>                      <span className="text-lg flex items-center"><BsCurrencyRupee />{typeof orderData.grandTotal === 'number' ? orderData.grandTotal.toFixed(2) : '0.00'}</span>                    </div>                                        <div className="flex justify-between text-sm text-gray-600 pt-2 pb-2 border-b border-gray-200">                      <span>Amount Paid</span>                      <span className="font-medium text-green-600 flex items-center"><BsCurrencyRupee />{(typeof orderData.amountPaid === 'number' ? orderData.amountPaid.toFixed(2) : '0.00')}</span>                    </div>                                        <div className="flex justify-between text-base font-bold pt-2">                      <span className={isPaid ? 'text-green-600' : 'text-red-600'}>Balance Due</span>                      <span className={isPaid ? 'text-green-600' : 'text-red-600'} style={{ display: 'flex', alignItems: 'center' }}><BsCurrencyRupee />{Math.max(0, balanceDue).toFixed(2)}</span>                    </div>
                   </div>
                 </div>
               </div>
@@ -972,9 +947,7 @@ const OrderDetail = () => {
                             timeZone: 'Asia/Kolkata'
                           })}
                         </td>
-                        <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-xs sm:text-sm font-medium text-green-600 text-right">
-                          ₹{parseFloat(payment.amount).toFixed(2)}
-                        </td>
+                                                <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-xs sm:text-sm font-medium text-green-600 text-right flex items-center justify-end">                          <BsCurrencyRupee />{parseFloat(payment.amount).toFixed(2)}                        </td>
                         <td className="px-3 sm:px-6 py-3 text-right">
                           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-green-800">
                             Received

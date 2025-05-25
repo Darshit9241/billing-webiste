@@ -105,6 +105,13 @@ const Login = () => {
         {/* Card with animation */}
         <div className="bg-white bg-opacity-90 backdrop-filter backdrop-blur-lg rounded-2xl shadow-2xl overflow-hidden transform transition-all duration-500 hover:scale-102 animate-float">
           {/* Header */}
+          <div className="flex justify-center items-center">
+          <img
+                  src="/siyaram-lace.png"
+                  alt="icon"
+                  className="h-28 w-1/2 sm:h-28 sm:w-3/4 object-contain text-white"
+                />
+          </div>
           <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 relative">
             <div className="glow-effect absolute inset-0"></div>
             <h2 className="text-3xl font-bold text-white text-center animate-fadeIn">Welcome To Siyaram Lace</h2>

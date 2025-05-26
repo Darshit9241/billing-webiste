@@ -129,7 +129,6 @@ const ClientNameOrders = () => {
       
       // If no matches found, try a more flexible approach
       if (matchingOrders.length === 0) {
-        console.log("No exact matches found, trying flexible matching...");
         // Try to match by removing extra spaces and normalizing case
         const normalizedName = name.toLowerCase().replace(/\s+/g, ' ').trim();
         matchingOrders = allClients.filter(client => {
@@ -140,7 +139,6 @@ const ClientNameOrders = () => {
         
         // If still no matches, try substring matching as a last resort
         if (matchingOrders.length === 0 && normalizedName.length > 2) {
-          console.log("No normalized matches found, trying substring matching...");
           matchingOrders = allClients.filter(client => {
             if (!client.clientName) return false;
             const normalizedClientName = client.clientName.toLowerCase().replace(/\s+/g, ' ').trim();
@@ -171,12 +169,6 @@ const ClientNameOrders = () => {
       setTotalAmount(total);
       setPaidAmount(paid);
       setPendingAmount(pending);
-      
-      // Log for debugging
-      console.log(`Found ${matchingOrders.length} orders for client "${name}"`);
-      if (matchingOrders.length === 0) {
-        console.log("All available clients:", allClients.map(c => c.clientName));
-      }
     } catch (err) {
       console.error("Error fetching orders by client name:", err);
       setError("Failed to load orders. Please try again.");
@@ -336,19 +328,6 @@ const ClientNameOrders = () => {
       setSortField(field);
       setSortDirection(field === 'timestamp' ? 'desc' : 'asc');
     }
-  };
-  
-  // Pagination handlers
-  const handlePageChange = (page) => {
-    // This function is no longer needed as we're removing pagination
-  };
-  
-  const handlePrevPage = () => {
-    // This function is no longer needed as we're removing pagination
-  };
-  
-  const handleNextPage = () => {
-    // This function is no longer needed as we're removing pagination
   };
   
   // SortButton Component
@@ -1220,7 +1199,6 @@ const ClientNameOrders = () => {
                     </thead>
                     <tbody className={`divide-y ${isDarkMode ? 'divide-white/10' : 'divide-gray-200'}`}>
                       {sortedOrders.map((order, index) => {
-                        console.log("order", order);
                         const balanceDue = (parseFloat(order.grandTotal) || 0) - (parseFloat(order.amountPaid) || 0);
                         const isSelected = selectedOrders.some(o => o.id === order.id);
                         return (

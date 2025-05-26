@@ -64,8 +64,6 @@ const OrderDetail = () => {
         id: snapshot.key,
         ...snapshot.val()
       };
-
-      console.log("mmmmm", data);
       
       // Set invoice date - use invoiceDate from data if available, otherwise use timestamp
       const timestamp = data.timestamp || Date.now();

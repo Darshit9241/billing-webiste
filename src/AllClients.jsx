@@ -1044,7 +1044,6 @@ const AllClients = () => {
                     >
                       {paginatedClients.map(
                         (client, index) => (
-                          console.log("client", client),
                           (
                             <tr
                               key={client.clientName}

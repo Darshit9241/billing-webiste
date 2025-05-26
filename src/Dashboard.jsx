@@ -1651,17 +1651,6 @@ const Dashboard = () => {
         // Get top products with sell/purchase separation
         const topProducts = getTopProducts(nonMergedClients);
         
-        // Log payment status data for debugging
-        console.log('Payment Status Data:', {
-          sell: {
-            cleared: sellClearedClients.length,
-            pending: sellPendingClients.length
-          },
-          purchase: {
-            cleared: purchaseClearedClients.length,
-            pending: purchasePendingClients.length
-          }
-        });
         
         setStats({
           totalClients: nonMergedClients.length,

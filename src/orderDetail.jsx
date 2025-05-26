@@ -720,7 +720,7 @@ const OrderDetail = () => {
         {/* Invoice Content */}
         <div ref={targetRef} className="px-4 sm:px-6 md:px-8 py-6 sm:py-8 print:p-4">
           {/* Company Logo and Invoice Title */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-4 border-b print-break-inside-avoid">
+          {/* <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-4 border-b print-break-inside-avoid">
             <div className="flex items-start sm:items-center sm:flex-row mb-4 md:mb-0 w-full md:w-auto justify-between">
               <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-2.5 rounded-lg mr-3 shadow-md flex-shrink-0 mb-3 sm:mb-0 print:bg-indigo-500">
                 <svg className="h-6 w-6 sm:h-7 sm:w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -733,8 +733,8 @@ const OrderDetail = () => {
                 <p className="text-gray-500 text-xs sm:text-sm mt-1 text-left">Contact Number :- 98794 43940</p>
               </div>
             </div>
-          </div>
-          {/* <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-4 border-b print-break-inside-avoid">
+          </div> */}
+          <div className="flex flex-col print:flex-row md:flex-row justify-between items-start md:items-center mb-8 pb-4 border-b print-break-inside-avoid">
             <div className="flex justify-center items-center">
               <img
                 src="/siyaram-lace.png"
@@ -747,7 +747,7 @@ const OrderDetail = () => {
               <p className="text-gray-500 text-xs sm:text-sm mt-1 text-end">Jay Industrial Estate, IND 79, Anjana, 1, Anjana, Surat, Gujarat 395003</p>
               <p className="text-gray-500 text-xs sm:text-sm mt-1 text-end">Contact Number :- 98794 43940</p>
             </div>
-          </div> */}
+          </div>
 
           {/* INVOICE STAMP */}
           <div className="hidden sm:block absolute top-4 right-4 print:top-8 print:right-8">

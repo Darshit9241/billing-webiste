@@ -885,7 +885,6 @@ const OrderDetail = () => {
                   <th scope="col" className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Qty</th>
                   <th scope="col" className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Price</th>
                   <th scope="col" className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Amount</th>
-                  {/* <th scope="col" className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Date Added</th> */}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -896,15 +895,6 @@ const OrderDetail = () => {
                     <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 text-right">{product.count}</td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 text-right">₹{product.price}</td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 text-right">₹{product.total}</td>
-                    {/* <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 text-right">
-                        {product.timestamp ? 
-                        new Date(product.timestamp).toLocaleString('en-IN', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                          timeZone: 'Asia/Kolkata'
-                        }) : 'N/A'}
-                    </td> */}
                   </tr>
                 ))}
               </tbody>

@@ -997,6 +997,14 @@ const AllClients = () => {
                       <tr>
                         <th
                           scope="col"
+                          className={`px-2 sm:px-3 py-2 sm:py-3 text-center text-xs font-medium ${
+                            isDarkMode ? "text-slate-400" : "text-gray-500"
+                          } uppercase tracking-wider`}
+                        >
+                          #
+                        </th>
+                        <th
+                          scope="col"
                           className={`px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium ${
                             isDarkMode ? "text-slate-400" : "text-gray-500"
                           } uppercase tracking-wider`}
@@ -1069,6 +1077,13 @@ const AllClients = () => {
                                   : ""
                               }`}
                             >
+                              <td
+                                className={`px-2 sm:px-3 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-center ${
+                                  isDarkMode ? "text-slate-400" : "text-gray-500"
+                                }`}
+                              >
+                                {(currentPage - 1) * itemsPerPage + index + 1}
+                              </td>
                               <td
                                 className={`px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-left ${
                                   isDarkMode ? "text-white" : "text-gray-900"

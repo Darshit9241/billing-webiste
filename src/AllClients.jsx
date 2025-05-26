@@ -1052,7 +1052,7 @@ const AllClients = () => {
                     >
                       {paginatedClients.map(
                         (client, index) => (
-                          (
+                            (
                             <tr
                               key={client.clientName}
                               onClick={() =>

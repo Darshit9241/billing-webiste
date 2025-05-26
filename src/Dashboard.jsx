@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ThemeToggle from './components/ThemeToggle';
 import { useTheme } from './context/ThemeContext';
 import { fetchAllClients } from './firebase/clientsFirebase';
@@ -9,9 +9,9 @@ import {
   Tooltip, Legend, ResponsiveContainer, AreaChart, Area
 } from 'recharts';
 import { 
-  FiSearch, FiBell, FiCalendar, FiCheckSquare, FiTrendingUp, 
+  FiSearch,FiCalendar, FiCheckSquare, FiTrendingUp, 
   FiUsers, FiDollarSign, FiDownload, FiActivity, FiClock, 
-  FiAlertTriangle, FiCheckCircle, FiInfo, FiX
+  FiAlertTriangle
 } from 'react-icons/fi';
 
 
@@ -373,71 +373,6 @@ const PaymentStatusChart = ({ clearedPayments, pendingPayments, sellPayments, pu
   );
 };
 
-// Prepare client growth data
-const prepareClientGrowthData = (clients) => {
-  const clientGrowth = {};
-  const sellClientGrowth = {};
-  const purchaseClientGrowth = {};
-  const currentDate = new Date();
-  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  
-  // Initialize last 6 months with zero values
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(currentDate);
-    d.setMonth(currentDate.getMonth() - i);
-    const monthKey = `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
-    clientGrowth[monthKey] = 0;
-    sellClientGrowth[monthKey] = 0;
-    purchaseClientGrowth[monthKey] = 0;
-  }
-  
-  // Count clients by month of registration
-  clients.forEach(client => {
-    // Use orderDate if available, otherwise fall back to timestamp
-    if (!client.orderDate && !client.timestamp) return;
-    
-    const date = client.orderDate ? new Date(client.orderDate) : new Date(client.timestamp);
-    const monthKey = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
-    
-    // Only include if it's within the last 6 months
-    if (clientGrowth.hasOwnProperty(monthKey)) {
-      clientGrowth[monthKey] += 1;
-      
-      // Separate sell and purchase clients
-      if (client.orderStatus === 'sell') {
-        sellClientGrowth[monthKey] += 1;
-      } else if (client.orderStatus === 'purchased') {
-        purchaseClientGrowth[monthKey] += 1;
-      }
-    }
-  });
-  
-  // Convert to cumulative growth
-  let cumulativeClients = 0;
-  let cumulativeSellClients = 0;
-  let cumulativePurchaseClients = 0;
-  
-  const totalData = Object.entries(clientGrowth).map(([name, count]) => {
-    cumulativeClients += count;
-    return { name, clients: cumulativeClients };
-  });
-  
-  const sellData = Object.entries(sellClientGrowth).map(([name, count]) => {
-    cumulativeSellClients += count;
-    return { name, clients: cumulativeSellClients };
-  });
-  
-  const purchaseData = Object.entries(purchaseClientGrowth).map(([name, count]) => {
-    cumulativePurchaseClients += count;
-    return { name, clients: cumulativePurchaseClients };
-  });
-  
-  return {
-    total: totalData,
-    sell: sellData,
-    purchase: purchaseData
-  };
-};
 
 // Component for client growth chart
 const ClientGrowthChart = ({ data, isDarkMode }) => (
@@ -634,115 +569,6 @@ const PerformanceMetrics = ({ metrics, isDarkMode }) => (
   </div>
 );
 
-// Component for notification item
-const NotificationItem = ({ notification, isDarkMode, onClose }) => {
-  const getIconAndColor = (type) => {
-    switch(type) {
-      case 'success': 
-        return { 
-          icon: <FiCheckCircle className="h-5 w-5" />, 
-          bgColor: isDarkMode ? 'bg-green-900 bg-opacity-50' : 'bg-green-100',
-          textColor: isDarkMode ? 'text-green-300' : 'text-green-600'
-        };
-      case 'warning': 
-        return { 
-          icon: <FiAlertTriangle className="h-5 w-5" />, 
-          bgColor: isDarkMode ? 'bg-yellow-900 bg-opacity-50' : 'bg-yellow-100',
-          textColor: isDarkMode ? 'text-yellow-300' : 'text-yellow-600'
-        };
-      case 'info': 
-      default:
-        return { 
-          icon: <FiInfo className="h-5 w-5" />, 
-          bgColor: isDarkMode ? 'bg-blue-900 bg-opacity-50' : 'bg-blue-100',
-          textColor: isDarkMode ? 'text-blue-300' : 'text-blue-600'
-        };
-    }
-  };
-  
-  const { icon, bgColor, textColor } = getIconAndColor(notification.type);
-  
-  return (
-    <div className={`p-4 border-b ${isDarkMode ? 'border-gray-700 hover:bg-gray-700' : 'border-gray-200 hover:bg-gray-50'} transition-colors duration-200`}>
-      <div className="flex items-start">
-        <div className={`flex-shrink-0 mr-3 p-2 rounded-full ${bgColor}`}>
-          <div className={textColor}>
-            {icon}
-          </div>
-        </div>
-        <div className="flex-grow">
-          <p className="font-medium">{notification.message}</p>
-          <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} mt-1 flex items-center`}>
-            <FiClock className="mr-1 h-3 w-3" /> {notification.time}
-          </p>
-        </div>
-        {onClose && (
-          <button 
-            onClick={() => onClose(notification.id)}
-            className={`ml-2 p-1.5 rounded-full ${
-              isDarkMode 
-                ? 'hover:bg-gray-600 text-gray-400 hover:text-gray-200' 
-                : 'hover:bg-gray-200 text-gray-500 hover:text-gray-700'
-            } transition-colors duration-200`}
-            aria-label="Close notification"
-          >
-            <FiX className="h-4 w-4" />
-          </button>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// Component for notifications dropdown
-const NotificationsDropdown = ({ notifications, isDarkMode, onClose, onClearAll }) => (
-  <div className={`absolute right-0 top-full mt-3 w-[calc(100vw-32px)] sm:w-96 rounded-xl shadow-xl overflow-hidden z-50 notification-dropdown ${
-    isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-  } transform transition-all duration-300 origin-top-right`}>
-    <div className="p-3 sm:p-4 border-b flex items-center justify-between">
-      <div className="flex items-center">
-        <FiBell className={`mr-2 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-        <h3 className="font-semibold text-base">Notifications</h3>
-      </div>
-      <div className="flex space-x-2">
-        <button 
-          onClick={onClearAll}
-          className={`text-xs font-medium px-2 sm:px-3 py-1 rounded-lg ${
-            isDarkMode 
-              ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          } transition-colors duration-200`}
-        >
-          Clear all
-        </button>
-      </div>
-    </div>
-    <div className="max-h-[60vh] sm:max-h-96 overflow-y-auto">
-      {notifications.length > 0 ? (
-        notifications.map(notification => (
-          <NotificationItem 
-            key={notification.id} 
-            notification={notification} 
-            isDarkMode={isDarkMode} 
-            onClose={onClose} 
-          />
-        ))
-      ) : (
-        <div className="p-6 sm:p-8 text-center">
-          <div className="inline-flex items-center justify-center p-3 bg-gray-100 dark:bg-gray-700 rounded-full mb-4">
-            <FiBell className="h-6 w-6 text-gray-500 dark:text-gray-400" />
-          </div>
-          <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-500'} font-medium`}>
-            No new notifications
-          </p>
-          <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-400'} mt-1`}>
-            You're all caught up!
-          </p>
-        </div>
-      )}
-    </div>
-  </div>
-);
 
 // Component for recent client card
 const ClientCard = ({ client, isDarkMode }) => {
@@ -824,54 +650,6 @@ const RecentActivity = ({ clients, isDarkMode }) => (
     </div>
   </div>
 );
-
-
-
-
-// Get top products
-const getTopProducts = (clients) => {
-  const productCount = {};
-  const sellProductCount = {};
-  const purchaseProductCount = {};
-  
-  clients.forEach(client => {
-    client.products?.forEach(product => {
-      if (product.name) {
-        // Track total products
-        productCount[product.name] = (productCount[product.name] || 0) + product.count;
-        
-        // Track products by order type
-        if (client.orderStatus === 'sell') {
-          sellProductCount[product.name] = (sellProductCount[product.name] || 0) + product.count;
-        } else if (client.orderStatus === 'purchased') {
-          purchaseProductCount[product.name] = (purchaseProductCount[product.name] || 0) + product.count;
-        }
-      }
-    });
-  });
-  
-  // Convert to array format and sort by count
-  const totalProducts = Object.entries(productCount)
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
-    
-  const sellProducts = Object.entries(sellProductCount)
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
-    
-  const purchaseProducts = Object.entries(purchaseProductCount)
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
-  
-  return {
-    total: totalProducts,
-    sell: sellProducts,
-    purchase: purchaseProducts
-  };
-};
 
 // Component for top products
 const TopProducts = ({ products, isDarkMode }) => {
@@ -1186,14 +964,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [showNotifications, setShowNotifications] = useState(false);
-  const notificationRef = useRef(null);
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState([
-    { id: 1, message: 'New client registered', time: '5 min ago', type: 'info' },
-    { id: 2, message: 'Payment received from John Doe', time: '1 hour ago', type: 'success' },
-    { id: 3, message: '3 pending payments need attention', time: '2 hours ago', type: 'warning' }
-  ]);
   const [stats, setStats] = useState({
     totalClients: 0,
     pendingPayments: 0,
@@ -1481,9 +1252,6 @@ const Dashboard = () => {
   // Handle click outside notifications dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
-        setShowNotifications(false);
-      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -1491,17 +1259,6 @@ const Dashboard = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-
-  // Close notification
-  const closeNotification = (id) => {
-    setNotifications(notifications.filter(notification => notification.id !== id));
-  };
-
-  // Clear all notifications
-  const clearAllNotifications = () => {
-    setNotifications([]);
-  };
-
   // Export dashboard data
   const exportData = (format) => {
     // Prepare data to export
@@ -1705,14 +1462,6 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
-  // Filter clients based on search query
-  const filteredClients = useMemo(() => {
-    return clients.filter(client => 
-      client.clientName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      client.phoneNumber?.includes(searchQuery)
-    );
-  }, [clients, searchQuery]);
-
   // Handle search input change
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
@@ -1853,26 +1602,6 @@ const Dashboard = () => {
                   </span>
                 </h1>
               </div>
-              
-              {/* Mobile menu buttons */}
-              <div className="flex items-center space-x-2 sm:hidden">
-                <button 
-                  className={`p-1.5 rounded-full ${
-                    isDarkMode 
-                      ? 'bg-gray-700 hover:bg-gray-600' 
-                      : 'bg-gray-100 hover:bg-gray-200'
-                  } transition-colors duration-200 flex items-center justify-center`}
-                  onClick={() => setShowNotifications(!showNotifications)}
-                >
-                  <FiBell className="h-4 w-4" />
-                  {notifications.length > 0 && (
-                    <span className="absolute top-0.5 right-0.5 bg-red-500 text-white rounded-full w-3 h-3 text-[8px] flex items-center justify-center">
-                      {notifications.length}
-                    </span>
-                  )}
-                </button>
-                <ThemeToggle />
-              </div>
             </div>
             
             <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
@@ -1905,10 +1634,7 @@ const Dashboard = () => {
                   >
                     <FiDownload className="h-4 w-4 sm:h-5 sm:w-5" />
                   </button>
-                </div>
-                
-                <div className="border-l h-8 mx-1 ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}"></div>
-                
+                </div>                
                 <ThemeToggle />
               </div>
             </div>

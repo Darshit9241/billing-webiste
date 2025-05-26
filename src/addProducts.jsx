@@ -303,8 +303,6 @@ const AddProducts = () => {
       // Product fields handling
       if (id) {
         const currentIndex = products.findIndex((p) => p.id === id);
-        const currentProduct = products[currentIndex];
-
         // Define field sequence based on bill mode
         const fieldSequence =
           billMode === "full" ? ["name", "count", "price"] : ["count", "price"];

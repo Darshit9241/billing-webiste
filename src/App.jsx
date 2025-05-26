@@ -10,7 +10,7 @@ import ClientNameOrders from './ClientNameOrders';
 import AllClients from './AllClients';
 import Dashboard from './Dashboard';
 import ExpenseTracker from './ExpenseTracker';
-import NotificationsPage from './pages/NotificationsPage';
+import NotificationsPage from './components/NotificationsPage';
 //   import React, { useState, useEffect } from 'react';
 
 // // Simple error boundary component

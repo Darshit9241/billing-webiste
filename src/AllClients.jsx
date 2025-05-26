@@ -23,8 +23,8 @@ const AllClients = () => {
     // Initialize from localStorage or default to 'card'
     return localStorage.getItem("clientsViewMode") || "compact";
   });
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [visibleItems, setVisibleItems] = useState(20);
   const [showMergedClients, setShowMergedClients] = useState(() => {
     // Initialize from localStorage or default to false
     return localStorage.getItem("showMergedClients") === "true" || false;
@@ -38,6 +38,10 @@ const AllClients = () => {
 
   // New state variable for copy functionality
   const [copiedClient, setCopiedClient] = useState(null);
+  
+  // New state for infinite scrolling
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const scrollContainerRef = React.useRef(null);
 
   useEffect(() => {
     fetchClientNames();
@@ -108,9 +112,38 @@ const AllClients = () => {
     });
 
     setFilteredClients(result);
-    // Reset to first page when filters/sort change
-    setCurrentPage(1);
+    setVisibleItems(itemsPerPage); // Reset visible items when filters change
   }, [searchQuery, clientsData, sortField, sortDirection, showMergedClients]);
+
+  // Add scroll event listener for infinite scrolling
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!scrollContainerRef.current) return;
+      
+      const { scrollTop, clientHeight, scrollHeight } = document.documentElement;
+      
+      // Load more when user scrolls to bottom (with a threshold)
+      if (scrollHeight - scrollTop <= clientHeight * 1.5 && 
+          visibleItems < filteredClients.length && 
+          !isLoadingMore) {
+        loadMoreItems();
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [visibleItems, filteredClients, isLoadingMore]);
+
+  // Function to load more items
+  const loadMoreItems = () => {
+    setIsLoadingMore(true);
+    
+    // Simulate loading delay
+    setTimeout(() => {
+      setVisibleItems(prev => Math.min(prev + itemsPerPage, filteredClients.length));
+      setIsLoadingMore(false);
+    }, 300);
+  };
 
   const fetchClientNames = async () => {
     setLoading(true);
@@ -193,16 +226,15 @@ const AllClients = () => {
     }
   };
 
-  // Calculate paginated clients
-  const paginatedClients = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredClients.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredClients, currentPage, itemsPerPage]);
+  // Calculate visible clients
+  const visibleClients = useMemo(() => {
+    return filteredClients.slice(0, visibleItems);
+  }, [filteredClients, visibleItems]);
 
   // Calculate total pages
-  const totalPages = useMemo(() => {
-    return Math.ceil(filteredClients.length / itemsPerPage);
-  }, [filteredClients, itemsPerPage]);
+  const hasMoreItems = useMemo(() => {
+    return visibleItems < filteredClients.length;
+  }, [filteredClients, visibleItems]);
 
   // Calculate merged client count
   const mergedClientCount = useMemo(() => {
@@ -305,21 +337,17 @@ const AllClients = () => {
     }
   };
 
-  // Pagination handlers
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage((prev) => prev - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage((prev) => prev + 1);
-    }
+  // Copy client name to clipboard
+  const handleCopyClientName = (e, clientName) => {
+    e.stopPropagation(); // Prevent triggering the row click
+    navigator.clipboard
+      .writeText(clientName)
+      .then(() => {
+        setCopiedClient(clientName);
+      })
+      .catch((err) => {
+        console.error("Failed to copy client name: ", err);
+      });
   };
 
   // SortButton Component
@@ -368,25 +396,13 @@ const AllClients = () => {
     );
   };
 
-  // Copy client name to clipboard
-  const handleCopyClientName = (e, clientName) => {
-    e.stopPropagation(); // Prevent triggering the row click
-    navigator.clipboard
-      .writeText(clientName)
-      .then(() => {
-        setCopiedClient(clientName);
-      })
-      .catch((err) => {
-        console.error("Failed to copy client name: ", err);
-      });
-  };
-
   return (
     <div
       className={`min-h-screen ${isDarkMode
           ? "bg-gradient-to-br from-slate-900 to-slate-800"
           : "bg-gradient-to-br from-gray-100 to-white"
         } py-4 sm:py-8 px-3 sm:px-6 lg:px-8 transition-colors duration-200`}
+      ref={scrollContainerRef}
     >
       <div className="max-w-7xl mx-auto">
         {/* Header */}
@@ -779,7 +795,7 @@ const AllClients = () => {
             {/* Client List in Card or Compact View */}
             {viewMode === "card" ? (
               <div className="space-y-3 sm:space-y-4">
-                {paginatedClients.map((client) => (
+                {visibleClients.map((client) => (
                   <div
                     key={client.clientName}
                     onClick={() =>
@@ -1009,7 +1025,7 @@ const AllClients = () => {
                       className={`divide-y ${isDarkMode ? "divide-white/10" : "divide-gray-200"
                         }`}
                     >
-                      {paginatedClients.map(
+                      {visibleClients.map(
                         (client, index) => (
                           (
                             <tr
@@ -1038,7 +1054,7 @@ const AllClients = () => {
                                 className={`px-2 sm:px-3 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-center ${isDarkMode ? "text-slate-400" : "text-gray-500"
                                   }`}
                               >
-                                {(currentPage - 1) * itemsPerPage + index + 1}
+                                {index + 1}
                               </td>
                               <td
                                 className={`px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-left ${isDarkMode ? "text-white" : "text-gray-900"
@@ -1164,111 +1180,33 @@ const AllClients = () => {
               </div>
             )}
 
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-                <div
-                  className={`text-xs sm:text-sm ${isDarkMode ? "text-slate-400" : "text-gray-500"
-                    } order-2 sm:order-1 text-center sm:text-left`}
-                >
-                  Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-                  {Math.min(currentPage * itemsPerPage, filteredClients.length)}{" "}
-                  of {filteredClients.length} clients
-                </div>
-
-                <div className="flex justify-center space-x-1 order-1 sm:order-2">
-                  <button
-                    onClick={handlePrevPage}
-                    disabled={currentPage === 1}
-                    className={`p-1.5 sm:p-2 rounded-lg ${currentPage === 1
-                        ? isDarkMode
-                          ? "bg-white/5 text-slate-600"
-                          : "bg-gray-100 text-gray-400"
-                        : isDarkMode
-                          ? "bg-white/10 text-white hover:bg-white/20"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      } transition-colors`}
-                    aria-label="Previous page"
+            {/* Loading indicator for infinite scroll */}
+            {hasMoreItems && (
+              <div className="flex justify-center py-4">
+                {isLoadingMore ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-6 h-6 border-t-2 border-b-2 border-emerald-500 rounded-full animate-spin"></div>
+                    <span className={`text-sm ${isDarkMode ? "text-slate-300" : "text-gray-600"}`}>Loading more...</span>
+                  </div>
+                ) : (
+                  <button 
+                    onClick={loadMoreItems}
+                    className={`px-4 py-2 text-sm rounded-lg ${
+                      isDarkMode 
+                        ? "bg-white/10 text-white hover:bg-white/20" 
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    } transition-colors`}
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 sm:h-5 sm:w-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 19l-7-7 7-7"
-                      />
-                    </svg>
+                    Load more
                   </button>
-
-                  {/* Page number buttons */}
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    // Logic to show pages around current page
-                    let pageNum;
-                    if (totalPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (currentPage <= 3) {
-                      pageNum = i + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i;
-                    } else {
-                      pageNum = currentPage - 2 + i;
-                    }
-
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => handlePageChange(pageNum)}
-                        className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg text-xs sm:text-sm ${currentPage === pageNum
-                            ? isDarkMode
-                              ? "bg-emerald-500 text-white"
-                              : "bg-emerald-500 text-white"
-                            : isDarkMode
-                              ? "bg-white/5 text-white hover:bg-white/10"
-                              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                          } transition-colors`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-
-                  <button
-                    onClick={handleNextPage}
-                    disabled={currentPage === totalPages}
-                    className={`p-1.5 sm:p-2 rounded-lg ${currentPage === totalPages
-                        ? isDarkMode
-                          ? "bg-white/5 text-slate-600"
-                          : "bg-gray-100 text-gray-400"
-                        : isDarkMode
-                          ? "bg-white/10 text-white hover:bg-white/20"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      } transition-colors`}
-                    aria-label="Next page"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 sm:h-5 sm:w-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </button>
-                </div>
+                )}
               </div>
             )}
+            
+            {/* Results count */}
+            <div className={`text-xs sm:text-sm ${isDarkMode ? "text-slate-400" : "text-gray-500"} text-center`}>
+              Showing {visibleItems} of {filteredClients.length} clients
+            </div>
           </div>
         )}
 

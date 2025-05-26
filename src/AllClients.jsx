@@ -4,6 +4,7 @@ import { fetchAllClients, deleteClient } from "./firebase/clientsFirebase";
 import { useTheme } from "./context/ThemeContext";
 import ThemeToggle from "./components/ThemeToggle";
 import { BsCurrencyRupee } from "react-icons/bs";
+import Notifications from "./components/Notifications";
 
 const AllClients = () => {
   const { isDarkMode } = useTheme();
@@ -134,10 +135,10 @@ const AllClients = () => {
           existing.pendingAmount +=
             client.paymentStatus !== "cleared"
               ? Math.max(
-                  0,
-                  parseFloat(client.grandTotal || 0) -
-                    parseFloat(client.amountPaid || 0)
-                )
+                0,
+                parseFloat(client.grandTotal || 0) -
+                parseFloat(client.amountPaid || 0)
+              )
               : 0;
 
           // Store the client ID, regardless of whether it starts with "merged_" or not
@@ -160,10 +161,10 @@ const AllClients = () => {
             pendingAmount:
               client.paymentStatus !== "cleared"
                 ? Math.max(
-                    0,
-                    parseFloat(client.grandTotal || 0) -
-                      parseFloat(client.amountPaid || 0)
-                  )
+                  0,
+                  parseFloat(client.grandTotal || 0) -
+                  parseFloat(client.amountPaid || 0)
+                )
                 : 0,
             lastOrderDate: client.timestamp,
             clientIds: [client.id],
@@ -335,19 +336,16 @@ const AllClients = () => {
     return (
       <button
         onClick={() => onClick(field)}
-        className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium flex items-center space-x-1 ${
-          isActive
-            ? `${
-                isDarkMode
-                  ? "bg-emerald-500/20 text-emerald-300"
-                  : "bg-emerald-100 text-emerald-700"
-              }`
-            : `${
-                isDarkMode
-                  ? "bg-white/5 text-slate-300 hover:bg-white/10"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`
-        } transition-colors`}
+        className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium flex items-center space-x-1 ${isActive
+            ? `${isDarkMode
+              ? "bg-emerald-500/20 text-emerald-300"
+              : "bg-emerald-100 text-emerald-700"
+            }`
+            : `${isDarkMode
+              ? "bg-white/5 text-slate-300 hover:bg-white/10"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`
+          } transition-colors`}
       >
         <span>{label}</span>
         {isActive && (
@@ -385,11 +383,10 @@ const AllClients = () => {
 
   return (
     <div
-      className={`min-h-screen ${
-        isDarkMode
+      className={`min-h-screen ${isDarkMode
           ? "bg-gradient-to-br from-slate-900 to-slate-800"
           : "bg-gradient-to-br from-gray-100 to-white"
-      } py-4 sm:py-8 px-3 sm:px-6 lg:px-8 transition-colors duration-200`}
+        } py-4 sm:py-8 px-3 sm:px-6 lg:px-8 transition-colors duration-200`}
     >
       <div className="max-w-7xl mx-auto">
         {/* Header */}
@@ -398,18 +395,16 @@ const AllClients = () => {
             <div className="flex items-center space-x-3">
               <button
                 onClick={handleBackClick}
-                className={`p-1.5 sm:p-2 rounded-lg ${
-                  isDarkMode
+                className={`p-1.5 sm:p-2 rounded-lg ${isDarkMode
                     ? "bg-white/5 hover:bg-white/10"
                     : "bg-gray-100 hover:bg-gray-200"
-                } transition-colors`}
+                  } transition-colors`}
                 aria-label="Back to clients"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className={`h-4 w-4 sm:h-5 sm:w-5 ${
-                    isDarkMode ? "text-white" : "text-gray-700"
-                  }`}
+                  className={`h-4 w-4 sm:h-5 sm:w-5 ${isDarkMode ? "text-white" : "text-gray-700"
+                    }`}
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -424,9 +419,8 @@ const AllClients = () => {
               </button>
 
               <h1
-                className={`text-base sm:text-lg md:text-2xl font-bold ${
-                  isDarkMode ? "text-white" : "text-gray-900"
-                } flex items-center`}
+                className={`text-base sm:text-lg md:text-2xl font-bold ${isDarkMode ? "text-white" : "text-gray-900"
+                  } flex items-center`}
               >
                 <span className="bg-gradient-to-r from-emerald-500 to-teal-400 inline-block text-transparent bg-clip-text font-bold">
                   All Clients
@@ -435,29 +429,29 @@ const AllClients = () => {
             </div>
 
             <div className="flex items-center gap-2 mt-2 sm:mt-0">
+              <div>
+                <Notifications />
+              </div>
               {/* View mode toggle */}
               <div
-                className={`p-1 rounded-lg flex ${
-                  isDarkMode ? "bg-white/5" : "bg-gray-100"
-                }`}
+                className={`p-1 rounded-lg flex ${isDarkMode ? "bg-white/5" : "bg-gray-100"
+                  }`}
               >
                 <button
                   onClick={() => setViewMode("card")}
-                  className={`p-1 sm:p-1.5 rounded-md ${
-                    viewMode === "card"
+                  className={`p-1 sm:p-1.5 rounded-md ${viewMode === "card"
                       ? isDarkMode
                         ? "bg-slate-700"
                         : "bg-white shadow-sm"
                       : ""
-                  }`}
+                    }`}
                   aria-label="Card view"
                   title="Card view"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className={`h-4 w-4 sm:h-5 sm:w-5 ${
-                      isDarkMode ? "text-white" : "text-gray-700"
-                    }`}
+                    className={`h-4 w-4 sm:h-5 sm:w-5 ${isDarkMode ? "text-white" : "text-gray-700"
+                      }`}
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -472,21 +466,19 @@ const AllClients = () => {
                 </button>
                 <button
                   onClick={() => setViewMode("compact")}
-                  className={`p-1 sm:p-1.5 rounded-md ${
-                    viewMode === "compact"
+                  className={`p-1 sm:p-1.5 rounded-md ${viewMode === "compact"
                       ? isDarkMode
                         ? "bg-slate-700"
                         : "bg-white shadow-sm"
                       : ""
-                  }`}
+                    }`}
                   aria-label="Compact view"
                   title="Compact view"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className={`h-4 w-4 sm:h-5 sm:w-5 ${
-                      isDarkMode ? "text-white" : "text-gray-700"
-                    }`}
+                    className={`h-4 w-4 sm:h-5 sm:w-5 ${isDarkMode ? "text-white" : "text-gray-700"
+                      }`}
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -500,7 +492,6 @@ const AllClients = () => {
                   </svg>
                 </button>
               </div>
-
               <ThemeToggle />
             </div>
           </div>
@@ -511,9 +502,8 @@ const AllClients = () => {
           {/* Search bar */}
           <div className="relative">
             <div
-              className={`absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none ${
-                isDarkMode ? "text-slate-400" : "text-gray-400"
-              }`}
+              className={`absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none ${isDarkMode ? "text-slate-400" : "text-gray-400"
+                }`}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -535,15 +525,12 @@ const AllClients = () => {
               placeholder="Search clients..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`w-full pl-9 sm:pl-10 pr-4 py-2 sm:py-3 ${
-                isDarkMode ? "bg-white/5" : "bg-white"
-              } border ${
-                isDarkMode ? "border-white/10" : "border-gray-200"
-              } rounded-xl ${
-                isDarkMode
+              className={`w-full pl-9 sm:pl-10 pr-4 py-2 sm:py-3 ${isDarkMode ? "bg-white/5" : "bg-white"
+                } border ${isDarkMode ? "border-white/10" : "border-gray-200"
+                } rounded-xl ${isDarkMode
                   ? "text-white placeholder-slate-400"
                   : "text-gray-900 placeholder-gray-400"
-              } focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 shadow-sm text-sm sm:text-base`}
+                } focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 shadow-sm text-sm sm:text-base`}
             />
             {searchQuery && (
               <button
@@ -553,11 +540,10 @@ const AllClients = () => {
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className={`h-4 w-4 sm:h-5 sm:w-5 ${
-                    isDarkMode
+                  className={`h-4 w-4 sm:h-5 sm:w-5 ${isDarkMode
                       ? "text-slate-400 hover:text-white"
                       : "text-gray-400 hover:text-gray-600"
-                  }`}
+                    }`}
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -619,12 +605,11 @@ const AllClients = () => {
             <button
               onClick={() => setShowMergedClients(!showMergedClients)}
               className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium flex items-center space-x-1 
-                ${
-                  showMergedClients
-                    ? isDarkMode
-                      ? "bg-emerald-500/20 text-emerald-300"
-                      : "bg-emerald-100 text-emerald-700"
-                    : isDarkMode
+                ${showMergedClients
+                  ? isDarkMode
+                    ? "bg-emerald-500/20 text-emerald-300"
+                    : "bg-emerald-100 text-emerald-700"
+                  : isDarkMode
                     ? "bg-white/5 text-slate-300 hover:bg-white/10"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 } transition-colors`}
@@ -734,9 +719,8 @@ const AllClients = () => {
                 Loading clients...
               </p>
               <div
-                className={`inline-block h-1.5 w-24 sm:w-32 rounded-full overflow-hidden ${
-                  isDarkMode ? "bg-white/10" : "bg-gray-200"
-                }`}
+                className={`inline-block h-1.5 w-24 sm:w-32 rounded-full overflow-hidden ${isDarkMode ? "bg-white/10" : "bg-gray-200"
+                  }`}
               >
                 <div
                   className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 animate-pulse"
@@ -801,26 +785,22 @@ const AllClients = () => {
                     onClick={() =>
                       handleClientClick(client.clientName, client.clientIds)
                     }
-                    className={`backdrop-blur-md ${
-                      isDarkMode ? "bg-white/10" : "bg-white"
-                    } rounded-xl shadow-xl overflow-hidden border ${
-                      isDarkMode ? "border-white/10" : "border-gray-200"
-                    } hover:shadow-emerald-500/10 transition-all duration-300 cursor-pointer ${
-                      client.hasMergedClient
+                    className={`backdrop-blur-md ${isDarkMode ? "bg-white/10" : "bg-white"
+                      } rounded-xl shadow-xl overflow-hidden border ${isDarkMode ? "border-white/10" : "border-gray-200"
+                      } hover:shadow-emerald-500/10 transition-all duration-300 cursor-pointer ${client.hasMergedClient
                         ? isDarkMode
                           ? "border-l-emerald-500"
                           : "border-l-emerald-500"
                         : ""
-                    }`}
+                      }`}
                   >
                     <div className="p-3 sm:p-5">
                       <div className="flex flex-col gap-3">
                         <div className="flex justify-between items-start">
                           <div className="flex items-center">
                             <h3
-                              className={`font-semibold text-base sm:text-lg md:text-xl ${
-                                isDarkMode ? "text-white" : "text-gray-900"
-                              } hover:text-emerald-500 transition-colors`}
+                              className={`font-semibold text-base sm:text-lg md:text-xl ${isDarkMode ? "text-white" : "text-gray-900"
+                                } hover:text-emerald-500 transition-colors`}
                             >
                               {client.clientName}
                               {client.hasMergedClient && (
@@ -833,11 +813,10 @@ const AllClients = () => {
                               onClick={(e) =>
                                 handleCopyClientName(e, client.clientName)
                               }
-                              className={`ml-2 p-1.5 rounded-full ${
-                                isDarkMode
+                              className={`ml-2 p-1.5 rounded-full ${isDarkMode
                                   ? "bg-white/5 hover:bg-white/10"
                                   : "bg-gray-100 hover:bg-gray-200"
-                              } transition-colors`}
+                                } transition-colors`}
                               title="Copy client name"
                             >
                               {copiedClient === client.clientName ? (
@@ -856,11 +835,10 @@ const AllClients = () => {
                               ) : (
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
-                                  className={`h-4 w-4 ${
-                                    isDarkMode
+                                  className={`h-4 w-4 ${isDarkMode
                                       ? "text-slate-300"
                                       : "text-gray-500"
-                                  }`}
+                                    }`}
                                   fill="none"
                                   viewBox="0 0 24 24"
                                   stroke="currentColor"
@@ -877,11 +855,10 @@ const AllClients = () => {
                           </div>
                           <button
                             onClick={(e) => handleDeleteClick(e, client)}
-                            className={`p-1.5 rounded-full ${
-                              isDarkMode
+                            className={`p-1.5 rounded-full ${isDarkMode
                                 ? "bg-red-500/10 hover:bg-red-500/20 text-red-300"
                                 : "bg-red-50 hover:bg-red-100 text-red-500"
-                            } transition-colors`}
+                              } transition-colors`}
                             title="Delete client"
                           >
                             <svg
@@ -903,73 +880,63 @@ const AllClients = () => {
 
                         <div className="flex flex-wrap gap-2 sm:gap-3">
                           <div
-                            className={`${
-                              isDarkMode ? "bg-white/5" : "bg-gray-50"
-                            } rounded-lg py-1 sm:py-1.5 px-2 sm:px-3 border ${
-                              isDarkMode ? "border-white/10" : "border-gray-200"
-                            }`}
+                            className={`${isDarkMode ? "bg-white/5" : "bg-gray-50"
+                              } rounded-lg py-1 sm:py-1.5 px-2 sm:px-3 border ${isDarkMode ? "border-white/10" : "border-gray-200"
+                              }`}
                           >
                             <p
-                              className={`text-xs ${
-                                isDarkMode ? "text-slate-400" : "text-gray-500"
-                              }`}
+                              className={`text-xs ${isDarkMode ? "text-slate-400" : "text-gray-500"
+                                }`}
                             >
                               Orders
                             </p>
                             <p
-                              className={`font-medium text-center ${
-                                isDarkMode ? "text-white" : "text-gray-900"
-                              } text-sm sm:text-base`}
+                              className={`font-medium text-center ${isDarkMode ? "text-white" : "text-gray-900"
+                                } text-sm sm:text-base`}
                             >
                               {client.orderCount}
                             </p>
                           </div>
 
                           <div
-                            className={`${
-                              isDarkMode ? "bg-white/5" : "bg-gray-50"
-                            } rounded-lg py-1 sm:py-1.5 px-2 sm:px-3 border ${
-                              isDarkMode ? "border-white/10" : "border-gray-200"
-                            }`}
+                            className={`${isDarkMode ? "bg-white/5" : "bg-gray-50"
+                              } rounded-lg py-1 sm:py-1.5 px-2 sm:px-3 border ${isDarkMode ? "border-white/10" : "border-gray-200"
+                              }`}
                           >
                             <p
-                              className={`text-xs ${
-                                isDarkMode ? "text-slate-400" : "text-gray-500"
-                              }`}
+                              className={`text-xs ${isDarkMode ? "text-slate-400" : "text-gray-500"
+                                }`}
                             >
                               Total Value
                             </p>
                             <p
                               className={`font-medium text-emerald-500 text-sm sm:text-base flex items-center`}
                             >
-                              <BsCurrencyRupee  />
+                              <BsCurrencyRupee />
                               {client.totalAmount.toFixed(2)}
                             </p>
                           </div>
 
                           {client.pendingAmount > 0 && (
                             <div
-                              className={`${
-                                isDarkMode ? "bg-amber-500/10" : "bg-amber-50"
-                              } rounded-lg py-1 sm:py-1.5 px-2 sm:px-3 border ${
-                                isDarkMode
+                              className={`${isDarkMode ? "bg-amber-500/10" : "bg-amber-50"
+                                } rounded-lg py-1 sm:py-1.5 px-2 sm:px-3 border ${isDarkMode
                                   ? "border-amber-500/30"
                                   : "border-amber-200"
-                              }`}
+                                }`}
                             >
                               <p
-                                className={`text-xs ${
-                                  isDarkMode
+                                className={`text-xs ${isDarkMode
                                     ? "text-amber-300"
                                     : "text-amber-600"
-                                }`}
+                                  }`}
                               >
                                 Pending
                               </p>
                               <p
                                 className={`font-medium text-amber-500 text-sm sm:text-base flex items-center`}
                               >
-                                <BsCurrencyRupee  />
+                                <BsCurrencyRupee />
                                 {client.pendingAmount.toFixed(2)}
                               </p>
                             </div>
@@ -983,11 +950,10 @@ const AllClients = () => {
             ) : (
               // Compact View
               <div
-                className={`overflow-hidden rounded-xl border ${
-                  isDarkMode
+                className={`overflow-hidden rounded-xl border ${isDarkMode
                     ? "border-white/10 bg-white/5"
                     : "border-gray-200 bg-white"
-                }`}
+                  }`}
               >
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-700">
@@ -997,62 +963,55 @@ const AllClients = () => {
                       <tr>
                         <th
                           scope="col"
-                          className={`px-2 sm:px-3 py-2 sm:py-3 text-center text-xs font-medium ${
-                            isDarkMode ? "text-slate-400" : "text-gray-500"
-                          } uppercase tracking-wider`}
+                          className={`px-2 sm:px-3 py-2 sm:py-3 text-center text-xs font-medium ${isDarkMode ? "text-slate-400" : "text-gray-500"
+                            } uppercase tracking-wider`}
                         >
                           #
                         </th>
                         <th
                           scope="col"
-                          className={`px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium ${
-                            isDarkMode ? "text-slate-400" : "text-gray-500"
-                          } uppercase tracking-wider`}
+                          className={`px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium ${isDarkMode ? "text-slate-400" : "text-gray-500"
+                            } uppercase tracking-wider`}
                         >
                           Client Name
                         </th>
                         <th
                           scope="col"
-                          className={`px-3 sm:px-6 py-2 sm:py-3 text-center text-xs font-medium ${
-                            isDarkMode ? "text-slate-400" : "text-gray-500"
-                          } uppercase tracking-wider`}
+                          className={`px-3 sm:px-6 py-2 sm:py-3 text-center text-xs font-medium ${isDarkMode ? "text-slate-400" : "text-gray-500"
+                            } uppercase tracking-wider`}
                         >
                           Orders
                         </th>
                         <th
                           scope="col"
-                          className={`px-3 sm:px-6 py-2 sm:py-3 text-center text-xs font-medium ${
-                            isDarkMode ? "text-slate-400" : "text-gray-500"
-                          } uppercase tracking-wider`}
+                          className={`px-3 sm:px-6 py-2 sm:py-3 text-center text-xs font-medium ${isDarkMode ? "text-slate-400" : "text-gray-500"
+                            } uppercase tracking-wider`}
                         >
                           Total Value
                         </th>
                         <th
                           scope="col"
-                          className={`px-3 sm:px-6 py-2 sm:py-3 text-center text-xs font-medium ${
-                            isDarkMode ? "text-slate-400" : "text-gray-500"
-                          } uppercase tracking-wider`}
+                          className={`px-3 sm:px-6 py-2 sm:py-3 text-center text-xs font-medium ${isDarkMode ? "text-slate-400" : "text-gray-500"
+                            } uppercase tracking-wider`}
                         >
                           Pending
                         </th>
                         <th
                           scope="col"
-                          className={`px-3 sm:px-6 py-2 sm:py-3 text-right text-xs font-medium ${
-                            isDarkMode ? "text-slate-400" : "text-gray-500"
-                          } uppercase tracking-wider`}
+                          className={`px-3 sm:px-6 py-2 sm:py-3 text-right text-xs font-medium ${isDarkMode ? "text-slate-400" : "text-gray-500"
+                            } uppercase tracking-wider`}
                         >
                           Action
                         </th>
                       </tr>
                     </thead>
                     <tbody
-                      className={`divide-y ${
-                        isDarkMode ? "divide-white/10" : "divide-gray-200"
-                      }`}
+                      className={`divide-y ${isDarkMode ? "divide-white/10" : "divide-gray-200"
+                        }`}
                     >
                       {paginatedClients.map(
                         (client, index) => (
-                            (
+                          (
                             <tr
                               key={client.clientName}
                               onClick={() =>
@@ -1061,33 +1020,29 @@ const AllClients = () => {
                                   client.clientIds
                                 )
                               }
-                              className={`${
-                                index % 2 === 0
+                              className={`${index % 2 === 0
                                   ? isDarkMode
                                     ? "bg-white/5"
                                     : "bg-white"
                                   : isDarkMode
-                                  ? "bg-white/[0.02]"
-                                  : "bg-gray-50"
-                              } cursor-pointer hover:bg-emerald-500/10 ${
-                                client.hasMergedClient
+                                    ? "bg-white/[0.02]"
+                                    : "bg-gray-50"
+                                } cursor-pointer hover:bg-emerald-500/10 ${client.hasMergedClient
                                   ? isDarkMode
                                     ? "border-l-4 border-l-emerald-500"
                                     : "border-l-4 border-l-emerald-500"
                                   : ""
-                              }`}
+                                }`}
                             >
                               <td
-                                className={`px-2 sm:px-3 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-center ${
-                                  isDarkMode ? "text-slate-400" : "text-gray-500"
-                                }`}
+                                className={`px-2 sm:px-3 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-center ${isDarkMode ? "text-slate-400" : "text-gray-500"
+                                  }`}
                               >
                                 {(currentPage - 1) * itemsPerPage + index + 1}
                               </td>
                               <td
-                                className={`px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-left ${
-                                  isDarkMode ? "text-white" : "text-gray-900"
-                                }`}
+                                className={`px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-left ${isDarkMode ? "text-white" : "text-gray-900"
+                                  }`}
                               >
                                 <div className="flex items-center">
                                   <span>{client.clientName}</span>
@@ -1100,11 +1055,10 @@ const AllClients = () => {
                                     onClick={(e) =>
                                       handleCopyClientName(e, client.clientName)
                                     }
-                                    className={`ml-2 p-1 rounded-full ${
-                                      isDarkMode
+                                    className={`ml-2 p-1 rounded-full ${isDarkMode
                                         ? "bg-white/5 hover:bg-white/10"
                                         : "bg-gray-100 hover:bg-gray-200"
-                                    } transition-colors`}
+                                      } transition-colors`}
                                     title="Copy client name"
                                   >
                                     {copiedClient === client.clientName ? (
@@ -1123,11 +1077,10 @@ const AllClients = () => {
                                     ) : (
                                       <svg
                                         xmlns="http://www.w3.org/2000/svg"
-                                        className={`h-3 w-3 ${
-                                          isDarkMode
+                                        className={`h-3 w-3 ${isDarkMode
                                             ? "text-slate-300"
                                             : "text-gray-500"
-                                        }`}
+                                          }`}
                                         fill="none"
                                         viewBox="0 0 24 24"
                                         stroke="currentColor"
@@ -1144,32 +1097,30 @@ const AllClients = () => {
                                 </div>
                               </td>
                               <td
-                                className={`px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-center ${
-                                  isDarkMode
+                                className={`px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-center ${isDarkMode
                                     ? "text-slate-300"
                                     : "text-gray-700"
-                                }`}
+                                  }`}
                               >
                                 {client.orderCount}
                               </td>
                               <td
                                 className={`px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-center text-emerald-500 font-medium flex items-center justify-center`}
                               >
-                                <BsCurrencyRupee  />
+                                <BsCurrencyRupee />
                                 {client.totalAmount.toFixed(2)}
                               </td>
                               <td
-                                className={`px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-center ${
-                                  client.pendingAmount > 0
+                                className={`px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-center ${client.pendingAmount > 0
                                     ? "text-amber-500 font-medium"
                                     : isDarkMode
-                                    ? "text-slate-500"
-                                    : "text-gray-500"
-                                }`}
+                                      ? "text-slate-500"
+                                      : "text-gray-500"
+                                  }`}
                               >
                                 {client.pendingAmount > 0 ? (
                                   <div className="flex items-center justify-center">
-                                    <BsCurrencyRupee  />
+                                    <BsCurrencyRupee />
                                     {client.pendingAmount.toFixed(2)}
                                   </div>
                                 ) : (
@@ -1181,11 +1132,10 @@ const AllClients = () => {
                               >
                                 <button
                                   onClick={(e) => handleDeleteClick(e, client)}
-                                  className={`p-1.5 rounded-full ${
-                                    isDarkMode
+                                  className={`p-1.5 rounded-full ${isDarkMode
                                       ? "bg-red-500/10 hover:bg-red-500/20 text-red-300"
                                       : "bg-red-50 hover:bg-red-100 text-red-500"
-                                  } transition-colors`}
+                                    } transition-colors`}
                                   title="Delete client"
                                 >
                                   <svg
@@ -1218,9 +1168,8 @@ const AllClients = () => {
             {totalPages > 1 && (
               <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                 <div
-                  className={`text-xs sm:text-sm ${
-                    isDarkMode ? "text-slate-400" : "text-gray-500"
-                  } order-2 sm:order-1 text-center sm:text-left`}
+                  className={`text-xs sm:text-sm ${isDarkMode ? "text-slate-400" : "text-gray-500"
+                    } order-2 sm:order-1 text-center sm:text-left`}
                 >
                   Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
                   {Math.min(currentPage * itemsPerPage, filteredClients.length)}{" "}
@@ -1231,15 +1180,14 @@ const AllClients = () => {
                   <button
                     onClick={handlePrevPage}
                     disabled={currentPage === 1}
-                    className={`p-1.5 sm:p-2 rounded-lg ${
-                      currentPage === 1
+                    className={`p-1.5 sm:p-2 rounded-lg ${currentPage === 1
                         ? isDarkMode
                           ? "bg-white/5 text-slate-600"
                           : "bg-gray-100 text-gray-400"
                         : isDarkMode
-                        ? "bg-white/10 text-white hover:bg-white/20"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    } transition-colors`}
+                          ? "bg-white/10 text-white hover:bg-white/20"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      } transition-colors`}
                     aria-label="Previous page"
                   >
                     <svg
@@ -1276,15 +1224,14 @@ const AllClients = () => {
                       <button
                         key={pageNum}
                         onClick={() => handlePageChange(pageNum)}
-                        className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg text-xs sm:text-sm ${
-                          currentPage === pageNum
+                        className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg text-xs sm:text-sm ${currentPage === pageNum
                             ? isDarkMode
                               ? "bg-emerald-500 text-white"
                               : "bg-emerald-500 text-white"
                             : isDarkMode
-                            ? "bg-white/5 text-white hover:bg-white/10"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        } transition-colors`}
+                              ? "bg-white/5 text-white hover:bg-white/10"
+                              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                          } transition-colors`}
                       >
                         {pageNum}
                       </button>
@@ -1294,15 +1241,14 @@ const AllClients = () => {
                   <button
                     onClick={handleNextPage}
                     disabled={currentPage === totalPages}
-                    className={`p-1.5 sm:p-2 rounded-lg ${
-                      currentPage === totalPages
+                    className={`p-1.5 sm:p-2 rounded-lg ${currentPage === totalPages
                         ? isDarkMode
                           ? "bg-white/5 text-slate-600"
                           : "bg-gray-100 text-gray-400"
                         : isDarkMode
-                        ? "bg-white/10 text-white hover:bg-white/20"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    } transition-colors`}
+                          ? "bg-white/10 text-white hover:bg-white/20"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      } transition-colors`}
                     aria-label="Next page"
                   >
                     <svg
@@ -1344,15 +1290,13 @@ const AllClients = () => {
               {/* Modal panel */}
               <div className="inline-block align-bottom rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                 <div
-                  className={`${
-                    isDarkMode ? "bg-slate-800" : "bg-white"
-                  } px-4 pt-5 pb-4 sm:p-6 sm:pb-4`}
+                  className={`${isDarkMode ? "bg-slate-800" : "bg-white"
+                    } px-4 pt-5 pb-4 sm:p-6 sm:pb-4`}
                 >
                   <div className="sm:flex sm:items-start">
                     <div
-                      className={`mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full ${
-                        isDarkMode ? "bg-red-900/50" : "bg-red-100"
-                      } sm:mx-0 sm:h-10 sm:w-10`}
+                      className={`mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full ${isDarkMode ? "bg-red-900/50" : "bg-red-100"
+                        } sm:mx-0 sm:h-10 sm:w-10`}
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -1371,18 +1315,16 @@ const AllClients = () => {
                     </div>
                     <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                       <h3
-                        className={`text-lg leading-6 font-medium ${
-                          isDarkMode ? "text-white" : "text-gray-900"
-                        }`}
+                        className={`text-lg leading-6 font-medium ${isDarkMode ? "text-white" : "text-gray-900"
+                          }`}
                         id="modal-title"
                       >
                         Delete Client
                       </h3>
                       <div className="mt-2">
                         <p
-                          className={`text-sm ${
-                            isDarkMode ? "text-slate-300" : "text-gray-500"
-                          }`}
+                          className={`text-sm ${isDarkMode ? "text-slate-300" : "text-gray-500"
+                            }`}
                         >
                           Are you sure you want to delete{" "}
                           <span className="font-semibold">
@@ -1403,19 +1345,17 @@ const AllClients = () => {
                   </div>
                 </div>
                 <div
-                  className={`${
-                    isDarkMode
+                  className={`${isDarkMode
                       ? "bg-slate-800/80 border-t border-white/10"
                       : "bg-gray-50 border-t border-gray-200"
-                  } px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse`}
+                    } px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse`}
                 >
                   <button
                     type="button"
                     disabled={isDeleting}
                     onClick={handleConfirmDelete}
-                    className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 ${
-                      isDeleting ? "bg-red-400" : "bg-red-600 hover:bg-red-700"
-                    } text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm transition-colors`}
+                    className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 ${isDeleting ? "bg-red-400" : "bg-red-600 hover:bg-red-700"
+                      } text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm transition-colors`}
                   >
                     {isDeleting ? (
                       <span className="flex items-center">
@@ -1449,11 +1389,10 @@ const AllClients = () => {
                     type="button"
                     disabled={isDeleting}
                     onClick={handleCancelDelete}
-                    className={`mt-3 w-full inline-flex justify-center rounded-md border ${
-                      isDarkMode
+                    className={`mt-3 w-full inline-flex justify-center rounded-md border ${isDarkMode
                         ? "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
                         : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                    } shadow-sm px-4 py-2 text-base font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors`}
+                      } shadow-sm px-4 py-2 text-base font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors`}
                   >
                     Cancel
                   </button>

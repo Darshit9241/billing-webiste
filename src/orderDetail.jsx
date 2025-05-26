@@ -913,7 +913,7 @@ const OrderDetail = () => {
                       <span>Subtotal</span>
                       <span className="font-medium flex items-center">₹{typeof orderData.grandTotal === 'number' ? orderData.grandTotal.toFixed(2) : '0.00'}</span>
                     </div>
-                    <div className="flex justify-between text-sm text-gray-600 pb-2 border-b border-gray-200">
+                    <div className="flex justify-between text-sm text-gray-600 pb-2 border-b border-gray-200 print:hidden">
                       <span>Tax</span>
                       <span className="font-medium flex items-center">₹0.00</span>
                     </div>
@@ -982,7 +982,7 @@ const OrderDetail = () => {
           )}
 
           {/* Thank you note */}
-          <div className="text-center my-6 print-break-inside-avoid border-t border-gray-100 pt-6">
+          <div className="text-center my-6 print-break-inside-avoid border-t border-gray-100 pt-6 print:hidden">
             <div className="flex items-center justify-center mb-2">
               <svg className="h-5 w-5 text-indigo-500 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />

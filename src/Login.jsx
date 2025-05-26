@@ -113,7 +113,7 @@ const Login = () => {
                 />
           </div>
             <div className="glow-effect absolute inset-0"></div>
-            {/* <h2 className="text-3xl font-bold text-white text-center animate-fadeIn">Welcome To Siyaram Lace</h2> */}
+            <h2 className="text-3xl font-bold text-white text-center animate-fadeIn">Welcome To Siyaram Lace</h2>
             <p className="text-blue-100 text-center mt-2 animate-fadeIn-delayed">Sign in to your account</p>
           </div>
           

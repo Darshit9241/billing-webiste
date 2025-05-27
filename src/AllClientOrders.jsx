@@ -391,7 +391,7 @@ const AllClientOrders = () => {
                       GST Number
                     </th>
                     <th className="px-6 py-4 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      Order Date
+                      Order Added Date
                     </th>
                     <th className="px-6 py-4 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                       Total Amount
@@ -704,7 +704,7 @@ const AllClientOrders = () => {
                     GST Number
                   </th>
                   <th className="px-6 py-4 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Order Date
+                    Order Added Date
                   </th>
                   <th className="px-6 py-4 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Total Amount

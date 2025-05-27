@@ -461,6 +461,28 @@ const ClientList = () => {
     return dateValue.toLocaleString('en-IN', options);
   };
 
+  // Helper to show saved date/time if available
+  const renderSavedDateTime = (client) => {
+    if (client.savedTime) {
+      // Parse the savedTime string to a Date object using today's date
+      const today = new Date();
+      const [hours, minutes, seconds] = client.savedTime.split(':');
+      today.setHours(Number(hours), Number(minutes), Number(seconds || 0));
+      // Format to 12-hour with AM/PM
+      const formattedTime = today.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      });
+      return (
+        <span className="block text-xstext-amber-500 dark:text-amber-300">
+           {formattedTime}
+        </span>
+      );
+    }
+    return null;
+  };
+
   const deleteOrder = async (id) => {
     try {
       await deleteClient(id);
@@ -2496,6 +2518,9 @@ const ClientList = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                     {formatDate(client)}
+                    <div className='ml-2'>
+                    {renderSavedDateTime(client)}
+                    </div>
                   </p>
                 </div>
 
@@ -2745,6 +2770,9 @@ const ClientList = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                     {formatDate(client)}
+                    <div className='ml-2'>
+                    {renderSavedDateTime(client)}
+                    </div>
                   </p>
                 </div>
 

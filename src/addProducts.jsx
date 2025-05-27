@@ -569,6 +569,11 @@ const AddProducts = () => {
     setIsLoading(true);
 
     try {
+      // Get current date and time
+      const now = new Date();
+      const savedDate = now.toISOString().split('T')[0]; // YYYY-MM-DD
+      const savedTime = now.toLocaleTimeString(); // HH:MM:SS
+
       if (isEditMode || (billMode === "existing" && currentOrderId)) {
         // Get the order ID to use - either from edit mode or from the searched order
         const orderIdToUse = currentOrderId || orderId;
@@ -673,6 +678,8 @@ const AddProducts = () => {
           paymentHistory: updatedPaymentHistory,
           billMode,
           lastUpdated: Date.now(),
+          savedDate, // Add saved date
+          savedTime, // Add saved time
         };
 
         // Update the order
@@ -737,6 +744,8 @@ const AddProducts = () => {
           timestamp: Date.now(),
           billMode,
           paymentHistory,
+          savedDate, // Add saved date
+          savedTime, // Add saved time
         };
 
         await createClient(orderData);

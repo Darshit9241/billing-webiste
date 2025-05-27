@@ -291,16 +291,16 @@ const ClientList = () => {
     }
 
     // Sort clients by orderDate (or timestamp) in descending order (newest first)
-    // filtered.sort((a, b) => {
-    //   // Get date values for both clients, preferring orderDate over timestamp
-    //   const dateA = a.orderDate ? new Date(a.orderDate).getTime() : 
-    //                a.timestamp ? new Date(a.timestamp).getTime() : 0;
-    //   const dateB = b.orderDate ? new Date(b.orderDate).getTime() : 
-    //                b.timestamp ? new Date(b.timestamp).getTime() : 0;
+    filtered.sort((a, b) => {
+      // Get date values for both clients, preferring orderDate over timestamp
+      const dateA = a.orderDate ? new Date(a.orderDate).getTime() : 
+                  a.timestamp ? new Date(a.timestamp).getTime() : 0;
+      const dateB = b.orderDate ? new Date(b.orderDate).getTime() : 
+                  b.timestamp ? new Date(b.timestamp).getTime() : 0;
       
-    //   // Sort in descending order (newest first)
-    //   return dateB - dateA;
-    // });
+      // Sort in descending order (newest first)
+      return dateB - dateA;
+    });
 
     setFilteredClients(filtered);
     setShowMergeButton(filtered.length > 1 && searchQuery.trim() !== '');
@@ -426,16 +426,16 @@ const ClientList = () => {
       const data = await fetchAllClients();
       
       // Sort clients by orderDate or timestamp (newest first) before saving
-      // data.sort((a, b) => {
-      //   // Get date values for both clients, preferring orderDate over timestamp
-      //   const dateA = a.orderDate ? new Date(a.orderDate).getTime() : 
-      //               a.timestamp ? new Date(a.timestamp).getTime() : 0;
-      //   const dateB = b.orderDate ? new Date(b.orderDate).getTime() : 
-      //               b.timestamp ? new Date(b.timestamp).getTime() : 0;
+      data.sort((a, b) => {
+        // Get date values for both clients, preferring orderDate over timestamp
+        const dateA = a.orderDate ? new Date(a.orderDate).getTime() : 
+                    a.timestamp ? new Date(a.timestamp).getTime() : 0;
+        const dateB = b.orderDate ? new Date(b.orderDate).getTime() : 
+                    b.timestamp ? new Date(b.timestamp).getTime() : 0;
         
-      //   // Sort in descending order (newest first)
-      //   return dateB - dateA;
-      // });
+        // Sort in descending order (newest first)
+        return dateB - dateA;
+      });
       
       setSavedClients(data);
     } catch (err) {

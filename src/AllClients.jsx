@@ -38,7 +38,7 @@ const AllClients = () => {
 
   // New state variable for copy functionality
   const [copiedClient, setCopiedClient] = useState(null);
-  
+
   // New state for infinite scrolling
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const scrollContainerRef = React.useRef(null);
@@ -119,17 +119,17 @@ const AllClients = () => {
   useEffect(() => {
     const handleScroll = () => {
       if (!scrollContainerRef.current) return;
-      
+
       const { scrollTop, clientHeight, scrollHeight } = document.documentElement;
-      
+
       // Load more when user scrolls to bottom (with a threshold)
-      if (scrollHeight - scrollTop <= clientHeight * 1.5 && 
-          visibleItems < filteredClients.length && 
-          !isLoadingMore) {
+      if (scrollHeight - scrollTop <= clientHeight * 1.5 &&
+        visibleItems < filteredClients.length &&
+        !isLoadingMore) {
         loadMoreItems();
       }
     };
-    
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [visibleItems, filteredClients, isLoadingMore]);
@@ -137,7 +137,7 @@ const AllClients = () => {
   // Function to load more items
   const loadMoreItems = () => {
     setIsLoadingMore(true);
-    
+
     // Simulate loading delay
     setTimeout(() => {
       setVisibleItems(prev => Math.min(prev + itemsPerPage, filteredClients.length));
@@ -365,14 +365,14 @@ const AllClients = () => {
       <button
         onClick={() => onClick(field)}
         className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium flex items-center space-x-1 ${isActive
-            ? `${isDarkMode
-              ? "bg-emerald-500/20 text-emerald-300"
-              : "bg-emerald-100 text-emerald-700"
-            }`
-            : `${isDarkMode
-              ? "bg-white/5 text-slate-300 hover:bg-white/10"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`
+          ? `${isDarkMode
+            ? "bg-emerald-500/20 text-emerald-300"
+            : "bg-emerald-100 text-emerald-700"
+          }`
+          : `${isDarkMode
+            ? "bg-white/5 text-slate-300 hover:bg-white/10"
+            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+          }`
           } transition-colors`}
       >
         <span>{label}</span>
@@ -399,8 +399,8 @@ const AllClients = () => {
   return (
     <div
       className={`min-h-screen ${isDarkMode
-          ? "bg-gradient-to-br from-slate-900 to-slate-800"
-          : "bg-gradient-to-br from-gray-100 to-white"
+        ? "bg-gradient-to-br from-slate-900 to-slate-800"
+        : "bg-gradient-to-br from-gray-100 to-white"
         } py-4 sm:py-8 px-3 sm:px-6 lg:px-8 transition-colors duration-200`}
       ref={scrollContainerRef}
     >
@@ -412,8 +412,8 @@ const AllClients = () => {
               <button
                 onClick={handleBackClick}
                 className={`p-1.5 sm:p-2 rounded-lg ${isDarkMode
-                    ? "bg-white/5 hover:bg-white/10"
-                    : "bg-gray-100 hover:bg-gray-200"
+                  ? "bg-white/5 hover:bg-white/10"
+                  : "bg-gray-100 hover:bg-gray-200"
                   } transition-colors`}
                 aria-label="Back to clients"
               >
@@ -446,6 +446,29 @@ const AllClients = () => {
 
             <div className="flex items-center gap-2 mt-2 sm:mt-0">
               <div>
+                <button
+                  onClick={() => navigate('/daily-orders')}
+                  className="flex items-center gap-2 text-sm px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors duration-200"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M8 7V3m8 4V3m-9 8h10m2 9H5a2 2 0 01-2-2V7a2 2 0 012-2h14a2 2 0 012 2v11a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                  Orders Info
+                </button>
+              </div>
+
+              <div>
                 <Notifications />
               </div>
               {/* View mode toggle */}
@@ -456,10 +479,10 @@ const AllClients = () => {
                 <button
                   onClick={() => setViewMode("card")}
                   className={`p-1 sm:p-1.5 rounded-md ${viewMode === "card"
-                      ? isDarkMode
-                        ? "bg-slate-700"
-                        : "bg-white shadow-sm"
-                      : ""
+                    ? isDarkMode
+                      ? "bg-slate-700"
+                      : "bg-white shadow-sm"
+                    : ""
                     }`}
                   aria-label="Card view"
                   title="Card view"
@@ -483,10 +506,10 @@ const AllClients = () => {
                 <button
                   onClick={() => setViewMode("compact")}
                   className={`p-1 sm:p-1.5 rounded-md ${viewMode === "compact"
-                      ? isDarkMode
-                        ? "bg-slate-700"
-                        : "bg-white shadow-sm"
-                      : ""
+                    ? isDarkMode
+                      ? "bg-slate-700"
+                      : "bg-white shadow-sm"
+                    : ""
                     }`}
                   aria-label="Compact view"
                   title="Compact view"
@@ -557,8 +580,8 @@ const AllClients = () => {
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className={`h-4 w-4 sm:h-5 sm:w-5 ${isDarkMode
-                      ? "text-slate-400 hover:text-white"
-                      : "text-gray-400 hover:text-gray-600"
+                    ? "text-slate-400 hover:text-white"
+                    : "text-gray-400 hover:text-gray-600"
                     }`}
                   fill="none"
                   viewBox="0 0 24 24"
@@ -830,8 +853,8 @@ const AllClients = () => {
                                 handleCopyClientName(e, client.clientName)
                               }
                               className={`ml-2 p-1.5 rounded-full ${isDarkMode
-                                  ? "bg-white/5 hover:bg-white/10"
-                                  : "bg-gray-100 hover:bg-gray-200"
+                                ? "bg-white/5 hover:bg-white/10"
+                                : "bg-gray-100 hover:bg-gray-200"
                                 } transition-colors`}
                               title="Copy client name"
                             >
@@ -852,8 +875,8 @@ const AllClients = () => {
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
                                   className={`h-4 w-4 ${isDarkMode
-                                      ? "text-slate-300"
-                                      : "text-gray-500"
+                                    ? "text-slate-300"
+                                    : "text-gray-500"
                                     }`}
                                   fill="none"
                                   viewBox="0 0 24 24"
@@ -872,8 +895,8 @@ const AllClients = () => {
                           <button
                             onClick={(e) => handleDeleteClick(e, client)}
                             className={`p-1.5 rounded-full ${isDarkMode
-                                ? "bg-red-500/10 hover:bg-red-500/20 text-red-300"
-                                : "bg-red-50 hover:bg-red-100 text-red-500"
+                              ? "bg-red-500/10 hover:bg-red-500/20 text-red-300"
+                              : "bg-red-50 hover:bg-red-100 text-red-500"
                               } transition-colors`}
                             title="Delete client"
                           >
@@ -943,8 +966,8 @@ const AllClients = () => {
                             >
                               <p
                                 className={`text-xs ${isDarkMode
-                                    ? "text-amber-300"
-                                    : "text-amber-600"
+                                  ? "text-amber-300"
+                                  : "text-amber-600"
                                   }`}
                               >
                                 Pending
@@ -967,8 +990,8 @@ const AllClients = () => {
               // Compact View
               <div
                 className={`overflow-hidden rounded-xl border ${isDarkMode
-                    ? "border-white/10 bg-white/5"
-                    : "border-gray-200 bg-white"
+                  ? "border-white/10 bg-white/5"
+                  : "border-gray-200 bg-white"
                   }`}
               >
                 <div className="overflow-x-auto">
@@ -1037,12 +1060,12 @@ const AllClients = () => {
                                 )
                               }
                               className={`${index % 2 === 0
-                                  ? isDarkMode
-                                    ? "bg-white/5"
-                                    : "bg-white"
-                                  : isDarkMode
-                                    ? "bg-white/[0.02]"
-                                    : "bg-gray-50"
+                                ? isDarkMode
+                                  ? "bg-white/5"
+                                  : "bg-white"
+                                : isDarkMode
+                                  ? "bg-white/[0.02]"
+                                  : "bg-gray-50"
                                 } cursor-pointer hover:bg-emerald-500/10 ${client.hasMergedClient
                                   ? isDarkMode
                                     ? "border-l-4 border-l-emerald-500"
@@ -1072,8 +1095,8 @@ const AllClients = () => {
                                       handleCopyClientName(e, client.clientName)
                                     }
                                     className={`ml-2 p-1 rounded-full ${isDarkMode
-                                        ? "bg-white/5 hover:bg-white/10"
-                                        : "bg-gray-100 hover:bg-gray-200"
+                                      ? "bg-white/5 hover:bg-white/10"
+                                      : "bg-gray-100 hover:bg-gray-200"
                                       } transition-colors`}
                                     title="Copy client name"
                                   >
@@ -1094,8 +1117,8 @@ const AllClients = () => {
                                       <svg
                                         xmlns="http://www.w3.org/2000/svg"
                                         className={`h-3 w-3 ${isDarkMode
-                                            ? "text-slate-300"
-                                            : "text-gray-500"
+                                          ? "text-slate-300"
+                                          : "text-gray-500"
                                           }`}
                                         fill="none"
                                         viewBox="0 0 24 24"
@@ -1114,8 +1137,8 @@ const AllClients = () => {
                               </td>
                               <td
                                 className={`px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-center ${isDarkMode
-                                    ? "text-slate-300"
-                                    : "text-gray-700"
+                                  ? "text-slate-300"
+                                  : "text-gray-700"
                                   }`}
                               >
                                 {client.orderCount}
@@ -1128,10 +1151,10 @@ const AllClients = () => {
                               </td>
                               <td
                                 className={`px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-center ${client.pendingAmount > 0
-                                    ? "text-amber-500 font-medium"
-                                    : isDarkMode
-                                      ? "text-slate-500"
-                                      : "text-gray-500"
+                                  ? "text-amber-500 font-medium"
+                                  : isDarkMode
+                                    ? "text-slate-500"
+                                    : "text-gray-500"
                                   }`}
                               >
                                 {client.pendingAmount > 0 ? (
@@ -1149,8 +1172,8 @@ const AllClients = () => {
                                 <button
                                   onClick={(e) => handleDeleteClick(e, client)}
                                   className={`p-1.5 rounded-full ${isDarkMode
-                                      ? "bg-red-500/10 hover:bg-red-500/20 text-red-300"
-                                      : "bg-red-50 hover:bg-red-100 text-red-500"
+                                    ? "bg-red-500/10 hover:bg-red-500/20 text-red-300"
+                                    : "bg-red-50 hover:bg-red-100 text-red-500"
                                     } transition-colors`}
                                   title="Delete client"
                                 >
@@ -1189,20 +1212,19 @@ const AllClients = () => {
                     <span className={`text-sm ${isDarkMode ? "text-slate-300" : "text-gray-600"}`}>Loading more...</span>
                   </div>
                 ) : (
-                  <button 
+                  <button
                     onClick={loadMoreItems}
-                    className={`px-4 py-2 text-sm rounded-lg ${
-                      isDarkMode 
-                        ? "bg-white/10 text-white hover:bg-white/20" 
+                    className={`px-4 py-2 text-sm rounded-lg ${isDarkMode
+                        ? "bg-white/10 text-white hover:bg-white/20"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    } transition-colors`}
+                      } transition-colors`}
                   >
                     Load more
                   </button>
                 )}
               </div>
             )}
-            
+
             {/* Results count */}
             <div className={`text-xs sm:text-sm ${isDarkMode ? "text-slate-400" : "text-gray-500"} text-center`}>
               Showing {visibleItems} of {filteredClients.length} clients
@@ -1284,8 +1306,8 @@ const AllClients = () => {
                 </div>
                 <div
                   className={`${isDarkMode
-                      ? "bg-slate-800/80 border-t border-white/10"
-                      : "bg-gray-50 border-t border-gray-200"
+                    ? "bg-slate-800/80 border-t border-white/10"
+                    : "bg-gray-50 border-t border-gray-200"
                     } px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse`}
                 >
                   <button
@@ -1328,8 +1350,8 @@ const AllClients = () => {
                     disabled={isDeleting}
                     onClick={handleCancelDelete}
                     className={`mt-3 w-full inline-flex justify-center rounded-md border ${isDarkMode
-                        ? "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
-                        : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                      ? "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                      : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                       } shadow-sm px-4 py-2 text-base font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors`}
                   >
                     Cancel

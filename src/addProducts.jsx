@@ -1068,7 +1068,7 @@ const AddProducts = () => {
           <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-gradient-to-br from-white to-transparent opacity-10"></div>
           <div className="absolute -left-10 -bottom-16 w-40 h-40 rounded-full bg-indigo-300 opacity-10"></div>
 
-          <div className="relative flex flex-col sm:flex-row justify-between items-center sm:gap-4 sm:gap-6">
+          <div className="relative flex flex-col sm:flex-row justify-between items-center  sm:gap-6">
             <div className="flex items-center space-x-3 sm:space-x-4 mb-4 sm:mb-0">
               {/* <div className="bg-white bg-opacity-20 p-2 sm:p-3 rounded-xl backdrop-blur-sm relative icon-glow-container"> */}
               {/* <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 sm:h-8 sm:w-8 text-white relative z-10" viewBox="0 0 20 20" fill="currentColor">

@@ -1079,7 +1079,7 @@ const AddProducts = () => {
                 <img
                   src="/siyaram-lace.png"
                   alt="icon"
-                  className="h-24 w-1/2 sm:h-28 sm:w-3/4 object-contain text-white"
+                  className="h-24 w-1/2 sm:h-28 sm:w-[350px] object-contain text-white"
                 />
               </div>
               {/* </div> */}

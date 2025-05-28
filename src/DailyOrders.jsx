@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTheme } from './context/ThemeContext';
 import { fetchAllClients } from './firebase/clientsFirebase';
-import { BsCurrencyRupee } from 'react-icons/bs';
+import { BsCurrencyRupee, BsArrowLeft } from 'react-icons/bs';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -65,8 +65,16 @@ const DailyOrders = () => {
         <motion.h1 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`text-3xl font-bold mb-8 ${isDarkMode ? 'text-white' : 'text-gray-900'} tracking-tight`}
+          className={`text-3xl font-bold mb-8 ${isDarkMode ? 'text-white' : 'text-gray-900'} tracking-tight flex items-center gap-3`}
         >
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => navigate(-1)}
+            className={`p-2 rounded-full hover:bg-opacity-10 ${isDarkMode ? 'hover:bg-white' : 'hover:bg-gray-900'} transition-colors duration-200`}
+          >
+            <BsArrowLeft className={`text-2xl ${isDarkMode ? 'text-white' : 'text-gray-900'}`} />
+          </motion.button>
           Daily Orders Overview
         </motion.h1>
         

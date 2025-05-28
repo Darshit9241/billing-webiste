@@ -957,6 +957,175 @@ const YearlyRevenueChart = ({ data, isDarkMode }) => (
   </div>
 );
 
+// Component for Sales vs Purchase Comparison Chart
+const SalesVsPurchaseChart = ({ data, isDarkMode }) => (
+  <div className={`p-4 sm:p-6 rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border ${isDarkMode ? 'border-gray-700' : 'border-gray-100'} transition-all duration-300 hover:shadow-xl`}>
+    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6">
+      <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-0">Sales vs Purchase Comparison</h2>
+      <div className={`px-3 py-1 rounded-full text-xs font-medium ${isDarkMode ? 'bg-indigo-900 text-indigo-200' : 'bg-indigo-100 text-indigo-800'}`}>
+        Monthly Comparison
+      </div>
+    </div>
+    <div className="h-60 sm:h-72 md:h-80 lg:h-[300px]">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart
+          data={data}
+          margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+          barSize={20}
+          barGap={2}
+          barCategoryGap="20%"
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#374151' : '#e5e7eb'} />
+          <XAxis 
+            dataKey="month" 
+            stroke={isDarkMode ? '#d1d5db' : '#6b7280'} 
+            tick={{ fontSize: 10 }}
+            axisLine={{ stroke: isDarkMode ? '#4b5563' : '#d1d5db' }}
+            height={50}
+            tickMargin={8}
+          />
+          <YAxis 
+            stroke={isDarkMode ? '#d1d5db' : '#6b7280'} 
+            tickFormatter={(value) => formatCurrency(value).replace('₹', '')}
+            tick={{ fontSize: 10 }}
+            axisLine={{ stroke: isDarkMode ? '#4b5563' : '#d1d5db' }}
+            width={50}
+          />
+          <Tooltip 
+            formatter={(value) => [formatCurrency(value), 'Amount']}
+            contentStyle={{ 
+              backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+              color: isDarkMode ? '#ffffff' : '#000000',
+              border: `1px solid ${isDarkMode ? '#374151' : '#e5e7eb'}`,
+              borderRadius: '0.5rem',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+            }}
+            wrapperStyle={{ zIndex: 10 }}
+          />
+          <Legend 
+            wrapperStyle={{ paddingTop: 10, fontSize: 12 }}
+            iconSize={8}
+            verticalAlign="bottom"
+            height={36}
+          />
+          <Bar 
+            dataKey="sales" 
+            name="Sales"
+            fill={isDarkMode ? "#3b82f6" : "#2563eb"}
+            radius={[4, 4, 0, 0]}
+            animationDuration={1500}
+            animationEasing="ease-out"
+          />
+          <Bar 
+            dataKey="purchase" 
+            name="Purchase"
+            fill={isDarkMode ? "#8b5cf6" : "#7c3aed"}
+            radius={[4, 4, 0, 0]}
+            animationDuration={1500}
+            animationEasing="ease-out"
+          />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  </div>
+);
+
+// Component for Payment Timeline Chart
+const PaymentTimelineChart = ({ data, isDarkMode }) => (
+  <div className={`p-4 sm:p-6 rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border ${isDarkMode ? 'border-gray-700' : 'border-gray-100'} transition-all duration-300 hover:shadow-xl`}>
+    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6">
+      <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-0">Payment Timeline</h2>
+      <div className={`px-3 py-1 rounded-full text-xs font-medium ${isDarkMode ? 'bg-green-900 text-green-200' : 'bg-green-100 text-green-800'}`}>
+        Last 30 days
+      </div>
+    </div>
+    <div className="h-60 sm:h-72 md:h-80 lg:h-[300px]">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart
+          data={data}
+          margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#374151' : '#e5e7eb'} />
+          <XAxis 
+            dataKey="date" 
+            stroke={isDarkMode ? '#d1d5db' : '#6b7280'} 
+            tick={{ fontSize: 10 }}
+            axisLine={{ stroke: isDarkMode ? '#4b5563' : '#d1d5db' }}
+            height={50}
+            tickMargin={8}
+          />
+          <YAxis 
+            stroke={isDarkMode ? '#d1d5db' : '#6b7280'} 
+            tickFormatter={(value) => formatCurrency(value).replace('₹', '')}
+            tick={{ fontSize: 10 }}
+            axisLine={{ stroke: isDarkMode ? '#4b5563' : '#d1d5db' }}
+            width={50}
+          />
+          <Tooltip 
+            formatter={(value) => [formatCurrency(value), 'Amount']}
+            contentStyle={{ 
+              backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+              color: isDarkMode ? '#ffffff' : '#000000',
+              border: `1px solid ${isDarkMode ? '#374151' : '#e5e7eb'}`,
+              borderRadius: '0.5rem',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+            }}
+            wrapperStyle={{ zIndex: 10 }}
+          />
+          <Legend 
+            wrapperStyle={{ paddingTop: 10, fontSize: 12 }}
+            iconSize={8}
+            verticalAlign="bottom"
+            height={36}
+          />
+          <Line 
+            type="monotone" 
+            dataKey="received" 
+            name="Received Payments"
+            stroke={isDarkMode ? "#10b981" : "#059669"} 
+            strokeWidth={2}
+            dot={{ 
+              r: 4, 
+              strokeWidth: 2,
+              fill: isDarkMode ? '#1f2937' : '#ffffff',
+              stroke: isDarkMode ? '#10b981' : '#059669'
+            }}
+            activeDot={{ 
+              r: 6, 
+              stroke: isDarkMode ? '#34d399' : '#10b981',
+              strokeWidth: 2,
+              fill: isDarkMode ? '#1f2937' : '#ffffff'
+            }}
+            animationDuration={1500}
+            animationEasing="ease-out"
+          />
+          <Line 
+            type="monotone" 
+            dataKey="pending" 
+            name="Pending Payments"
+            stroke={isDarkMode ? "#f59e0b" : "#d97706"} 
+            strokeWidth={2}
+            dot={{ 
+              r: 4, 
+              strokeWidth: 2,
+              fill: isDarkMode ? '#1f2937' : '#ffffff',
+              stroke: isDarkMode ? '#f59e0b' : '#d97706'
+            }}
+            activeDot={{ 
+              r: 6, 
+              stroke: isDarkMode ? '#fbbf24' : '#f59e0b',
+              strokeWidth: 2,
+              fill: isDarkMode ? '#1f2937' : '#ffffff'
+            }}
+            animationDuration={1500}
+            animationEasing="ease-out"
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  </div>
+);
+
 // Main Dashboard component
 const Dashboard = () => {
   const { isDarkMode } = useTheme();
@@ -976,7 +1145,10 @@ const Dashboard = () => {
     dailyRevenue: [],
     yearlyRevenue: [],
     topProducts: [],
-    clientGrowth: []
+    clientGrowth: [],
+    salesVsPurchaseData: [],
+    paymentTimelineData: [],
+    productCategoryData: []
   });
 
   const handleBackClick = () => {
@@ -1249,6 +1421,107 @@ const Dashboard = () => {
     };
   };
 
+  // Inside the Dashboard component, add these new data preparation functions:
+  const prepareSalesVsPurchaseData = (clients) => {
+    const monthlyData = {};
+    const currentDate = new Date();
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    // Initialize last 6 months
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(currentDate);
+      d.setMonth(currentDate.getMonth() - i);
+      const monthKey = `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+      monthlyData[monthKey] = { month: monthKey, sales: 0, purchase: 0 };
+    }
+    
+    // Populate data
+    clients.forEach(client => {
+      if (!client.orderDate && !client.timestamp) return;
+      
+      const date = client.orderDate ? new Date(client.orderDate) : new Date(client.timestamp);
+      const monthKey = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+      
+      if (monthlyData[monthKey]) {
+        const totalAmount = client.products?.reduce((total, product) => {
+          return total + (product.price * product.count);
+        }, 0) || 0;
+        
+        if (client.orderStatus === 'sell') {
+          monthlyData[monthKey].sales += totalAmount;
+        } else if (client.orderStatus === 'purchased') {
+          monthlyData[monthKey].purchase += totalAmount;
+        }
+      }
+    });
+    
+    return Object.values(monthlyData);
+  };
+
+  const preparePaymentTimelineData = (clients) => {
+    const dailyData = {};
+    const currentDate = new Date();
+    
+    // Initialize last 30 days
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(currentDate);
+      d.setDate(currentDate.getDate() - i);
+      const dateKey = d.toISOString().split('T')[0];
+      dailyData[dateKey] = { date: dateKey, received: 0, pending: 0 };
+    }
+    
+    // Populate data
+    clients.forEach(client => {
+      if (!client.orderDate && !client.timestamp) return;
+      
+      const date = client.orderDate ? new Date(client.orderDate) : new Date(client.timestamp);
+      const dateKey = date.toISOString().split('T')[0];
+      
+      if (dailyData[dateKey]) {
+        const totalAmount = client.products?.reduce((total, product) => {
+          return total + (product.price * product.count);
+        }, 0) || 0;
+        
+        if (client.paymentStatus === 'cleared') {
+          dailyData[dateKey].received += totalAmount;
+        } else {
+          dailyData[dateKey].pending += totalAmount;
+        }
+      }
+    });
+    
+    return Object.values(dailyData);
+  };
+
+  const prepareProductCategoryData = (clients) => {
+    const categoryData = {};
+    const colors = [
+      { light: '#3b82f6', dark: '#60a5fa' }, // blue
+      { light: '#10b981', dark: '#34d399' }, // green
+      { light: '#f59e0b', dark: '#fbbf24' }, // yellow
+      { light: '#ef4444', dark: '#f87171' }, // red
+      { light: '#8b5cf6', dark: '#a78bfa' }, // purple
+      { light: '#ec4899', dark: '#f472b6' }, // pink
+    ];
+    
+    // Count products by category
+    clients.forEach(client => {
+      client.products?.forEach(product => {
+        if (product.category) {
+          categoryData[product.category] = (categoryData[product.category] || 0) + product.count;
+        }
+      });
+    });
+    
+    // Convert to array format with colors
+    const total = Object.values(categoryData).reduce((sum, count) => sum + count, 0);
+    return Object.entries(categoryData).map(([name, count], index) => ({
+      name,
+      value: Math.round((count / total) * 100),
+      color: isDarkMode ? colors[index % colors.length].dark : colors[index % colors.length].light
+    }));
+  };
+
   // Handle click outside notifications dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -1408,6 +1681,9 @@ const Dashboard = () => {
         // Get top products with sell/purchase separation
         const topProducts = getTopProducts(nonMergedClients);
         
+        const salesVsPurchaseData = prepareSalesVsPurchaseData(nonMergedClients);
+        const paymentTimelineData = preparePaymentTimelineData(nonMergedClients);
+        const productCategoryData = prepareProductCategoryData(nonMergedClients);
         
         setStats({
           totalClients: nonMergedClients.length,
@@ -1421,6 +1697,9 @@ const Dashboard = () => {
           yearlyRevenue,
           topProducts,
           clientGrowth,
+          salesVsPurchaseData,
+          paymentTimelineData,
+          productCategoryData,
           // Add payment status data for sell and purchase
           paymentStatus: {
             sell: {
@@ -1793,6 +2072,17 @@ const Dashboard = () => {
         {/* Top Products */}
         <div className="grid grid-cols-1 gap-3 sm:gap-6 mb-4 sm:mb-6 md:mb-8">
           <TopProducts products={stats.topProducts} isDarkMode={isDarkMode} />
+        </div>
+
+        {/* New Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6 mb-4 sm:mb-6 md:mb-8">
+          <div className="lg:col-span-2">
+            <SalesVsPurchaseChart data={stats.salesVsPurchaseData} isDarkMode={isDarkMode} />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:gap-6 mb-4 sm:mb-6 md:mb-8">
+          <PaymentTimelineChart data={stats.paymentTimelineData} isDarkMode={isDarkMode} />
         </div>
 
         {/* Export Options */}

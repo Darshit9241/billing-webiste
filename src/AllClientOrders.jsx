@@ -220,66 +220,98 @@ const AllClientOrders = () => {
     return (
       <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Header Section with Back Button and Info Button */}
-          <div className="mb-8 flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={handleBack}
-                className={`p-2 rounded-lg ${isDarkMode
-                    ? 'bg-gray-800 hover:bg-gray-700 text-white'
-                    : 'bg-white hover:bg-gray-50 text-gray-900'
-                  } shadow-sm border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'
-                  } transition-all`}
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-              </button>
-              <h1 className="text-3xl font-bold">Client Orders</h1>
+          {/* Enhanced Header Section */}
+          <div className="mb-8">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={handleBack}
+                  className={`p-2.5 rounded-xl ${isDarkMode
+                      ? 'bg-gray-800 hover:bg-gray-700 text-white'
+                      : 'bg-white hover:bg-gray-50 text-gray-900'
+                    } shadow-sm border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'
+                    } transition-all hover:shadow-md`}
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                </button>
+                <div>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Client Orders</h1>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setIsSummaryModalOpen(true)}
+                  className={`p-2.5 rounded-xl flex items-center gap-2 ${isDarkMode
+                      ? 'bg-gray-800 hover:bg-gray-700 text-white'
+                      : 'bg-white hover:bg-gray-50 text-gray-900'
+                    } shadow-sm border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'
+                    } transition-all hover:shadow-md`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {/* <span className="hidden sm:inline">View Summary</span> */}
+                </button>
+              </div>
             </div>
-            <button
-              onClick={() => setIsSummaryModalOpen(true)}
-              className={`p-2 rounded-lg ${isDarkMode
-                  ? 'bg-gray-800 hover:bg-gray-700 text-white'
-                  : 'bg-white hover:bg-gray-50 text-gray-900'
-                } shadow-sm border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'
-                } transition-all`}
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
           </div>
 
-          {/* Filters Section */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 mb-6">
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+          {/* Enhanced Filters Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 mb-6 border border-gray-100 dark:border-gray-700">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              {/* Search Bar */}
+              <div className="lg:col-span-1">
+                <label className="block text-sm font-medium mb-2">Search Orders</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search by name, ID, GST..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className={`w-full pl-10 pr-4 py-2.5 rounded-xl border ${isDarkMode
+                      ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400'
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                      } focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
+                  />
+                  <svg className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+              </div>
 
               {/* Date Range */}
               <div className="lg:col-span-2">
                 <label className="block text-sm font-medium mb-2">Date Range</label>
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
+                  <div className="relative">
                     <input
                       type="date"
                       value={fromDate}
                       onChange={(e) => setFromDate(e.target.value)}
-                      className={`w-full px-4 py-2.5 rounded-lg border ${isDarkMode
+                      className={`w-full pl-10 pr-4 py-2.5 rounded-xl border ${isDarkMode
                         ? 'bg-gray-800 border-gray-700 text-white'
                         : 'bg-white border-gray-300 text-gray-900'
                         } focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
                     />
+                    <svg className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
                   </div>
-                  <div>
+                  <div className="relative">
                     <input
                       type="date"
                       value={toDate}
                       onChange={(e) => setToDate(e.target.value)}
-                      className={`w-full px-4 py-2.5 rounded-lg border ${isDarkMode
+                      className={`w-full pl-10 pr-4 py-2.5 rounded-xl border ${isDarkMode
                         ? 'bg-gray-800 border-gray-700 text-white'
                         : 'bg-white border-gray-300 text-gray-900'
                         } focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
                     />
+                    <svg className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
                   </div>
                 </div>
                 {(fromDate || toDate) && (
@@ -304,7 +336,7 @@ const AllClientOrders = () => {
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className={`w-full px-4 py-2.5 rounded-lg border flex justify-between items-center ${isDarkMode
+                    className={`w-full px-4 py-2.5 rounded-xl border flex justify-between items-center ${isDarkMode
                       ? 'bg-gray-800 border-gray-700 text-white'
                       : 'bg-white border-gray-300 text-gray-900'
                       } focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
@@ -322,7 +354,7 @@ const AllClientOrders = () => {
                     </svg>
                   </button>
                   {isDropdownOpen && (
-                    <div className={`absolute z-50 w-full mt-1 rounded-lg shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'
+                    <div className={`absolute z-50 w-full mt-1 rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'
                       } border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
                       {paymentStatuses.map((status) => (
                         <button
@@ -344,36 +376,8 @@ const AllClientOrders = () => {
             </div>
           </div>
 
-          {/* Summary Section */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4">
-                <div className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">Total Orders</div>
-                <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">{filteredClients.length}</div>
-              </div>
-              <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-4">
-                <div className="text-sm font-medium text-green-600 dark:text-green-400 mb-1">Total Amount</div>
-                <div className="text-2xl font-bold text-green-700 dark:text-green-300">
-                  <div className="flex items-center">
-                    <BsCurrencyRupee className="inline-block mr-1" size={18} />
-                    {totalFilteredAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-                  </div>
-                </div>
-              </div>
-              <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-4">
-                <div className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-1">Average Order Value</div>
-                <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">
-                  <div className="flex items-center">
-                    <BsCurrencyRupee className="inline-block mr-1" size={18} />
-                    {(totalFilteredAmount / (filteredClients.length || 1)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Table Section */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden relative z-10">
+          {/* Enhanced Table Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden relative z-10 border border-gray-100 dark:border-gray-700">
             <div
               ref={tableRef}
               className="overflow-y-auto max-h-[600px] hide-scrollbar"
@@ -422,12 +426,12 @@ const AllClientOrders = () => {
                           >
                             {copiedField === `id-${client.id}` ? (
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-emerald-500" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
                             ) : (
                               <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${isDarkMode ? 'text-slate-300' : 'text-gray-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                </svg>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                              </svg>
                             )}
                           </button>
                         </div>
@@ -442,12 +446,12 @@ const AllClientOrders = () => {
                           >
                             {copiedField === `name-${client.id}` ? (
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-emerald-500" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
                             ) : (
                               <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${isDarkMode ? 'text-slate-300' : 'text-gray-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                </svg>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                              </svg>
                             )}
                           </button>
                         </div>
@@ -478,7 +482,7 @@ const AllClientOrders = () => {
                         <div className="flex items-center justify-center space-x-3">
                           <button
                             onClick={() => handleEditClick(client.id)}
-                            className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                            className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
                             title="Edit order"
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -487,7 +491,7 @@ const AllClientOrders = () => {
                           </button>
                           <button
                             onClick={() => handleDeleteClick(client.id)}
-                            className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                            className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
                             title="Delete order"
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -548,66 +552,97 @@ const AllClientOrders = () => {
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header Section with Back Button and Info Button */}
-        <div className="mb-8 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={handleBack}
-              className={`p-2 rounded-lg ${isDarkMode
-                  ? 'bg-gray-800 hover:bg-gray-700 text-white'
-                  : 'bg-white hover:bg-gray-50 text-gray-900'
-                } shadow-sm border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'
-                } transition-all`}
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-            </button>
-            <h1 className="text-3xl font-bold">Client Orders</h1>
+        {/* Enhanced Header Section */}
+        <div className="mb-8">
+          <div className="flex flex-row md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleBack}
+                className={`p-2.5 rounded-xl ${isDarkMode
+                    ? 'bg-gray-800 hover:bg-gray-700 text-white'
+                    : 'bg-white hover:bg-gray-50 text-gray-900'
+                  } shadow-sm border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'
+                  } transition-all hover:shadow-md`}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+              </button>
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Client Orders</h1>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsSummaryModalOpen(true)}
+                className={`p-2.5 rounded-xl flex items-center gap-2 ${isDarkMode
+                    ? 'bg-gray-800 hover:bg-gray-700 text-white'
+                    : 'bg-white hover:bg-gray-50 text-gray-900'
+                  } shadow-sm border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'
+                  } transition-all hover:shadow-md`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+            </div>
           </div>
-          <button
-            onClick={() => setIsSummaryModalOpen(true)}
-            className={`p-2 rounded-lg ${isDarkMode
-                ? 'bg-gray-800 hover:bg-gray-700 text-white'
-                : 'bg-white hover:bg-gray-50 text-gray-900'
-              } shadow-sm border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'
-              } transition-all`}
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </button>
         </div>
 
-        {/* Filters Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 mb-6">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        {/* Enhanced Filters Section */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 mb-6 border border-gray-100 dark:border-gray-700">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Search Bar */}
+            <div className="lg:col-span-1">
+              <label className="block text-sm font-medium mb-2">Search Orders</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search by name, ID, GST..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className={`w-full pl-10 pr-4 py-2.5 rounded-xl border ${isDarkMode
+                    ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400'
+                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                    } focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
+                />
+                <svg className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+            </div>
 
             {/* Date Range */}
             <div className="lg:col-span-2">
               <label className="block text-sm font-medium mb-2">Date Range</label>
               <div className="grid grid-cols-2 gap-3">
-                <div>
+                <div className="relative">
                   <input
                     type="date"
                     value={fromDate}
                     onChange={(e) => setFromDate(e.target.value)}
-                    className={`w-full px-4 py-2.5 rounded-lg border ${isDarkMode
+                    className={`w-full pl-10 pr-4 py-2.5 rounded-xl border ${isDarkMode
                       ? 'bg-gray-800 border-gray-700 text-white'
                       : 'bg-white border-gray-300 text-gray-900'
                       } focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
                   />
+                  <svg className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
                 </div>
-                <div>
+                <div className="relative">
                   <input
                     type="date"
                     value={toDate}
                     onChange={(e) => setToDate(e.target.value)}
-                    className={`w-full px-4 py-2.5 rounded-lg border ${isDarkMode
+                    className={`w-full pl-10 pr-4 py-2.5 rounded-xl border ${isDarkMode
                       ? 'bg-gray-800 border-gray-700 text-white'
                       : 'bg-white border-gray-300 text-gray-900'
                       } focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
                   />
+                  <svg className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
                 </div>
               </div>
               {(fromDate || toDate) && (
@@ -632,7 +667,7 @@ const AllClientOrders = () => {
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className={`w-full px-4 py-2.5 rounded-lg border flex justify-between items-center ${isDarkMode
+                  className={`w-full px-4 py-2.5 rounded-xl border flex justify-between items-center ${isDarkMode
                     ? 'bg-gray-800 border-gray-700 text-white'
                     : 'bg-white border-gray-300 text-gray-900'
                     } focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
@@ -650,7 +685,7 @@ const AllClientOrders = () => {
                   </svg>
                 </button>
                 {isDropdownOpen && (
-                  <div className={`absolute z-50 w-full mt-1 rounded-lg shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'
+                  <div className={`absolute z-50 w-full mt-1 rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'
                     } border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
                     {paymentStatuses.map((status) => (
                       <button
@@ -672,21 +707,8 @@ const AllClientOrders = () => {
           </div>
         </div>
 
-        <div className="lg:col-span-1 mb-5">
-          <input
-            type="text"
-            placeholder="Search by name, ID, GST, or date..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className={`w-full px-4 py-2.5 rounded-lg border ${isDarkMode
-              ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400'
-              : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-              } focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
-          />
-        </div>
-
-        {/* Table Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden relative z-10">
+        {/* Enhanced Table Section */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden relative z-10 border border-gray-100 dark:border-gray-700">
           <div
             ref={tableRef}
             className="overflow-y-auto max-h-[600px] hide-scrollbar"
@@ -735,12 +757,12 @@ const AllClientOrders = () => {
                         >
                           {copiedField === `id-${client.id}` ? (
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-emerald-500" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
                           ) : (
                             <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${isDarkMode ? 'text-slate-300' : 'text-gray-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                </svg>
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
                           )}
                         </button>
                       </div>
@@ -755,12 +777,12 @@ const AllClientOrders = () => {
                         >
                           {copiedField === `name-${client.id}` ? (
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-emerald-500" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
                           ) : (
                             <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${isDarkMode ? 'text-slate-300' : 'text-gray-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                </svg>
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
                           )}
                         </button>
                       </div>
@@ -791,7 +813,7 @@ const AllClientOrders = () => {
                       <div className="flex items-center justify-center space-x-3">
                         <button
                           onClick={() => handleEditClick(client.id)}
-                          className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                          className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
                           title="Edit order"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -800,7 +822,7 @@ const AllClientOrders = () => {
                         </button>
                         <button
                           onClick={() => handleDeleteClick(client.id)}
-                          className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                          className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
                           title="Delete order"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

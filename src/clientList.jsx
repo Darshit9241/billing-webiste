@@ -2665,7 +2665,7 @@ const ClientList = () => {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
                               </svg>
                               Merged
-                              {client.mergedFrom && client.mergedFrom.length > 0 && (
+                              {/* {client.mergedFrom && client.mergedFrom.length > 0 && (
                                 <div className="absolute z-10 left-0 top-full mt-1 w-48 p-2 bg-slate-800 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                                   <div className="text-xs text-slate-300 font-normal">
                                     <p className="font-medium mb-1">Merged from:</p>
@@ -2676,7 +2676,7 @@ const ClientList = () => {
                                     </ul>
                                   </div>
                                 </div>
-                              )}
+                              )} */}
                             </span>
                           )}
                         </h3>

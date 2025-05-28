@@ -422,7 +422,8 @@ const AllClients = () => {
                 </button>
               </div>
 
-              <div>
+              <div className={`rounded-lg flex ${isDarkMode ? "bg-white/5" : "bg-gray-100"
+                  }`}>
                 <Notifications />
               </div>
               {/* View mode toggle */}

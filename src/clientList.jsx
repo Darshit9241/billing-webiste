@@ -73,10 +73,11 @@ const ClientList = () => {
 
   // New state for merge functionality 
   const [selectedClientsForMerge, setSelectedClientsForMerge] = useState([]);
-  // const [showMergeButton, setShowMergeButton] = useState(true); // Changed from false to true
-  const [showMergeButton, setShowMergeButton] = useState(false); // Changed from false to true
+  const [showMergeButton, setShowMergeButton] = useState(true); // Changed from false to true
   const [showMergeModal, setShowMergeModal] = useState(false);
   const [mergedClient, setMergedClient] = useState(null);
+  // New state to track if merge mode is active
+  const [mergeMode, setMergeMode] = useState(false);
 
   const [showModalDelete, setShowDeleteModal] = useState(false);
   const [selectedDeleteClientId, setSelectedDeleteClientId] = useState(null);
@@ -303,7 +304,7 @@ const ClientList = () => {
     });
 
     setFilteredClients(filtered);
-    setShowMergeButton(filtered.length > 1 && searchQuery.trim() !== '');
+    // setShowMergeButton(filtered.length > 1 && searchQuery.trim() !== '');
   };
 
   // Toggle client selection for merge
@@ -312,6 +313,17 @@ const ClientList = () => {
       setSelectedClientsForMerge(selectedClientsForMerge.filter(id => id !== clientId));
     } else {
       setSelectedClientsForMerge([...selectedClientsForMerge, clientId]);
+    }
+  };
+
+  // Add a function to toggle merge mode
+  const toggleMergeMode = () => {
+    const newMergeMode = !mergeMode;
+    setMergeMode(newMergeMode);
+    
+    // Clear selections when exiting merge mode
+    if (!newMergeMode) {
+      setSelectedClientsForMerge([]);
     }
   };
 
@@ -1605,65 +1617,77 @@ const ClientList = () => {
               </div>
               <input
                 type="text"
-                placeholder="Search by name, ID, GST or date (DD/MM/YYYY - searches order date & timestamp)"
+                placeholder={mergeMode ? "clients to merge" : "Search by name, ID, GST or date (DD/MM/YYYY - searches order date & timestamp)"}
                 value={searchQuery}
                 onChange={handleSearchChange}
-                className={`w-full pl-10 pr-24 py-3 ${isDarkMode ? 'bg-white/5' : 'bg-white'} border ${dateSearchActive ? (isDarkMode ? 'border-amber-500/70' : 'border-amber-400') : (isDarkMode ? 'border-white/10' : 'border-gray-200')} rounded-xl ${isDarkMode ? 'text-white placeholder-slate-400' : 'text-gray-900 placeholder-gray-400'} focus:outline-none focus:ring-2 ${dateSearchActive ? 'focus:ring-amber-500/50 focus:border-amber-500' : 'focus:ring-emerald-500/50 focus:border-emerald-500'} shadow-sm transition-colors`}
+                className={`w-full pl-10 pr-24 py-3 ${isDarkMode ? 'bg-white/5' : 'bg-white'} border ${dateSearchActive ? (isDarkMode ? 'border-amber-500/70' : 'border-amber-400') : mergeMode ? (isDarkMode ? 'border-emerald-500/70' : 'border-emerald-400') : (isDarkMode ? 'border-white/10' : 'border-gray-200')} rounded-xl ${isDarkMode ? 'text-white placeholder-slate-400' : 'text-gray-900 placeholder-gray-400'} focus:outline-none focus:ring-2 ${dateSearchActive ? 'focus:ring-amber-500/50 focus:border-amber-500' : mergeMode ? 'focus:ring-emerald-500/50 focus:border-emerald-500' : 'focus:ring-emerald-500/50 focus:border-emerald-500'} shadow-sm transition-colors`}
               />
               {/* Date format hint */}
               <div className="absolute top-full left-0 mt-1 flex items-center">
-                <span className={`text-xs flex items-center ${dateSearchActive ? (isDarkMode ? 'text-amber-400' : 'text-amber-600') : 'text-slate-400'}`}>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  {dateSearchActive ? 'Date filter active (searches order date & timestamp)' : 'Date format: DD/MM/YYYY'}
-                </span>
+                {mergeMode ? (
+                  <span className={`text-xs flex items-center ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                    </svg>
+                    Merge Mode: Select clients to merge ({selectedClientsForMerge.length} selected)
+                  </span>
+                ) : (
+                  <span className={`text-xs flex items-center ${dateSearchActive ? (isDarkMode ? 'text-amber-400' : 'text-amber-600') : 'text-slate-400'}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    {dateSearchActive ? 'Date filter active (searches order date & timestamp)' : 'Date format: DD/MM/YYYY'}
+                  </span>
+                )}
               </div>
               {/* Merge buttons */}
-              {showMergeButton && (
-                <div className="absolute inset-y-0 right-10 flex items-center">
-                  {/* Select All button */}
+              <div className="absolute inset-y-0 right-1 flex items-center">
+                <button
+                  onClick={toggleMergeMode}
+                  className={`mr-1 px-2 py-1.5 rounded-md text-xs font-medium ${mergeMode
+                    ? `${isDarkMode ? 'bg-emerald-500/80 text-white' : 'bg-emerald-100 text-emerald-700'}`
+                    : `${isDarkMode ? 'bg-white/10 text-slate-300 hover:bg-white/20' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`
+                    } transition-colors`}
+                >
+                  {mergeMode ? 'Exit' : 'Merge'}
+                </button>
+
+                {mergeMode && (
                   <button
                     onClick={() => {
-                      // Check if all filtered clients are already selected
                       const allSelected = filteredClients.every(client =>
                         selectedClientsForMerge.includes(client.id)
                       );
 
                       if (allSelected) {
-                        // If all are selected, deselect all
                         setSelectedClientsForMerge([]);
                       } else {
-                        // Otherwise, select all filtered clients
                         setSelectedClientsForMerge(filteredClients.map(client => client.id));
                       }
                     }}
-                    className={`mr-3 px-2 py-1 rounded-md text-xs font-medium ${filteredClients.length > 0 && filteredClients.every(client => selectedClientsForMerge.includes(client.id))
+                    className={`mr-1 px-2 py-1 rounded-md text-xs font-medium ${filteredClients.length > 0 && filteredClients.every(client => selectedClientsForMerge.includes(client.id))
                       ? `${isDarkMode ? 'bg-emerald-500/80 text-white' : 'bg-emerald-100 text-emerald-700'}`
                       : `${isDarkMode ? 'bg-white/10 text-slate-300 hover:bg-white/20' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`
                       } transition-colors`}
                   >
                     {filteredClients.length > 0 && filteredClients.every(client => selectedClientsForMerge.includes(client.id))
-                      ? 'Deselect All'
+                      ? 'Deselect'
                       : 'Select All'}
                   </button>
+                )}
 
-                  {/* Merge button */}
+                {mergeMode && selectedClientsForMerge.length >= 2 && (
                   <button
                     onClick={handleMergeButtonClick}
-                    disabled={selectedClientsForMerge.length < 2}
-                    className={`flex items-center pr-3 pl-3 ${selectedClientsForMerge.length < 2
-                      ? `${isDarkMode ? 'text-slate-500' : 'text-gray-400'} cursor-not-allowed`
-                      : `${isDarkMode ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-500'} cursor-pointer`
-                      }`}
+                    className={`flex items-center px-2 py-1.5 rounded-md text-xs font-medium bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 transition-colors`}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
                     </svg>
-                    <span className="ml-1 text-sm font-medium">Merge ({selectedClientsForMerge.length})</span>
+                    <span className="hidden xs:inline">Merge</span> ({selectedClientsForMerge.length})
                   </button>
-                </div>
-              )}
+                )}
+              </div>
               {searchQuery && (
                 <button
                   onClick={clearSearchQuery}
@@ -1722,7 +1746,7 @@ const ClientList = () => {
         )}
 
         {/* Selection info panel - Show when search has results */}
-        {showMergeButton && filteredClients.length > 0 && (
+        {/* {showMergeButton && filteredClients.length > 0 && (
           <div className={`mb-6 p-4 rounded-xl ${isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-white border border-gray-200'} shadow-sm animate-fadeIn`}>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center">
@@ -1783,7 +1807,7 @@ const ClientList = () => {
               </div>
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Edit Client Modal */}
         {editingClient && (
@@ -2339,14 +2363,21 @@ const ClientList = () => {
                   <div className="flex justify-between items-start">
                     <div className="flex items-start">
                       {/* Checkbox for merge functionality */}
-                      {showMergeButton && (
+                      {(showMergeButton && mergeMode) && (
                         <div className="mr-3 mt-1">
-                          <input
-                            type="checkbox"
-                            checked={selectedClientsForMerge.includes(client.id)}
-                            onChange={() => toggleClientSelection(client.id)}
-                            className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
-                          />
+                          <div className="relative">
+                            <input
+                              type="checkbox"
+                              checked={selectedClientsForMerge.includes(client.id)}
+                              onChange={() => toggleClientSelection(client.id)}
+                              className="h-5 w-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                            />
+                            {selectedClientsForMerge.includes(client.id) && (
+                              <div className="absolute -top-3 -right-3 bg-emerald-500 text-white text-[10px] rounded-full h-5 w-5 flex items-center justify-center">
+                                {selectedClientsForMerge.indexOf(client.id) + 1}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
                       <div>
@@ -2591,14 +2622,21 @@ const ClientList = () => {
                   <div className="flex justify-between items-start">
                     <div className="flex items-start">
                       {/* Checkbox for merge functionality */}
-                      {showMergeButton && (
+                      {(showMergeButton && mergeMode) && (
                         <div className="mr-3 mt-1">
-                          <input
-                            type="checkbox"
-                            checked={selectedClientsForMerge.includes(client.id)}
-                            onChange={() => toggleClientSelection(client.id)}
-                            className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
-                          />
+                          <div className="relative">
+                            <input
+                              type="checkbox"
+                              checked={selectedClientsForMerge.includes(client.id)}
+                              onChange={() => toggleClientSelection(client.id)}
+                              className="h-5 w-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                            />
+                            {selectedClientsForMerge.includes(client.id) && (
+                              <div className="absolute -top-3 -right-3 bg-emerald-500 text-white text-[10px] rounded-full h-5 w-5 flex items-center justify-center">
+                                {selectedClientsForMerge.indexOf(client.id) + 1}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
                       <div>

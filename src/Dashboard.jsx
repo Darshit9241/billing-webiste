@@ -6,7 +6,7 @@ import { fetchAllClients } from './firebase/clientsFirebase';
 import { 
   BarChart, Bar, PieChart, Pie, Cell, 
   LineChart, Line, XAxis, YAxis, CartesianGrid, 
-  Tooltip, Legend, ResponsiveContainer, AreaChart, Area
+  Tooltip, Legend, ResponsiveContainer, AreaChart, Area, ComposedChart
 } from 'recharts';
 import { 
   FiSearch,FiCalendar, FiCheckSquare, FiTrendingUp, 
@@ -1030,6 +1030,106 @@ const SalesVsPurchaseChart = ({ data, isDarkMode }) => (
   </div>
 );
 
+// Component for Profit Chart
+const ProfitChart = ({ data, isDarkMode }) => (
+  <div className={`p-4 sm:p-6 rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border ${isDarkMode ? 'border-gray-700' : 'border-gray-100'} transition-all duration-300 hover:shadow-xl`}>
+    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6">
+      <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-0">Profit Analysis</h2>
+      <div className={`px-3 py-1 rounded-full text-xs font-medium ${isDarkMode ? 'bg-emerald-900 text-emerald-200' : 'bg-emerald-100 text-emerald-800'}`}>
+        Monthly Profit
+      </div>
+    </div>
+    <div className="h-60 sm:h-72 md:h-80 lg:h-[300px]">
+      <ResponsiveContainer width="100%" height="100%">
+        <ComposedChart
+          data={data}
+          margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#374151' : '#e5e7eb'} />
+          <XAxis 
+            dataKey="month" 
+            stroke={isDarkMode ? '#d1d5db' : '#6b7280'} 
+            tick={{ fontSize: 10 }}
+            axisLine={{ stroke: isDarkMode ? '#4b5563' : '#d1d5db' }}
+            height={50}
+            tickMargin={8}
+          />
+          <YAxis 
+            stroke={isDarkMode ? '#d1d5db' : '#6b7280'} 
+            tickFormatter={(value) => formatCurrency(value).replace('₹', '')}
+            tick={{ fontSize: 10 }}
+            axisLine={{ stroke: isDarkMode ? '#4b5563' : '#d1d5db' }}
+            width={50}
+          />
+          <Tooltip 
+            formatter={(value, name) => {
+              if (name === "profit") {
+                return [formatCurrency(value), "Profit"];
+              }
+              return [formatCurrency(value), name === "sales" ? "Sales" : "Purchase"];
+            }}
+            contentStyle={{ 
+              backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+              color: isDarkMode ? '#ffffff' : '#000000',
+              border: `1px solid ${isDarkMode ? '#374151' : '#e5e7eb'}`,
+              borderRadius: '0.5rem',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+            }}
+            wrapperStyle={{ zIndex: 10 }}
+          />
+          <Legend 
+            wrapperStyle={{ paddingTop: 10, fontSize: 12 }}
+            iconSize={8}
+            verticalAlign="bottom"
+            height={36}
+          />
+          <Bar 
+            dataKey="sales" 
+            name="Sales"
+            fill={isDarkMode ? "#3b82f6" : "#2563eb"}
+            radius={[4, 4, 0, 0]}
+            animationDuration={1500}
+            animationEasing="ease-out"
+            stackId="a"
+            opacity={0.7}
+          />
+          <Bar 
+            dataKey="purchase" 
+            name="Purchase"
+            fill={isDarkMode ? "#8b5cf6" : "#7c3aed"}
+            radius={[4, 4, 0, 0]}
+            animationDuration={1500}
+            animationEasing="ease-out"
+            stackId="a"
+            opacity={0.7}
+          />
+          <Line 
+            type="monotone" 
+            dataKey="profit" 
+            name="Profit"
+            stroke={isDarkMode ? "#10b981" : "#059669"}
+            strokeWidth={3}
+            dot={{ 
+              r: 4, 
+              strokeWidth: 2,
+              fill: isDarkMode ? '#1f2937' : '#ffffff',
+              stroke: isDarkMode ? '#10b981' : '#059669'
+            }}
+            activeDot={{ 
+              r: 6, 
+              stroke: isDarkMode ? '#34d399' : '#10b981',
+              strokeWidth: 2,
+              fill: isDarkMode ? '#1f2937' : '#ffffff'
+            }}
+            animationDuration={1500}
+            animationEasing="ease-out"
+          />
+        </ComposedChart>
+      </ResponsiveContainer>
+    </div>
+  </div>
+);
+
 // Component for Payment Timeline Chart
 const PaymentTimelineChart = ({ data, isDarkMode }) => (
   <div className={`p-4 sm:p-6 rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border ${isDarkMode ? 'border-gray-700' : 'border-gray-100'} transition-all duration-300 hover:shadow-xl`}>
@@ -1147,6 +1247,7 @@ const Dashboard = () => {
     topProducts: [],
     clientGrowth: [],
     salesVsPurchaseData: [],
+    profitData: [],
     paymentTimelineData: [],
     productCategoryData: []
   });
@@ -1432,7 +1533,7 @@ const Dashboard = () => {
       const d = new Date(currentDate);
       d.setMonth(currentDate.getMonth() - i);
       const monthKey = `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
-      monthlyData[monthKey] = { month: monthKey, sales: 0, purchase: 0 };
+      monthlyData[monthKey] = { month: monthKey, sales: 0, purchase: 0, profit: 0 };
     }
     
     // Populate data
@@ -1453,6 +1554,11 @@ const Dashboard = () => {
           monthlyData[monthKey].purchase += totalAmount;
         }
       }
+    });
+    
+    // Calculate profit
+    Object.values(monthlyData).forEach(data => {
+      data.profit = data.sales - data.purchase;
     });
     
     return Object.values(monthlyData);
@@ -1682,6 +1788,7 @@ const Dashboard = () => {
         const topProducts = getTopProducts(nonMergedClients);
         
         const salesVsPurchaseData = prepareSalesVsPurchaseData(nonMergedClients);
+        const profitData = salesVsPurchaseData; // Use the same data for profit chart
         const paymentTimelineData = preparePaymentTimelineData(nonMergedClients);
         const productCategoryData = prepareProductCategoryData(nonMergedClients);
         
@@ -1698,6 +1805,7 @@ const Dashboard = () => {
           topProducts,
           clientGrowth,
           salesVsPurchaseData,
+          profitData,
           paymentTimelineData,
           productCategoryData,
           // Add payment status data for sell and purchase
@@ -2071,13 +2179,10 @@ const Dashboard = () => {
         </div>
         </div>
 
-        {/* Top Products */}
-
         {/* New Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6 mb-4 sm:mb-6 md:mb-8">
-          <div className="lg:col-span-2">
-            <SalesVsPurchaseChart data={stats.salesVsPurchaseData} isDarkMode={isDarkMode} />
-          </div>
+          <SalesVsPurchaseChart data={stats.salesVsPurchaseData} isDarkMode={isDarkMode} />
+          <ProfitChart data={stats.profitData} isDarkMode={isDarkMode} />
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:gap-6 mb-4 sm:mb-6 md:mb-8">

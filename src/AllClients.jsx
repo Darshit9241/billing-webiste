@@ -29,6 +29,10 @@ const AllClients = () => {
     // Initialize from localStorage or default to false
     return localStorage.getItem("showMergedClients") === "true" || false;
   });
+  // New state for revenue type toggle
+  const [revenueType, setRevenueType] = useState(() => {
+    return localStorage.getItem("revenueType") || "purchase";
+  });
 
   // New state variables for delete functionality
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -56,6 +60,11 @@ const AllClients = () => {
   useEffect(() => {
     localStorage.setItem("showMergedClients", showMergedClients);
   }, [showMergedClients]);
+
+  // Save revenue type to localStorage
+  useEffect(() => {
+    localStorage.setItem("revenueType", revenueType);
+  }, [revenueType]);
 
   // Reset copied client after 2 seconds
   useEffect(() => {
@@ -210,7 +219,7 @@ const AllClients = () => {
       // Convert Map to array and sort by name
       const clientArray = Array.from(clientMap.values());
       clientArray.sort((a, b) => a.clientName.localeCompare(b.clientName));
-      
+
 
       setClientsData(clientArray);
       setFilteredClients(clientArray);
@@ -244,7 +253,9 @@ const AllClients = () => {
       ? clientsData
       : clientsData.filter((client) => !client.hasMergedClient);
 
-    return {
+    // Mock data for sales revenue (in a real app, this would come from your database)
+    // For this example, we'll simulate sales data as 80% of purchase data
+    const purchaseStats = {
       totalClients: clientsToCount.length,
       totalOrders: clientsToCount.reduce(
         (sum, client) => sum + client.orderCount,
@@ -258,6 +269,19 @@ const AllClients = () => {
         (sum, client) => sum + client.pendingAmount,
         0
       ),
+    };
+
+    // Mock sales data (in a real app, you'd fetch this separately)
+    const salesStats = {
+      totalClients: Math.round(purchaseStats.totalClients * 0.7),
+      totalOrders: Math.round(purchaseStats.totalOrders * 0.8),
+      totalValue: purchaseStats.totalValue * 1.2, // Sales revenue is higher than purchase
+      pendingAmount: purchaseStats.pendingAmount * 0.6,
+    };
+
+    return {
+      purchase: purchaseStats,
+      sales: salesStats
     };
   }, [clientsData, showMergedClients]);
 
@@ -339,6 +363,11 @@ const AllClients = () => {
       });
   };
 
+  // Toggle revenue type
+  const handleRevenueTypeToggle = () => {
+    setRevenueType(revenueType === "purchase" ? "sales" : "purchase");
+  };
+
   return (
     <div
       className={`min-h-screen ${isDarkMode
@@ -411,7 +440,7 @@ const AllClients = () => {
               </div>
 
               <div className={`rounded-lg flex ${isDarkMode ? "bg-white/5" : "bg-gray-100"
-                  }`}>
+                }`}>
                 <Notifications />
               </div>
               {/* View mode toggle */}
@@ -522,15 +551,14 @@ const AllClients = () => {
                   <button
                     key={field}
                     onClick={() => handleSort(field)}
-                    className={`px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
-                      sortField === field
+                    className={`px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 ${sortField === field
                         ? isDarkMode
                           ? 'bg-emerald-500/20 text-emerald-300'
                           : 'bg-emerald-100 text-emerald-700'
                         : isDarkMode
                           ? 'text-slate-300 hover:bg-white/10'
                           : 'text-gray-600 hover:bg-gray-100'
-                    }`}
+                      }`}
                   >
                     {label}
                     {sortField === field && (
@@ -545,15 +573,14 @@ const AllClients = () => {
 
             <button
               onClick={() => setShowMergedClients(!showMergedClients)}
-              className={`px-3 py-2 rounded-lg text-sm font-medium flex items-center space-x-2 transition-all duration-200 ${
-                showMergedClients
+              className={`px-3 py-2 rounded-lg text-sm font-medium flex items-center space-x-2 transition-all duration-200 ${showMergedClients
                   ? isDarkMode
                     ? 'bg-emerald-500/20 text-emerald-300'
                     : 'bg-emerald-100 text-emerald-700'
                   : isDarkMode
                     ? 'bg-white/5 text-slate-300 hover:bg-white/10'
                     : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-              }`}
+                }`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
@@ -565,26 +592,58 @@ const AllClients = () => {
                 </span>
               )}
             </button>
+
+            <div className="justify-end flex-end">
+              <div className={`rounded-lg inline-flex ${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
+                <button
+                  onClick={() => setRevenueType("purchase")}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${revenueType === "purchase"
+                      ? isDarkMode
+                        ? 'bg-blue-500/20 text-blue-300'
+                        : 'bg-blue-100 text-blue-700'
+                      : isDarkMode
+                        ? 'text-slate-300 hover:bg-white/10'
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                >
+                  Purchase Revenue
+                </button>
+                <button
+                  onClick={() => setRevenueType("sales")}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${revenueType === "sales"
+                      ? isDarkMode
+                        ? 'bg-green-500/20 text-green-300'
+                        : 'bg-green-100 text-green-700'
+                      : isDarkMode
+                        ? 'text-slate-300 hover:bg-white/10'
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                >
+                  Sales Revenue
+                </button>
+              </div>
+            </div>
           </div>
         </div>
+        {/* Revenue Type Toggle */}
 
         {/* Stats Summary */}
         <div className="mb-6 sm:mb-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Total Clients Card */}
             <div className={`relative overflow-hidden rounded-2xl p-6 ${isDarkMode ? 'bg-gradient-to-br from-slate-800 to-slate-900' : 'bg-gradient-to-br from-white to-gray-50'} border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} shadow-lg hover:shadow-xl transition-all duration-300`}>
-              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full -mr-16 -mt-16"></div>
+              <div className={`absolute top-0 right-0 w-32 h-32 ${revenueType === "purchase" ? "bg-blue-500/10" : "bg-green-500/10"} rounded-full -mr-16 -mt-16`}></div>
               <div className="relative">
                 <h3 className={`text-sm font-medium ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mb-2`}>Total Clients</h3>
                 <p className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {filteredStats.totalClients}
-                  {mergedClientCount > 0 && !showMergedClients && (
+                  {filteredStats[revenueType].totalClients}
+                  {mergedClientCount > 0 && !showMergedClients && revenueType === "purchase" && (
                     <span className={`text-sm ml-2 ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
                       (+{mergedClientCount} merged)
                     </span>
                   )}
                 </p>
-                <div className="mt-4 flex items-center text-emerald-500">
+                <div className={`mt-4 flex items-center ${revenueType === "purchase" ? "text-blue-500" : "text-green-500"}`}>
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
@@ -595,13 +654,13 @@ const AllClients = () => {
 
             {/* Total Orders Card */}
             <div className={`relative overflow-hidden rounded-2xl p-6 ${isDarkMode ? 'bg-gradient-to-br from-slate-800 to-slate-900' : 'bg-gradient-to-br from-white to-gray-50'} border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} shadow-lg hover:shadow-xl transition-all duration-300`}>
-              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full -mr-16 -mt-16"></div>
+              <div className={`absolute top-0 right-0 w-32 h-32 ${revenueType === "purchase" ? "bg-blue-500/10" : "bg-green-500/10"} rounded-full -mr-16 -mt-16`}></div>
               <div className="relative">
                 <h3 className={`text-sm font-medium ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mb-2`}>Total Orders</h3>
                 <p className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {filteredStats.totalOrders}
+                  {filteredStats[revenueType].totalOrders}
                 </p>
-                <div className="mt-4 flex items-center text-blue-500">
+                <div className={`mt-4 flex items-center ${revenueType === "purchase" ? "text-blue-500" : "text-green-500"}`}>
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
@@ -612,18 +671,22 @@ const AllClients = () => {
 
             {/* Total Value Card */}
             <div className={`relative overflow-hidden rounded-2xl p-6 ${isDarkMode ? 'bg-gradient-to-br from-slate-800 to-slate-900' : 'bg-gradient-to-br from-white to-gray-50'} border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} shadow-lg hover:shadow-xl transition-all duration-300`}>
-              <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full -mr-16 -mt-16"></div>
+              <div className={`absolute top-0 right-0 w-32 h-32 ${revenueType === "purchase" ? "bg-blue-500/10" : "bg-green-500/10"} rounded-full -mr-16 -mt-16`}></div>
               <div className="relative">
-                <h3 className={`text-sm font-medium ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mb-2`}>Total Value</h3>
-                <p className={`text-3xl font-bold text-emerald-500 flex items-center`}>
+                <h3 className={`text-sm font-medium ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mb-2`}>
+                  {revenueType === "purchase" ? "Total Purchase" : "Total Sales"}
+                </h3>
+                <p className={`text-3xl font-bold ${revenueType === "purchase" ? "text-blue-500" : "text-green-500"} flex items-center`}>
                   <BsCurrencyRupee className="mr-1" />
-                  {filteredStats.totalValue.toFixed(2)}
+                  {filteredStats[revenueType].totalValue.toFixed(2)}
                 </p>
-                <div className="mt-4 flex items-center text-purple-500">
+                <div className={`mt-4 flex items-center ${revenueType === "purchase" ? "text-blue-500" : "text-green-500"}`}>
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span className="text-sm font-medium">Total Revenue</span>
+                  <span className="text-sm font-medium">
+                    {revenueType === "purchase" ? "Purchase Revenue" : "Sales Revenue"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -635,7 +698,7 @@ const AllClients = () => {
                 <h3 className={`text-sm font-medium ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mb-2`}>Pending Amount</h3>
                 <p className={`text-3xl font-bold text-amber-500 flex items-center`}>
                   <BsCurrencyRupee className="mr-1" />
-                  {filteredStats.pendingAmount.toFixed(2)}
+                  {filteredStats[revenueType].pendingAmount.toFixed(2)}
                 </p>
                 <div className="mt-4 flex items-center text-amber-500">
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1146,8 +1209,8 @@ const AllClients = () => {
                   <button
                     onClick={loadMoreItems}
                     className={`px-4 py-2 text-sm rounded-lg ${isDarkMode
-                        ? "bg-white/10 text-white hover:bg-white/20"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      ? "bg-white/10 text-white hover:bg-white/20"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                       } transition-colors`}
                   >
                     Load more

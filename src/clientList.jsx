@@ -473,6 +473,7 @@ const ClientList = () => {
         hour: 'numeric',
         minute: '2-digit',
         hour12: true,
+        timeZone: 'Asia/Kolkata', // Indian Standard Time
       });
       return (
         <span className="block text-xstext-amber-500 dark:text-amber-300">
@@ -2518,9 +2519,9 @@ const ClientList = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                     {formatDate(client)}
-                    <div className='ml-2'>
+                    {/* <div className='ml-2'>
                     {renderSavedDateTime(client)}
-                    </div>
+                    </div> */}
                   </p>
                 </div>
 
@@ -2770,9 +2771,9 @@ const ClientList = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                     {formatDate(client)}
-                    <div className='ml-2'>
+                    {/* <div className='ml-2'>
                     {renderSavedDateTime(client)}
-                    </div>
+                    </div> */}
                   </p>
                 </div>
 

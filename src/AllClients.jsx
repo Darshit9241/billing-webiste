@@ -210,7 +210,7 @@ const AllClients = () => {
       // Convert Map to array and sort by name
       const clientArray = Array.from(clientMap.values());
       clientArray.sort((a, b) => a.clientName.localeCompare(b.clientName));
-
+      
 
       setClientsData(clientArray);
       setFilteredClients(clientArray);
@@ -407,7 +407,6 @@ const AllClients = () => {
                       d="M8 7V3m8 4V3m-9 8h10m2 9H5a2 2 0 01-2-2V7a2 2 0 012-2h14a2 2 0 012 2v11a2 2 0 01-2 2z"
                     />
                   </svg>
-                  Orders Info
                 </button>
               </div>
 
@@ -512,7 +511,6 @@ const AllClients = () => {
           {/* Enhanced filter controls */}
           <div className="flex flex-wrap items-center gap-2">
             <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg ${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
-              <span className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Sort by:</span>
               <div className="flex items-center space-x-1">
                 {[
                   { field: "clientName", label: "Name" },

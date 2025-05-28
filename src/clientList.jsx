@@ -235,8 +235,8 @@ const ClientList = () => {
 
       filtered = filtered.filter(client => {
         // Use orderDate if available, otherwise fall back to timestamp
-        const dateValue = client.orderDate ? new Date(client.orderDate).getTime() : 
-                           client.timestamp ? new Date(client.timestamp).getTime() : Date.now();
+        const dateValue = client.orderDate ? new Date(client.orderDate).getTime() :
+          client.timestamp ? new Date(client.timestamp).getTime() : Date.now();
         return dateValue >= startDateTime && dateValue <= endDateTime;
       });
     }
@@ -277,8 +277,8 @@ const ClientList = () => {
 
         filtered = filtered.filter(client => {
           // Use orderDate if available, otherwise fall back to timestamp
-          const dateValue = client.orderDate ? new Date(client.orderDate).getTime() : 
-                            client.timestamp ? new Date(client.timestamp).getTime() : Date.now();
+          const dateValue = client.orderDate ? new Date(client.orderDate).getTime() :
+            client.timestamp ? new Date(client.timestamp).getTime() : Date.now();
           return dateValue >= searchDateStart && dateValue <= searchDateEnd;
         });
       } else {
@@ -294,11 +294,11 @@ const ClientList = () => {
     // Sort clients by orderDate (or timestamp) in descending order (newest first)
     filtered.sort((a, b) => {
       // Get date values for both clients, preferring orderDate over timestamp
-      const dateA = a.orderDate ? new Date(a.orderDate).getTime() : 
-                  a.timestamp ? new Date(a.timestamp).getTime() : 0;
-      const dateB = b.orderDate ? new Date(b.orderDate).getTime() : 
-                  b.timestamp ? new Date(b.timestamp).getTime() : 0;
-      
+      const dateA = a.orderDate ? new Date(a.orderDate).getTime() :
+        a.timestamp ? new Date(a.timestamp).getTime() : 0;
+      const dateB = b.orderDate ? new Date(b.orderDate).getTime() :
+        b.timestamp ? new Date(b.timestamp).getTime() : 0;
+
       // Sort in descending order (newest first)
       return dateB - dateA;
     });
@@ -320,7 +320,7 @@ const ClientList = () => {
   const toggleMergeMode = () => {
     const newMergeMode = !mergeMode;
     setMergeMode(newMergeMode);
-    
+
     // Clear selections when exiting merge mode
     if (!newMergeMode) {
       setSelectedClientsForMerge([]);
@@ -436,19 +436,19 @@ const ClientList = () => {
     setError('');
     try {
       const data = await fetchAllClients();
-      
+
       // Sort clients by orderDate or timestamp (newest first) before saving
       data.sort((a, b) => {
         // Get date values for both clients, preferring orderDate over timestamp
-        const dateA = a.orderDate ? new Date(a.orderDate).getTime() : 
-                    a.timestamp ? new Date(a.timestamp).getTime() : 0;
-        const dateB = b.orderDate ? new Date(b.orderDate).getTime() : 
-                    b.timestamp ? new Date(b.timestamp).getTime() : 0;
-        
+        const dateA = a.orderDate ? new Date(a.orderDate).getTime() :
+          a.timestamp ? new Date(a.timestamp).getTime() : 0;
+        const dateB = b.orderDate ? new Date(b.orderDate).getTime() :
+          b.timestamp ? new Date(b.timestamp).getTime() : 0;
+
         // Sort in descending order (newest first)
         return dateB - dateA;
       });
-      
+
       setSavedClients(data);
     } catch (err) {
       console.error("Error in fetchClients:", err);
@@ -462,14 +462,14 @@ const ClientList = () => {
   const formatDate = (client) => {
     // Use orderDate if available, otherwise fall back to timestamp
     const dateValue = client.orderDate ? new Date(client.orderDate) : new Date(client.timestamp || Date.now());
-    
+
     const options = {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       timeZone: 'Asia/Kolkata'
     };
-    
+
     return dateValue.toLocaleString('en-IN', options);
   };
 
@@ -871,12 +871,12 @@ const ClientList = () => {
     if (editFormData.paymentHistory && editFormData.paymentHistory[index]) {
       const payment = editFormData.paymentHistory[index];
       setNewPayment(payment.amount.toString());
-      
+
       // Format the date for the datetime-local input
       const paymentDateTime = new Date(payment.date);
       const formattedDate = paymentDateTime.toISOString().slice(0, 16); // Format: YYYY-MM-DDThh:mm
       setPaymentDate(formattedDate);
-      
+
       setEditingPayment(index);
       setShowPaymentModal(true);
     }
@@ -917,10 +917,10 @@ const ClientList = () => {
     setEndDate('');
     setIsDateFilterActive(false);
     setShowMergedOnly(false);
-    
+
     // Update URL to remove all query parameters
     navigate(location.pathname, { replace: true });
-    
+
     // Refresh client data
     fetchClients();
   };
@@ -975,30 +975,30 @@ const ClientList = () => {
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearchQuery(value);
-    
+
     // Check for date format in DD/MM/YYYY
     const dateRegex = /^(\d{2})\/(\d{2})(?:\/(\d{4}))?$/;
     const dateMatch = value.match(dateRegex);
-    
+
     if (dateMatch) {
       // If it's a valid date format, show a visual indicator or hint
       const [_, day, month, year] = dateMatch;
       const currentYear = new Date().getFullYear();
       const searchYear = year || currentYear;
-      
+
       // Validate date
       const searchDate = new Date(`${searchYear}-${month}-${day}`);
-      
+
       // If valid date, apply date filter automatically
       if (!isNaN(searchDate.getTime())) {
         setDateSearchActive(true);
-        
+
         // Provide visual feedback - pulse the border briefly
         const input = document.activeElement;
         if (input.tagName === 'INPUT') {
           // Add a temporary pulse class
           input.classList.add('date-pulse');
-          
+
           // Remove the class after animation completes
           setTimeout(() => {
             input.classList.remove('date-pulse');
@@ -1171,14 +1171,6 @@ const ClientList = () => {
               <div className="flex items-center gap-2 sm:hidden">
                 <div className="flex items-center gap-1">
                   <button
-                    onClick={() => navigate(`/all-client-orders`)}
-                    className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'} ${isDarkMode ? 'text-white' : 'text-gray-700'}`}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6M9 8h6m2-6H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2V4a2 2 0 00-2-2z" />
-                    </svg>
-                  </button>
-                  <button
                     onClick={() => navigate(`/all-clients`)}
                     className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'} ${isDarkMode ? 'text-white' : 'text-gray-700'} relative group`}
                   >
@@ -1188,6 +1180,14 @@ const ClientList = () => {
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap pointer-events-none z-10">
                       View Client List
                     </div>
+                  </button>
+                  <button
+                    onClick={() => navigate(`/all-client-orders`)}
+                    className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'} ${isDarkMode ? 'text-white' : 'text-gray-700'}`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6M9 8h6m2-6H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2V4a2 2 0 00-2-2z" />
+                    </svg>
                   </button>
                   <button
                     onClick={() => setIsInfoOpen(!isInfoOpen)}
@@ -1920,11 +1920,11 @@ const ClientList = () => {
                         value={editFormData.orderDate || ''}
                         onChange={(e) => {
                           const newOrderDate = e.target.value;
-                          
+
                           // Update both orderDate and timestamp for backward compatibility
                           const localDate = new Date(newOrderDate + 'T00:00:00');
                           const newTimestamp = localDate.getTime();
-                          
+
                           // Update the form data
                           setEditFormData({
                             ...editFormData,
@@ -2547,7 +2547,7 @@ const ClientList = () => {
                       <p className={`font-medium text-sm ${((typeof client.grandTotal === 'number' ? client.grandTotal : 0) -
                         (typeof client.amountPaid === 'number' ? client.amountPaid : 0)) <= 0 ? 'text-sky-500' : 'text-amber-500'
                         }`}>
-                        <span className="flex items-center"><BsCurrencyRupee />{((typeof client.grandTotal === 'number' ? client.grandTotal : 0) -                          (typeof client.amountPaid === 'number' ? client.amountPaid : 0)).toFixed(2)}</span>
+                        <span className="flex items-center"><BsCurrencyRupee />{((typeof client.grandTotal === 'number' ? client.grandTotal : 0) - (typeof client.amountPaid === 'number' ? client.amountPaid : 0)).toFixed(2)}</span>
                       </p>
                     </div>
                   </div>
@@ -2757,7 +2757,7 @@ const ClientList = () => {
                   <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                     <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} backdrop-blur-md rounded-lg p-2.5 sm:p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} transform transition-all hover:scale-105`}>
                       <p className={`text-[10px] sm:text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Total:</p>
-                                             <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'} text-xs sm:text-sm md:text-base truncate flex items-center justify-center`}><BsCurrencyRupee />{typeof client.grandTotal === 'number' ? client.grandTotal.toFixed(2) : '0.00'}</p>
+                      <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'} text-xs sm:text-sm md:text-base truncate flex items-center justify-center`}><BsCurrencyRupee />{typeof client.grandTotal === 'number' ? client.grandTotal.toFixed(2) : '0.00'}</p>
                     </div>
                     <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} backdrop-blur-md rounded-lg p-2.5 sm:p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} transform transition-all hover:scale-105`}>
                       <p className={`text-[10px] sm:text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Amount Paid:</p>
@@ -2767,7 +2767,7 @@ const ClientList = () => {
                     </div>
                     <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} backdrop-blur-md rounded-lg p-2.5 sm:p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} transform transition-all hover:scale-105 xs:col-span-2 sm:col-span-1`}>
                       <p className={`text-[10px] sm:text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Balance Due:</p>
-                                            <p className={`font-medium text-xs sm:text-sm md:text-base truncate flex items-center justify-center ${((typeof client.grandTotal === 'number' ? client.grandTotal : 0) -                        (typeof client.amountPaid === 'number' ? client.amountPaid : 0)) <= 0 ? 'text-sky-500' : 'text-amber-500'                        }`}>                        <BsCurrencyRupee />{((typeof client.grandTotal === 'number' ? client.grandTotal : 0) -                          (typeof client.amountPaid === 'number' ? client.amountPaid : 0)).toFixed(2)}                      </p>
+                      <p className={`font-medium text-xs sm:text-sm md:text-base truncate flex items-center justify-center ${((typeof client.grandTotal === 'number' ? client.grandTotal : 0) - (typeof client.amountPaid === 'number' ? client.amountPaid : 0)) <= 0 ? 'text-sky-500' : 'text-amber-500'}`}>                        <BsCurrencyRupee />{((typeof client.grandTotal === 'number' ? client.grandTotal : 0) - (typeof client.amountPaid === 'number' ? client.amountPaid : 0)).toFixed(2)}                      </p>
                     </div>
                   </div>
 
@@ -2857,7 +2857,7 @@ const ClientList = () => {
                                   </span>
                                 </div>
                                 <div className="col-span-3 text-right">
-                                                                    <span className={`text-xs font-medium ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'} flex items-center justify-end`}>                                    <BsCurrencyRupee />{typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(product.price || 0).toFixed(2)}                                  </span>
+                                  <span className={`text-xs font-medium ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'} flex items-center justify-end`}>                                    <BsCurrencyRupee />{typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(product.price || 0).toFixed(2)}                                  </span>
                                 </div>
                                 {/* <div className="col-span-3 text-left">
                                   <span className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
@@ -2990,7 +2990,7 @@ const ClientList = () => {
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
+                </svg>
               </button>
             </div>
 
@@ -3016,13 +3016,13 @@ const ClientList = () => {
                       <span className="text-xs ml-1 text-slate-400">(including this payment)</span>
                     </span>
                   ) : (
-                                        <span className="text-sm font-bold text-amber-400 flex items-center">                      <BsCurrencyRupee />{((editingClient?.grandTotal || 0) - (parseFloat(editFormData.amountPaid) || 0)).toFixed(2)}                    </span>
+                    <span className="text-sm font-bold text-amber-400 flex items-center">                      <BsCurrencyRupee />{((editingClient?.grandTotal || 0) - (parseFloat(editFormData.amountPaid) || 0)).toFixed(2)}                    </span>
                   )}
                 </div>
               </div>
 
               <div className="mb-5">
-                                  <label className="block text-sm font-medium text-slate-300 mb-2">                    Payment Amount                  </label>                  <div className="relative">                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">                      <span className="text-slate-400"><BsCurrencyRupee /></span>                    </div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">                    Payment Amount                  </label>                  <div className="relative">                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">                      <span className="text-slate-400"><BsCurrencyRupee /></span>                    </div>
                   <input
                     type="number"
                     value={newPayment}
@@ -3244,7 +3244,7 @@ const ClientList = () => {
                   <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                     <p className="text-xs text-slate-400 mb-1">Balance Due</p>
                     <p className={`text-xl font-bold ${(mergedClient.grandTotal - mergedClient.amountPaid) <= 0 ? 'text-sky-500' : 'text-amber-500'}`}>
-                                            <BsCurrencyRupee />{(mergedClient.grandTotal - mergedClient.amountPaid).toFixed(2)}                    </p>
+                      <BsCurrencyRupee />{(mergedClient.grandTotal - mergedClient.amountPaid).toFixed(2)}                    </p>
                   </div>
                 </div>
               </div>
@@ -3277,7 +3277,7 @@ const ClientList = () => {
                                 hour12: true
                               })}
                             </td>
-                                                        <td className="py-2.5 px-4 text-xs text-right font-medium text-emerald-500">                              <span className="flex items-center justify-end"><BsCurrencyRupee />{parseFloat(payment.amount).toFixed(2)}</span>                            </td>
+                            <td className="py-2.5 px-4 text-xs text-right font-medium text-emerald-500">                              <span className="flex items-center justify-end"><BsCurrencyRupee />{parseFloat(payment.amount).toFixed(2)}</span>                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -3315,7 +3315,7 @@ const ClientList = () => {
                             <td className="py-2.5 px-4 text-sm">{product.name}</td>
                             <td className="py-2.5 px-4 text-xs text-right text-slate-300">{product.count}</td>
                             <td className="py-2.5 px-4 text-xs text-right text-slate-300"><span className="flex items-center justify-end"><BsCurrencyRupee />{parseFloat(product.price).toFixed(2)}</span></td>
-                                                        <td className="py-2.5 px-4 text-xs text-right font-medium text-emerald-500">                              <span className="flex items-center justify-end"><BsCurrencyRupee />{(product.count * parseFloat(product.price)).toFixed(2)}</span>                            </td>
+                            <td className="py-2.5 px-4 text-xs text-right font-medium text-emerald-500">                              <span className="flex items-center justify-end"><BsCurrencyRupee />{(product.count * parseFloat(product.price)).toFixed(2)}</span>                            </td>
                           </tr>
                         ))}
                       </tbody>

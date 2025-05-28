@@ -2062,17 +2062,16 @@ const Dashboard = () => {
         </div>
 
         {/* Recent Activity and Calendar Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6 mb-4 sm:mb-6 md:mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-6 md:mb-8">
           <div className="lg:col-span-2">
             <RecentActivity clients={stats.recentClients} isDarkMode={isDarkMode} />
           </div>
-
+          <div className="lg:col-span-2">
+          <TopProducts products={stats.topProducts} isDarkMode={isDarkMode} />
+        </div>
         </div>
 
         {/* Top Products */}
-        <div className="grid grid-cols-1 gap-3 sm:gap-6 mb-4 sm:mb-6 md:mb-8">
-          <TopProducts products={stats.topProducts} isDarkMode={isDarkMode} />
-        </div>
 
         {/* New Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6 mb-4 sm:mb-6 md:mb-8">

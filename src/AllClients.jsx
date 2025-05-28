@@ -211,10 +211,6 @@ const AllClients = () => {
       const clientArray = Array.from(clientMap.values());
       clientArray.sort((a, b) => a.clientName.localeCompare(b.clientName));
 
-      // Debug: Check for merged clients in final array
-      const mergedClients = clientArray.filter((client) =>
-        client.clientIds.some((id) => id && id.startsWith("merged_"))
-      );
 
       setClientsData(clientArray);
       setFilteredClients(clientArray);
@@ -312,13 +308,6 @@ const AllClients = () => {
     } finally {
       setIsDeleting(false);
     }
-  };
-
-  const formatDate = (timestamp) => {
-    return new Date(timestamp).toLocaleString("en-IN", {
-      dateStyle: "medium",
-      timeZone: "Asia/Kolkata",
-    });
   };
 
   const handleBackClick = () => {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiPlus, FiDollarSign, FiTrash2, FiEdit, FiChevronLeft, FiPieChart, FiCalendar } from 'react-icons/fi';
+import { FiPlus, FiTrash2, FiEdit, FiChevronLeft, FiPieChart, FiCalendar } from 'react-icons/fi';
 import ThemeToggle from './components/ThemeToggle';
 import { useTheme } from './context/ThemeContext';
 import { database } from './firebase/config';

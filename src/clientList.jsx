@@ -461,29 +461,6 @@ const ClientList = () => {
     return dateValue.toLocaleString('en-IN', options);
   };
 
-  // Helper to show saved date/time if available
-  const renderSavedDateTime = (client) => {
-    if (client.savedTime) {
-      // Parse the savedTime string to a Date object using today's date
-      const today = new Date();
-      const [hours, minutes, seconds] = client.savedTime.split(':');
-      today.setHours(Number(hours), Number(minutes), Number(seconds || 0));
-      // Format to 12-hour with AM/PM
-      const formattedTime = today.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-        timeZone: 'Asia/Kolkata', // Indian Standard Time
-      });
-      return (
-        <span className="block text-xstext-amber-500 dark:text-amber-300">
-           {formattedTime}
-        </span>
-      );
-    }
-    return null;
-  };
-
   const deleteOrder = async (id) => {
     try {
       await deleteClient(id);
@@ -701,29 +678,6 @@ const ClientList = () => {
     }
   };
 
-  // Add a specific handler for the timestamp field
-  const handleTimestampChange = (e) => {
-    // Get the date string from the input
-    const dateString = e.target.value;
-
-    if (!dateString) {
-      // If the field is cleared, use current timestamp
-      setProductFormData({
-        ...productFormData,
-        timestamp: Date.now()
-      });
-      return;
-    }
-
-    // Create a date object in local timezone from the input value
-    const localDate = new Date(dateString);
-
-    // Set the timestamp in milliseconds
-    setProductFormData({
-      ...productFormData,
-      timestamp: localDate.getTime()
-    });
-  };
 
   const saveProductChanges = () => {
     if (!editingProduct) return;
@@ -1004,26 +958,6 @@ const ClientList = () => {
       setTimeout(() => setError(''), 3000);
     }
   };
-
-  // Helper function to format date for datetime-local input
-  const formatDateForInput = (client) => {
-    const dateValue = client.orderDate ? 
-      new Date(client.orderDate + 'T00:00:00') : // Convert YYYY-MM-DD to Date object
-      new Date(client.timestamp || Date.now());
-    
-    // Format to YYYY-MM-DDT00:00
-    const year = dateValue.getFullYear();
-    const month = String(dateValue.getMonth() + 1).padStart(2, '0');
-    const day = String(dateValue.getDate()).padStart(2, '0');
-    
-    return `${year}-${month}-${day}T00:00`;
-  };
-
-  // Add this right after the codebase search to help with debugging
-  useEffect(() => {
-    // Check for merged clients and log them
-    const mergedClients = savedClients.filter(client => client.merged === true);
-  }, [savedClients]);
 
   // Update the setSearchQuery function to also update URL
   const handleSearchChange = (e) => {

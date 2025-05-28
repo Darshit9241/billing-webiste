@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useTheme } from './context/ThemeContext';
 import { fetchAllClients } from './firebase/clientsFirebase';
-import { BsCurrencyRupee, BsArrowLeft } from 'react-icons/bs';
+import { BsCurrencyRupee, BsArrowLeft, BsCalendar3 } from 'react-icons/bs';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const formatDate = (date) => {
   const d = new Date(date);
@@ -61,28 +61,36 @@ const DailyOrders = () => {
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-slate-900' : 'bg-gray-50'} py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-200`}>
-      <div className="max-w-4xl mx-auto">
-        <motion.h1 
+      <div className="max-w-5xl mx-auto">
+        <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`text-3xl font-bold mb-8 ${isDarkMode ? 'text-white' : 'text-gray-900'} tracking-tight flex items-center gap-3`}
+          className="flex items-center justify-between mb-8"
         >
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => navigate(-1)}
-            className={`p-2 rounded-full hover:bg-opacity-10 ${isDarkMode ? 'hover:bg-white' : 'hover:bg-gray-900'} transition-colors duration-200`}
-          >
-            <BsArrowLeft className={`text-2xl ${isDarkMode ? 'text-white' : 'text-gray-900'}`} />
-          </motion.button>
-          Daily Orders Overview
-        </motion.h1>
+          <div className="flex items-center gap-4">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate(-1)}
+              className={`p-2.5 rounded-xl hover:bg-opacity-10 ${
+                isDarkMode ? 'hover:bg-white' : 'hover:bg-gray-900'
+              } transition-all duration-200`}
+            >
+              <BsArrowLeft className={`text-2xl ${isDarkMode ? 'text-white' : 'text-gray-900'}`} />
+            </motion.button>
+            <div>
+              <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} tracking-tight`}>
+                Daily Orders
+              </h1>
+            </div>
+          </div>
+        </motion.div>
         
         {error && (
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-red-100 text-red-700 p-4 rounded-lg mb-6 shadow-sm"
+            className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 p-4 rounded-xl mb-6 shadow-sm border border-red-100 dark:border-red-800"
           >
             {error}
           </motion.div>
@@ -90,29 +98,55 @@ const DailyOrders = () => {
 
         {loading ? (
           <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
+            <div className="relative">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-emerald-200 dark:border-emerald-800"></div>
+              <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-emerald-500 absolute top-0 left-0"></div>
+            </div>
           </div>
         ) : (
-          <>
+          <AnimatePresence mode="wait">
             {!selectedDate ? (
               <motion.div 
+                key="dates"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 divide-y divide-gray-200 dark:divide-slate-700"
+                exit={{ opacity: 0, y: -20 }}
+                className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-6 divide-y divide-gray-100 dark:divide-slate-700"
               >
-                <h2 className="text-xl font-semibold mb-6 text-emerald-600 dark:text-emerald-400">Orders by Date</h2>
-                <ul className="space-y-2">
+                <div className="flex items-center gap-3 mb-6">
+                  <BsCalendar3 className="text-2xl text-emerald-500" />
+                  <h2 className="text-xl font-semibold text-emerald-600 dark:text-emerald-400">Orders by Date</h2>
+                </div>
+                <ul className="space-y-3">
                   {dateKeys.map((date) => (
                     <motion.li 
                       key={date}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="py-4 flex items-center justify-between hover:bg-emerald-50 dark:hover:bg-slate-700/30 rounded-xl px-4 cursor-pointer transition-all duration-200"
+                      whileHover={{ scale: 1.01, backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)' }}
+                      whileTap={{ scale: 0.99 }}
+                      className="py-4 flex items-center justify-between rounded-xl px-4 cursor-pointer transition-all duration-200"
                       onClick={() => setSelectedDate(date)}
                     >
-                      <span className="font-medium text-gray-800 dark:text-white">{formatDate(date)}</span>
-                      <span className="text-sm bg-emerald-100 dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 px-3 py-1 rounded-full">
-                        {ordersByDate[date].length} order{ordersByDate[date].length !== 1 ? 's' : ''}
+                      <div className="flex items-center gap-3">
+                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                          isDarkMode ? 'bg-slate-700' : 'bg-emerald-50'
+                        }`}>
+                          <span className={`text-sm font-medium ${
+                            isDarkMode ? 'text-emerald-400' : 'text-emerald-600'
+                          }`}>
+                            {new Date(date).getDate()}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="font-medium text-gray-800 dark:text-white">{formatDate(date)}</span>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {ordersByDate[date].length} order{ordersByDate[date].length !== 1 ? 's' : ''}
+                          </p>
+                        </div>
+                      </div>
+                      <span className={`text-sm px-4 py-1.5 rounded-full ${
+                        isDarkMode ? 'bg-slate-700 text-emerald-300' : 'bg-emerald-100 text-emerald-700'
+                      }`}>
+                        ₹{ordersByDate[date].reduce((sum, client) => sum + (client.grandTotal || 0), 0).toFixed(2)}
                       </span>
                     </motion.li>
                   ))}
@@ -120,19 +154,27 @@ const DailyOrders = () => {
               </motion.div>
             ) : (
               <motion.div 
+                key="orders"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6"
+                exit={{ opacity: 0, x: -20 }}
+                className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-6"
               >
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-semibold text-emerald-600 dark:text-emerald-400">
-                    Orders for {formatDate(selectedDate)}
-                  </h2>
+                  <div>
+                    <h2 className="text-xl font-semibold text-emerald-600 dark:text-emerald-400">
+                      Orders for {formatDate(selectedDate)}
+                    </h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      {ordersByDate[selectedDate].length} orders • Total: ₹
+                      {ordersByDate[selectedDate].reduce((sum, client) => sum + (client.grandTotal || 0), 0).toFixed(2)}
+                    </p>
+                  </div>
                   <motion.button 
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => setSelectedDate(null)} 
-                    className="text-sm px-4 py-2 bg-emerald-100 dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 rounded-lg hover:bg-emerald-200 dark:hover:bg-slate-600 transition-colors duration-200"
+                    className="text-sm px-4 py-2 bg-emerald-50 dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 rounded-lg hover:bg-emerald-100 dark:hover:bg-slate-600 transition-colors duration-200"
                   >
                     Back to Dates
                   </motion.button>
@@ -154,8 +196,8 @@ const DailyOrders = () => {
                           {(client.grandTotal || 0).toFixed(2)}
                         </span>
                         <motion.button 
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
                           onClick={() => navigate(`/order/${client.id}`)} 
                           className="text-sm px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors duration-200"
                         >
@@ -167,7 +209,7 @@ const DailyOrders = () => {
                 </ul>
               </motion.div>
             )}
-          </>
+          </AnimatePresence>
         )}
       </div>
     </div>

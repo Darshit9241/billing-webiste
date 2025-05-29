@@ -108,6 +108,9 @@ const ClientNameOrders = () => {
     purchaseOrders: false
   });
   
+  // Add state for disabled orders
+  const [disabledOrders, setDisabledOrders] = useState([]);
+  
   const toggleSection = (section) => {
     setExpandedSections(prev => ({
       ...prev,
@@ -178,6 +181,13 @@ const ClientNameOrders = () => {
       
       setOrders(matchingOrders);
       
+      // Update disabled orders from Firebase data instead of localStorage
+      const disabledOrderIds = matchingOrders
+        .filter(order => order.isEnabled === false)
+        .map(order => order.id);
+      
+      setDisabledOrders(disabledOrderIds);
+      
       // Calculate totals
       let total = 0;
       let pending = 0;
@@ -192,8 +202,8 @@ const ClientNameOrders = () => {
       let purchasePaid = 0;
       
       matchingOrders.forEach(order => {
-        // Skip if this order is part of a merged order
-        if (order.mergedFrom) return;
+        // Skip if this order is part of a merged order or is disabled
+        if (order.mergedFrom || order.isEnabled === false) return;
         
         const orderTotal = parseFloat(order.grandTotal) || 0;
         const orderPaid = parseFloat(order.amountPaid) || 0;
@@ -638,8 +648,8 @@ const ClientNameOrders = () => {
     let purchasePaid = 0;
     
     filteredOrders.forEach(order => {
-      // Skip if this order is part of a merged order
-      if (order.mergedFrom) return;
+      // Skip if this order is part of a merged order or is disabled
+      if (order.mergedFrom || order.isEnabled === false) return;
       
       const orderTotal = parseFloat(order.grandTotal) || 0;
       const orderPaid = parseFloat(order.amountPaid) || 0;
@@ -674,6 +684,100 @@ const ClientNameOrders = () => {
     setFilteredPurchasePaidAmount(purchasePaid);
     setFilteredPurchasePendingAmount(purchasePending);
   }, [filteredOrders]);
+
+  // Toggle order disabled status
+  const toggleOrderDisabled = async (e, orderId) => {
+    e.stopPropagation(); // Prevent row click event
+    
+    try {
+      // Find the order to update
+      const orderToUpdate = orders.find(order => order.id === orderId);
+      if (!orderToUpdate) return;
+      
+      // Create updated order with toggled isEnabled field
+      const updatedOrder = {
+        ...orderToUpdate,
+        isEnabled: disabledOrders.includes(orderId) ? true : false
+      };
+      
+      // Update in Firebase
+      await updateClient(updatedOrder);
+      
+      // Update local state
+      setDisabledOrders(prev => {
+        if (prev.includes(orderId)) {
+          return prev.filter(id => id !== orderId);
+        } else {
+          return [...prev, orderId];
+        }
+      });
+      
+      // Update orders list in state
+      setOrders(prev => prev.map(order => 
+        order.id === orderId ? updatedOrder : order
+      ));
+      
+    } catch (err) {
+      console.error("Error updating order status:", err);
+      // Show error message if needed
+    }
+  };
+
+  // Save disabled orders to localStorage whenever it changes
+  useEffect(() => {
+    // Recalculate totals when orders change
+    if (orders.length > 0) {
+      // Calculate totals
+      let total = 0;
+      let pending = 0;
+      let paid = 0;
+      
+      // Separate totals for sell and purchase
+      let sellTotal = 0;
+      let sellPending = 0;
+      let sellPaid = 0;
+      let purchaseTotal = 0;
+      let purchasePending = 0;
+      let purchasePaid = 0;
+      
+      orders.forEach(order => {
+        // Skip if this order is part of a merged order or is disabled
+        if (order.mergedFrom || order.isEnabled === false) return;
+        
+        const orderTotal = parseFloat(order.grandTotal) || 0;
+        const orderPaid = parseFloat(order.amountPaid) || 0;
+        const orderPending = orderTotal - orderPaid;
+        
+        total += orderTotal;
+        paid += orderPaid;
+        pending += orderPending; // Allow negative values to show overpayments
+        
+        // Separate calculations for sell and purchase orders
+        if (order.orderStatus === 'purchased') {
+          purchaseTotal += orderTotal;
+          purchasePaid += orderPaid;
+          purchasePending += orderPending;
+        } else {
+          // Default to 'sell' if not specified
+          sellTotal += orderTotal;
+          sellPaid += orderPaid;
+          sellPending += orderPending;
+        }
+      });
+      
+      setTotalAmount(total);
+      setPaidAmount(paid);
+      setPendingAmount(pending);
+      
+      // Set sell and purchase totals
+      setSellTotalAmount(sellTotal);
+      setSellPaidAmount(sellPaid);
+      setSellPendingAmount(sellPending);
+      setPurchaseTotalAmount(purchaseTotal);
+      setPurchasePaidAmount(purchasePaid);
+      setPurchasePendingAmount(purchasePending);
+    }
+  }, [orders]);
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-gray-100 to-white'} py-8 px-4 sm:px-6 lg:px-8 transition-colors duration-200`}>
@@ -1092,11 +1196,19 @@ const ClientNameOrders = () => {
         {showSummary && (
           <div className="mb-6">
             <div className={`backdrop-blur-md ${isDarkMode ? 'bg-white/5' : 'bg-white'} rounded-xl border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} shadow-md p-5`}>
-              <h2 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                Summary for {decodedClientName}
-                {(searchTerm || isDateFilterActive) && (
-                  <span className={`ml-2 text-sm font-normal ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
-                    (Filtered)
+              <h2 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'} flex items-center justify-between`}>
+                <span>
+                  Summary for {decodedClientName}
+                  {(searchTerm || isDateFilterActive) && (
+                    <span className={`ml-2 text-sm font-normal ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                      (Filtered)
+                    </span>
+                  )}
+                </span>
+                
+                {orders.filter(order => order.isEnabled === false).length > 0 && (
+                  <span className={`text-sm font-normal ${isDarkMode ? 'text-amber-300' : 'text-amber-600'}`}>
+                    {orders.filter(order => order.isEnabled === false).length} order{orders.filter(order => order.isEnabled === false).length !== 1 ? 's' : ''} excluded from summary
                   </span>
                 )}
               </h2>
@@ -1227,7 +1339,7 @@ const ClientNameOrders = () => {
                           </thead>
                           <tbody className={`divide-y ${isDarkMode ? 'divide-blue-700/20' : 'divide-blue-200'}`}>
                             {(searchTerm || isDateFilterActive ? filteredOrders : orders)
-                              .filter(order => (order.orderStatus === 'sell' || !order.orderStatus) && !order.mergedFrom)
+                              .filter(order => (order.orderStatus === 'sell' || !order.orderStatus) && !order.mergedFrom && order.isEnabled !== false)
                               .map(order => {
                                 const balanceDue = (parseFloat(order.grandTotal) || 0) - (parseFloat(order.amountPaid) || 0);
                                 return (
@@ -1257,7 +1369,7 @@ const ClientNameOrders = () => {
                                   </tr>
                                 );
                               })}
-                            {(searchTerm || isDateFilterActive ? filteredOrders : orders).filter(order => (order.orderStatus === 'sell' || !order.orderStatus) && !order.mergedFrom).length === 0 && (
+                            {(searchTerm || isDateFilterActive ? filteredOrders : orders).filter(order => (order.orderStatus === 'sell' || !order.orderStatus) && !order.mergedFrom && order.isEnabled !== false).length === 0 && (
                               <tr>
                                 <td colSpan="5" className={`px-4 py-3 text-center text-sm ${isDarkMode ? 'text-blue-300/70' : 'text-blue-700/70'}`}>
                                   No sell orders found
@@ -1342,7 +1454,7 @@ const ClientNameOrders = () => {
                           </thead>
                           <tbody className={`divide-y ${isDarkMode ? 'divide-purple-700/20' : 'divide-purple-200'}`}>
                             {(searchTerm || isDateFilterActive ? filteredOrders : orders)
-                              .filter(order => order.orderStatus === 'purchased' && !order.mergedFrom)
+                              .filter(order => order.orderStatus === 'purchased' && !order.mergedFrom && order.isEnabled !== false)
                               .map(order => {
                                 const balanceDue = (parseFloat(order.grandTotal) || 0) - (parseFloat(order.amountPaid) || 0);
                                 return (
@@ -1372,7 +1484,7 @@ const ClientNameOrders = () => {
                                   </tr>
                                 );
                               })}
-                            {(searchTerm || isDateFilterActive ? filteredOrders : orders).filter(order => order.orderStatus === 'purchased' && !order.mergedFrom).length === 0 && (
+                            {(searchTerm || isDateFilterActive ? filteredOrders : orders).filter(order => order.orderStatus === 'purchased' && !order.mergedFrom && order.isEnabled !== false).length === 0 && (
                               <tr>
                                 <td colSpan="5" className={`px-4 py-3 text-center text-sm ${isDarkMode ? 'text-purple-300/70' : 'text-purple-700/70'}`}>
                                   No purchase orders found
@@ -1433,6 +1545,7 @@ const ClientNameOrders = () => {
               <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin' }}>
                 {sortedOrders.map((order) => {
                   const isSelected = selectedOrders.some(o => o.id === order.id);
+                  const isDisabled = order.isEnabled === false;
                   return (
                   <div 
                     key={order.id} 
@@ -1443,6 +1556,7 @@ const ClientNameOrders = () => {
                         : (isDarkMode ? 'border-white/10' : 'border-gray-200')} 
                       hover:shadow-emerald-500/10 transition-all duration-300 cursor-pointer
                       ${order.merged ? (isDarkMode ? 'border-l-4 border-l-blue-500' : 'border-l-4 border-l-blue-500') : ''}
+                      ${isDisabled ? (isDarkMode ? 'opacity-50' : 'opacity-50') : ''}
                     `}
                   >
                     {/* Selection indicator (shown in selection mode) */}
@@ -1457,6 +1571,32 @@ const ClientNameOrders = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
                         )}
+                      </div>
+                    )}
+                    
+                    {/* Disable/Enable button */}
+                    {!isSelectionMode && (
+                      <div className="absolute top-3 right-3">
+                        <button
+                          onClick={(e) => toggleOrderDisabled(e, order.id)}
+                          className={`p-1.5 rounded-full ${
+                            isDisabled
+                              ? (isDarkMode ? 'bg-green-500/20 text-green-300 hover:bg-green-500/30' : 'bg-green-100 text-green-700 hover:bg-green-200')
+                              : (isDarkMode ? 'bg-gray-500/20 text-gray-300 hover:bg-gray-500/30' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
+                          } transition-colors`}
+                          aria-label={isDisabled ? "Enable order" : "Disable order"}
+                        >
+                          {isDisabled ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                          ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                            </svg>
+                          )}
+                        </button>
                       </div>
                     )}
                     
@@ -1564,6 +1704,7 @@ const ClientNameOrders = () => {
                       {sortedOrders.map((order, index) => {
                         const balanceDue = (parseFloat(order.grandTotal) || 0) - (parseFloat(order.amountPaid) || 0);
                         const isSelected = selectedOrders.some(o => o.id === order.id);
+                        const isDisabled = order.isEnabled === false;
                         return (
                           <tr 
                             key={order.id} 
@@ -1572,6 +1713,7 @@ const ClientNameOrders = () => {
                               cursor-pointer hover:bg-emerald-500/10 
                               ${isSelectionMode && isSelected ? 'bg-indigo-500/20' : ''}
                               ${order.merged ? (isDarkMode ? 'border-l-4 border-l-blue-500' : 'border-l-4 border-l-blue-500') : ''}
+                              ${isDisabled ? (isDarkMode ? 'opacity-50' : 'opacity-50') : ''}
                             `}
                           >
                             {isSelectionMode && (
@@ -1618,15 +1760,37 @@ const ClientNameOrders = () => {
                               )}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-center">
-                              <button
-                                onClick={(e) => handleDeleteClick(e, order)}
-                                className={`p-1.5 rounded-full ${isDarkMode ? 'bg-red-500/20 text-red-300 hover:bg-red-500/30' : 'bg-red-100 text-red-700 hover:bg-red-200'} transition-colors`}
-                                aria-label="Delete order"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              </button>
+                              <div className="flex items-center justify-center space-x-2">
+                                <button
+                                  onClick={(e) => toggleOrderDisabled(e, order.id)}
+                                  className={`p-1.5 rounded-full ${
+                                    isDisabled
+                                      ? (isDarkMode ? 'bg-green-500/20 text-green-300 hover:bg-green-500/30' : 'bg-green-100 text-green-700 hover:bg-green-200')
+                                      : (isDarkMode ? 'bg-gray-500/20 text-gray-300 hover:bg-gray-500/30' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
+                                  } transition-colors`}
+                                  aria-label={isDisabled ? "Enable order" : "Disable order"}
+                                >
+                                  {isDisabled ? (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                  ) : (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                    </svg>
+                                  )}
+                                </button>
+                                <button
+                                  onClick={(e) => handleDeleteClick(e, order)}
+                                  className={`p-1.5 rounded-full ${isDarkMode ? 'bg-red-500/20 text-red-300 hover:bg-red-500/30' : 'bg-red-100 text-red-700 hover:bg-red-200'} transition-colors`}
+                                  aria-label="Delete order"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         );

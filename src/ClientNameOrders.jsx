@@ -38,6 +38,22 @@ const ClientNameOrders = () => {
   const [filteredPendingAmount, setFilteredPendingAmount] = useState(0);
   const [filteredPaidAmount, setFilteredPaidAmount] = useState(0);
   
+  // Add separate state for sell and purchase orders
+  const [sellTotalAmount, setSellTotalAmount] = useState(0);
+  const [sellPendingAmount, setSellPendingAmount] = useState(0);
+  const [sellPaidAmount, setSellPaidAmount] = useState(0);
+  const [purchaseTotalAmount, setPurchaseTotalAmount] = useState(0);
+  const [purchasePendingAmount, setPurchasePendingAmount] = useState(0);
+  const [purchasePaidAmount, setPurchasePaidAmount] = useState(0);
+  
+  // Filtered sell and purchase amounts
+  const [filteredSellTotalAmount, setFilteredSellTotalAmount] = useState(0);
+  const [filteredSellPendingAmount, setFilteredSellPendingAmount] = useState(0);
+  const [filteredSellPaidAmount, setFilteredSellPaidAmount] = useState(0);
+  const [filteredPurchaseTotalAmount, setFilteredPurchaseTotalAmount] = useState(0);
+  const [filteredPurchasePendingAmount, setFilteredPurchasePendingAmount] = useState(0);
+  const [filteredPurchasePaidAmount, setFilteredPurchasePaidAmount] = useState(0);
+  
   // Date filter states
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
@@ -85,6 +101,19 @@ const ClientNameOrders = () => {
   
   // State for summary visibility
   const [showSummary, setShowSummary] = useState(false);
+  
+  // State for expanded sections
+  const [expandedSections, setExpandedSections] = useState({
+    sellOrders: false,
+    purchaseOrders: false
+  });
+  
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
   
   useEffect(() => {
     // Decode the client name from URL parameter
@@ -154,21 +183,50 @@ const ClientNameOrders = () => {
       let pending = 0;
       let paid = 0;
       
+      // Separate totals for sell and purchase
+      let sellTotal = 0;
+      let sellPending = 0;
+      let sellPaid = 0;
+      let purchaseTotal = 0;
+      let purchasePending = 0;
+      let purchasePaid = 0;
+      
       matchingOrders.forEach(order => {
         // Skip if this order is part of a merged order
         if (order.mergedFrom) return;
         
         const orderTotal = parseFloat(order.grandTotal) || 0;
         const orderPaid = parseFloat(order.amountPaid) || 0;
+        const orderPending = orderTotal - orderPaid;
         
         total += orderTotal;
         paid += orderPaid;
-        pending += Math.max(0, orderTotal - orderPaid);
+        pending += orderPending; // Allow negative values to show overpayments
+        
+        // Separate calculations for sell and purchase orders
+        if (order.orderStatus === 'purchased') {
+          purchaseTotal += orderTotal;
+          purchasePaid += orderPaid;
+          purchasePending += orderPending;
+        } else {
+          // Default to 'sell' if not specified
+          sellTotal += orderTotal;
+          sellPaid += orderPaid;
+          sellPending += orderPending;
+        }
       });
       
       setTotalAmount(total);
       setPaidAmount(paid);
       setPendingAmount(pending);
+      
+      // Set sell and purchase totals
+      setSellTotalAmount(sellTotal);
+      setSellPaidAmount(sellPaid);
+      setSellPendingAmount(sellPending);
+      setPurchaseTotalAmount(purchaseTotal);
+      setPurchasePaidAmount(purchasePaid);
+      setPurchasePendingAmount(purchasePending);
     } catch (err) {
       console.error("Error fetching orders by client name:", err);
       setError("Failed to load orders. Please try again.");
@@ -501,20 +559,49 @@ const ClientNameOrders = () => {
       let pending = 0;
       let paid = 0;
       
+      // Separate totals for sell and purchase
+      let sellTotal = 0;
+      let sellPending = 0;
+      let sellPaid = 0;
+      let purchaseTotal = 0;
+      let purchasePending = 0;
+      let purchasePaid = 0;
+      
       updatedOrders.forEach(order => {
         if (order.mergedFrom) return;
         
         const orderTotal = parseFloat(order.grandTotal) || 0;
         const orderPaid = parseFloat(order.amountPaid) || 0;
+        const orderPending = orderTotal - orderPaid;
         
         total += orderTotal;
         paid += orderPaid;
-        pending += Math.max(0, orderTotal - orderPaid);
+        pending += orderPending; // Allow negative values to show overpayments
+        
+        // Separate calculations for sell and purchase orders
+        if (order.orderStatus === 'purchased') {
+          purchaseTotal += orderTotal;
+          purchasePaid += orderPaid;
+          purchasePending += orderPending;
+        } else {
+          // Default to 'sell' if not specified
+          sellTotal += orderTotal;
+          sellPaid += orderPaid;
+          sellPending += orderPending;
+        }
       });
       
       setTotalAmount(total);
       setPaidAmount(paid);
       setPendingAmount(pending);
+      
+      // Set sell and purchase totals
+      setSellTotalAmount(sellTotal);
+      setSellPaidAmount(sellPaid);
+      setSellPendingAmount(sellPending);
+      setPurchaseTotalAmount(purchaseTotal);
+      setPurchasePaidAmount(purchasePaid);
+      setPurchasePendingAmount(purchasePending);
     } catch (err) {
       setError(`Failed to delete order: ${err.message}`);
       setTimeout(() => setError(''), 5000);
@@ -542,21 +629,50 @@ const ClientNameOrders = () => {
     let pending = 0;
     let paid = 0;
     
+    // Separate totals for sell and purchase
+    let sellTotal = 0;
+    let sellPending = 0;
+    let sellPaid = 0;
+    let purchaseTotal = 0;
+    let purchasePending = 0;
+    let purchasePaid = 0;
+    
     filteredOrders.forEach(order => {
       // Skip if this order is part of a merged order
       if (order.mergedFrom) return;
       
       const orderTotal = parseFloat(order.grandTotal) || 0;
       const orderPaid = parseFloat(order.amountPaid) || 0;
+      const orderPending = orderTotal - orderPaid;
       
       total += orderTotal;
       paid += orderPaid;
-      pending += Math.max(0, orderTotal - orderPaid);
+      pending += orderPending; // Allow negative values to show overpayments
+      
+      // Separate calculations for sell and purchase orders
+      if (order.orderStatus === 'purchased') {
+        purchaseTotal += orderTotal;
+        purchasePaid += orderPaid;
+        purchasePending += orderPending;
+      } else {
+        // Default to 'sell' if not specified
+        sellTotal += orderTotal;
+        sellPaid += orderPaid;
+        sellPending += orderPending;
+      }
     });
     
     setFilteredTotalAmount(total);
     setFilteredPaidAmount(paid);
     setFilteredPendingAmount(pending);
+    
+    // Set filtered sell and purchase totals
+    setFilteredSellTotalAmount(sellTotal);
+    setFilteredSellPaidAmount(sellPaid);
+    setFilteredSellPendingAmount(sellPending);
+    setFilteredPurchaseTotalAmount(purchaseTotal);
+    setFilteredPurchasePaidAmount(purchasePaid);
+    setFilteredPurchasePendingAmount(purchasePending);
   }, [filteredOrders]);
 
   return (
@@ -985,7 +1101,8 @@ const ClientNameOrders = () => {
                 )}
               </h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Overall Summary */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-4 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
                   <p className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Total Orders</p>
                   <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
@@ -1020,12 +1137,253 @@ const ClientNameOrders = () => {
                     </div>
                     
                     <div className="text-right">
-                      <p className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Pending</p>
-                      <p className={`text-xl font-bold text-amber-500`}>
-                        ₹{(searchTerm || isDateFilterActive) ? filteredPendingAmount.toFixed(2) : pendingAmount.toFixed(2)}
+                      <p className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                        {(searchTerm || isDateFilterActive) ? 
+                          (filteredPendingAmount <= 0 ? "Overpaid" : "Pending") : 
+                          (pendingAmount <= 0 ? "Overpaid" : "Pending")}
+                      </p>
+                      <p className={`text-xl font-bold ${
+                        (searchTerm || isDateFilterActive) ? 
+                          (filteredPendingAmount <= 0 ? "text-green-500" : "text-amber-500") : 
+                          (pendingAmount <= 0 ? "text-green-500" : "text-amber-500")
+                      }`}>
+                        ₹{Math.abs((searchTerm || isDateFilterActive) ? filteredPendingAmount.toFixed(2) : pendingAmount.toFixed(2))}
                       </p>
                     </div>
                   </div>
+                </div>
+              </div>
+              
+              {/* Order Type Summaries - Side by Side */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Sell Orders Summary */}
+                <div className={`${isDarkMode ? 'bg-blue-500/5' : 'bg-blue-50'} rounded-xl p-5 border ${isDarkMode ? 'border-blue-500/20' : 'border-blue-100'}`}>
+                  <h3 className={`text-md font-semibold mb-3 ${isDarkMode ? 'text-white' : 'text-gray-900'} flex items-center`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                    Sell Orders Summary
+                    
+                    <button 
+                      onClick={() => toggleSection('sellOrders')}
+                      className={`ml-2 p-1 rounded-full ${isDarkMode ? 'hover:bg-white/10' : 'hover:bg-gray-200'} transition-colors`}
+                      aria-label={expandedSections.sellOrders ? "Collapse sell orders" : "Expand sell orders"}
+                    >
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        className={`h-4 w-4 transition-transform ${expandedSections.sellOrders ? 'transform rotate-180' : ''}`} 
+                        fill="none" 
+                        viewBox="0 0 24 24" 
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                    <div className={`${isDarkMode ? 'bg-blue-500/10' : 'bg-blue-100'} rounded-xl p-4 border ${isDarkMode ? 'border-blue-500/20' : 'border-blue-200'}`}>
+                      <p className={`text-sm ${isDarkMode ? 'text-blue-300' : 'text-blue-700'}`}>Total Amount</p>
+                      <p className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        ₹{(searchTerm || isDateFilterActive) ? filteredSellTotalAmount.toFixed(2) : sellTotalAmount.toFixed(2)}
+                      </p>
+                    </div>
+                    
+                    <div className={`${isDarkMode ? 'bg-blue-500/10' : 'bg-blue-100'} rounded-xl p-4 border ${isDarkMode ? 'border-blue-500/20' : 'border-blue-200'}`}>
+                      <p className={`text-sm ${isDarkMode ? 'text-blue-300' : 'text-blue-700'}`}>Paid</p>
+                      <p className={`text-xl font-bold text-emerald-500`}>
+                        ₹{(searchTerm || isDateFilterActive) ? filteredSellPaidAmount.toFixed(2) : sellPaidAmount.toFixed(2)}
+                      </p>
+                    </div>
+                    
+                    <div className={`${isDarkMode ? 'bg-blue-500/10' : 'bg-blue-100'} rounded-xl p-4 border ${isDarkMode ? 'border-blue-500/20' : 'border-blue-200'}`}>
+                      <p className={`text-sm ${isDarkMode ? 'text-blue-300' : 'text-blue-700'}`}>
+                        {(searchTerm || isDateFilterActive) ? 
+                          (filteredSellPendingAmount <= 0 ? "Overpaid" : "Pending") : 
+                          (sellPendingAmount <= 0 ? "Overpaid" : "Pending")}
+                      </p>
+                      <p className={`text-xl font-bold ${
+                        (searchTerm || isDateFilterActive) ? 
+                          (filteredSellPendingAmount <= 0 ? "text-green-500" : "text-amber-500") : 
+                          (sellPendingAmount <= 0 ? "text-green-500" : "text-amber-500")
+                      }`}>
+                        ₹{Math.abs((searchTerm || isDateFilterActive) ? filteredSellPendingAmount.toFixed(2) : sellPendingAmount.toFixed(2))}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Sell Orders List */}
+                  {expandedSections.sellOrders && (
+                    <div className={`mt-2 rounded-xl border ${isDarkMode ? 'border-blue-500/20 bg-blue-500/5' : 'border-blue-100 bg-blue-50'} overflow-hidden`}>
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-blue-200 dark:divide-blue-700/30">
+                          <thead className={`${isDarkMode ? 'bg-blue-500/10' : 'bg-blue-100'}`}>
+                            <tr>
+                              <th scope="col" className={`px-4 py-3 text-left text-xs font-medium ${isDarkMode ? 'text-blue-300' : 'text-blue-700'} uppercase tracking-wider`}>Order ID</th>
+                              <th scope="col" className={`px-4 py-3 text-left text-xs font-medium ${isDarkMode ? 'text-blue-300' : 'text-blue-700'} uppercase tracking-wider`}>Date</th>
+                              <th scope="col" className={`px-4 py-3 text-right text-xs font-medium ${isDarkMode ? 'text-blue-300' : 'text-blue-700'} uppercase tracking-wider`}>Total</th>
+                              <th scope="col" className={`px-4 py-3 text-right text-xs font-medium ${isDarkMode ? 'text-blue-300' : 'text-blue-700'} uppercase tracking-wider`}>Paid</th>
+                              <th scope="col" className={`px-4 py-3 text-right text-xs font-medium ${isDarkMode ? 'text-blue-300' : 'text-blue-700'} uppercase tracking-wider`}>Balance</th>
+                            </tr>
+                          </thead>
+                          <tbody className={`divide-y ${isDarkMode ? 'divide-blue-700/20' : 'divide-blue-200'}`}>
+                            {(searchTerm || isDateFilterActive ? filteredOrders : orders)
+                              .filter(order => (order.orderStatus === 'sell' || !order.orderStatus) && !order.mergedFrom)
+                              .map(order => {
+                                const balanceDue = (parseFloat(order.grandTotal) || 0) - (parseFloat(order.amountPaid) || 0);
+                                return (
+                                  <tr 
+                                    key={order.id} 
+                                    onClick={() => handleOrderClick(order.id)}
+                                    className={`cursor-pointer ${isDarkMode ? 'hover:bg-blue-500/10' : 'hover:bg-blue-100'}`}
+                                  >
+                                    <td className={`px-4 py-2 whitespace-nowrap text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                      #{order.id.substring(0, 8)}
+                                    </td>
+                                    <td className={`px-4 py-2 whitespace-nowrap text-sm ${isDarkMode ? 'text-blue-300/70' : 'text-blue-700/70'}`}>
+                                      {formatDate(order.orderDate || order.timestamp)}
+                                    </td>
+                                    <td className={`px-4 py-2 whitespace-nowrap text-sm text-right ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                      ₹{parseFloat(order.grandTotal || 0).toFixed(2)}
+                                    </td>
+                                    <td className={`px-4 py-2 whitespace-nowrap text-sm text-right text-emerald-500`}>
+                                      ₹{parseFloat(order.amountPaid || 0).toFixed(2)}
+                                    </td>
+                                    <td className={`px-4 py-2 whitespace-nowrap text-sm text-right ${balanceDue <= 0 ? 'text-green-500' : 'text-amber-500'}`}>
+                                      {balanceDue <= 0 ? 
+                                        `₹${Math.abs(balanceDue).toFixed(2)}` : 
+                                        `₹${balanceDue.toFixed(2)}`
+                                      }
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            {(searchTerm || isDateFilterActive ? filteredOrders : orders).filter(order => (order.orderStatus === 'sell' || !order.orderStatus) && !order.mergedFrom).length === 0 && (
+                              <tr>
+                                <td colSpan="5" className={`px-4 py-3 text-center text-sm ${isDarkMode ? 'text-blue-300/70' : 'text-blue-700/70'}`}>
+                                  No sell orders found
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Purchase Orders Summary */}
+                <div className={`${isDarkMode ? 'bg-purple-500/5' : 'bg-purple-50'} rounded-xl p-5 border ${isDarkMode ? 'border-purple-500/20' : 'border-purple-100'}`}>
+                  <h3 className={`text-md font-semibold mb-3 ${isDarkMode ? 'text-white' : 'text-gray-900'} flex items-center`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 17l-5-5m0 0l5-5m-5 5h12" />
+                    </svg>
+                    Purchase Orders Summary
+                    
+                    <button 
+                      onClick={() => toggleSection('purchaseOrders')}
+                      className={`ml-2 p-1 rounded-full ${isDarkMode ? 'hover:bg-white/10' : 'hover:bg-gray-200'} transition-colors`}
+                      aria-label={expandedSections.purchaseOrders ? "Collapse purchase orders" : "Expand purchase orders"}
+                    >
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        className={`h-4 w-4 transition-transform ${expandedSections.purchaseOrders ? 'transform rotate-180' : ''}`} 
+                        fill="none" 
+                        viewBox="0 0 24 24" 
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                    <div className={`${isDarkMode ? 'bg-purple-500/10' : 'bg-purple-100'} rounded-xl p-4 border ${isDarkMode ? 'border-purple-500/20' : 'border-purple-200'}`}>
+                      <p className={`text-sm ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>Total Amount</p>
+                      <p className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        ₹{(searchTerm || isDateFilterActive) ? filteredPurchaseTotalAmount.toFixed(2) : purchaseTotalAmount.toFixed(2)}
+                      </p>
+                    </div>
+                    
+                    <div className={`${isDarkMode ? 'bg-purple-500/10' : 'bg-purple-100'} rounded-xl p-4 border ${isDarkMode ? 'border-purple-500/20' : 'border-purple-200'}`}>
+                      <p className={`text-sm ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>Paid</p>
+                      <p className={`text-xl font-bold text-emerald-500`}>
+                        ₹{(searchTerm || isDateFilterActive) ? filteredPurchasePaidAmount.toFixed(2) : purchasePaidAmount.toFixed(2)}
+                      </p>
+                    </div>
+                    
+                    <div className={`${isDarkMode ? 'bg-purple-500/10' : 'bg-purple-100'} rounded-xl p-4 border ${isDarkMode ? 'border-purple-500/20' : 'border-purple-200'}`}>
+                      <p className={`text-sm ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>
+                        {(searchTerm || isDateFilterActive) ? 
+                          (filteredPurchasePendingAmount <= 0 ? "Overpaid" : "Pending") : 
+                          (purchasePendingAmount <= 0 ? "Overpaid" : "Pending")}
+                      </p>
+                      <p className={`text-xl font-bold ${
+                        (searchTerm || isDateFilterActive) ? 
+                          (filteredPurchasePendingAmount <= 0 ? "text-green-500" : "text-amber-500") : 
+                          (purchasePendingAmount <= 0 ? "text-green-500" : "text-amber-500")
+                      }`}>
+                        ₹{Math.abs((searchTerm || isDateFilterActive) ? filteredPurchasePendingAmount.toFixed(2) : purchasePendingAmount.toFixed(2))}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Purchase Orders List */}
+                  {expandedSections.purchaseOrders && (
+                    <div className={`mt-2 rounded-xl border ${isDarkMode ? 'border-purple-500/20 bg-purple-500/5' : 'border-purple-100 bg-purple-50'} overflow-hidden`}>
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-purple-200 dark:divide-purple-700/30">
+                          <thead className={`${isDarkMode ? 'bg-purple-500/10' : 'bg-purple-100'}`}>
+                            <tr>
+                              <th scope="col" className={`px-4 py-3 text-left text-xs font-medium ${isDarkMode ? 'text-purple-300' : 'text-purple-700'} uppercase tracking-wider`}>Order ID</th>
+                              <th scope="col" className={`px-4 py-3 text-left text-xs font-medium ${isDarkMode ? 'text-purple-300' : 'text-purple-700'} uppercase tracking-wider`}>Date</th>
+                              <th scope="col" className={`px-4 py-3 text-right text-xs font-medium ${isDarkMode ? 'text-purple-300' : 'text-purple-700'} uppercase tracking-wider`}>Total</th>
+                              <th scope="col" className={`px-4 py-3 text-right text-xs font-medium ${isDarkMode ? 'text-purple-300' : 'text-purple-700'} uppercase tracking-wider`}>Paid</th>
+                              <th scope="col" className={`px-4 py-3 text-right text-xs font-medium ${isDarkMode ? 'text-purple-300' : 'text-purple-700'} uppercase tracking-wider`}>Balance</th>
+                            </tr>
+                          </thead>
+                          <tbody className={`divide-y ${isDarkMode ? 'divide-purple-700/20' : 'divide-purple-200'}`}>
+                            {(searchTerm || isDateFilterActive ? filteredOrders : orders)
+                              .filter(order => order.orderStatus === 'purchased' && !order.mergedFrom)
+                              .map(order => {
+                                const balanceDue = (parseFloat(order.grandTotal) || 0) - (parseFloat(order.amountPaid) || 0);
+                                return (
+                                  <tr 
+                                    key={order.id} 
+                                    onClick={() => handleOrderClick(order.id)}
+                                    className={`cursor-pointer ${isDarkMode ? 'hover:bg-purple-500/10' : 'hover:bg-purple-100'}`}
+                                  >
+                                    <td className={`px-4 py-2 whitespace-nowrap text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                      #{order.id.substring(0, 8)}
+                                    </td>
+                                    <td className={`px-4 py-2 whitespace-nowrap text-sm ${isDarkMode ? 'text-purple-300/70' : 'text-purple-700/70'}`}>
+                                      {formatDate(order.orderDate || order.timestamp)}
+                                    </td>
+                                    <td className={`px-4 py-2 whitespace-nowrap text-sm text-right ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                      ₹{parseFloat(order.grandTotal || 0).toFixed(2)}
+                                    </td>
+                                    <td className={`px-4 py-2 whitespace-nowrap text-sm text-right text-emerald-500`}>
+                                      ₹{parseFloat(order.amountPaid || 0).toFixed(2)}
+                                    </td>
+                                    <td className={`px-4 py-2 whitespace-nowrap text-sm text-right ${balanceDue <= 0 ? 'text-green-500' : 'text-amber-500'}`}>
+                                      {balanceDue <= 0 ? 
+                                        `₹${Math.abs(balanceDue).toFixed(2)}` : 
+                                        `₹${balanceDue.toFixed(2)}`
+                                      }
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            {(searchTerm || isDateFilterActive ? filteredOrders : orders).filter(order => order.orderStatus === 'purchased' && !order.mergedFrom).length === 0 && (
+                              <tr>
+                                <td colSpan="5" className={`px-4 py-3 text-center text-sm ${isDarkMode ? 'text-purple-300/70' : 'text-purple-700/70'}`}>
+                                  No purchase orders found
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1148,10 +1506,15 @@ const ClientNameOrders = () => {
                         <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-lg p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
                           <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Balance Due:</p>
                           <p className={`font-medium ${((typeof order.grandTotal === 'number' ? order.grandTotal : 0) -
-                            (typeof order.amountPaid === 'number' ? order.amountPaid : 0)) <= 0 ? 'text-sky-500' : 'text-amber-500'
+                            (typeof order.amountPaid === 'number' ? order.amountPaid : 0)) <= 0 ? 'text-green-500' : 'text-amber-500'
                             }`}>
-                            ₹{((typeof order.grandTotal === 'number' ? order.grandTotal : 0) -
-                              (typeof order.amountPaid === 'number' ? order.amountPaid : 0)).toFixed(2)}
+                            {((typeof order.grandTotal === 'number' ? order.grandTotal : 0) -
+                              (typeof order.amountPaid === 'number' ? order.amountPaid : 0)) <= 0 ? 
+                              `₹${Math.abs(((typeof order.grandTotal === 'number' ? order.grandTotal : 0) - 
+                                (typeof order.amountPaid === 'number' ? order.amountPaid : 0))).toFixed(2)} (Overpaid)` : 
+                              `₹${((typeof order.grandTotal === 'number' ? order.grandTotal : 0) - 
+                                (typeof order.amountPaid === 'number' ? order.amountPaid : 0)).toFixed(2)}`
+                            }
                           </p>
                         </div>
                       </div>
@@ -1232,7 +1595,9 @@ const ClientNameOrders = () => {
                             <td className={`px-6 py-4 whitespace-nowrap text-sm text-left ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>{formatDate(order.orderDate || order.orderDate)}</td>
                             <td className={`px-6 py-4 whitespace-nowrap text-sm text-center ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>₹{parseFloat(order.grandTotal || 0).toFixed(2)}</td>
                             <td className={`px-6 py-4 whitespace-nowrap text-sm text-center text-emerald-500 font-medium`}>₹{parseFloat(order.amountPaid || 0).toFixed(2)}</td>
-                            <td className={`px-6 py-4 whitespace-nowrap text-sm text-center ${balanceDue <= 0 ? 'text-sky-500' : 'text-amber-500'} font-medium`}>₹{balanceDue.toFixed(2)}</td>
+                            <td className={`px-6 py-4 whitespace-nowrap text-sm text-center ${balanceDue <= 0 ? 'text-green-500' : 'text-amber-500'} font-medium`}>
+                              {balanceDue <= 0 ? '₹' + Math.abs(balanceDue).toFixed(2) + ' (Overpaid)' : '₹' + balanceDue.toFixed(2)}
+                            </td>
                             <td className="px-6 py-4 whitespace-nowrap text-center">
                               <span className={`inline-block text-xs px-2 py-1 rounded-full font-medium ${order.paymentStatus === 'cleared'
                                 ? `${isDarkMode ? 'bg-sky-500/20 text-sky-300' : 'bg-sky-100 text-sky-700'}`
@@ -1306,8 +1671,11 @@ const ClientNameOrders = () => {
                     </li>
                     <li className="flex justify-between">
                       <span className={`${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Balance Due:</span>
-                      <span className={`font-medium ${mergedOrder.grandTotal - mergedOrder.amountPaid <= 0 ? 'text-sky-500' : 'text-amber-500'}`}>
-                        ₹{(mergedOrder.grandTotal - mergedOrder.amountPaid).toFixed(2)}
+                      <span className={`font-medium ${mergedOrder.grandTotal - mergedOrder.amountPaid <= 0 ? 'text-green-500' : 'text-amber-500'}`}>
+                        {mergedOrder.grandTotal - mergedOrder.amountPaid <= 0 ? 
+                          `₹${Math.abs(mergedOrder.grandTotal - mergedOrder.amountPaid).toFixed(2)} (Overpaid)` : 
+                          `₹${(mergedOrder.grandTotal - mergedOrder.amountPaid).toFixed(2)}`
+                        }
                       </span>
                     </li>
                     <li className="flex justify-between">

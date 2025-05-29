@@ -1471,11 +1471,111 @@ const ClientList = () => {
                         const grandTotal = typeof client.grandTotal === 'number' ? client.grandTotal : 0;
                         const amountPaid = typeof client.amountPaid === 'number' ? client.amountPaid : 0;
                         const pendingAmount = grandTotal - amountPaid;
-                        return total + (pendingAmount > 0 ? pendingAmount : 0);
+                        return total + pendingAmount; // Include negative balances as well
                       }, 0).toFixed(2)}</p>
-                      <p className={`text-[9px] sm:text-xs ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>To collect</p>
+                      <p className={`text-[9px] sm:text-xs ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>Balance due</p>
                     </div>
                   </div>
+
+                  {/* Order Type Statistics (Sell vs Purchased) */}
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Sell Orders Stats */}
+                    <div className={`${isDarkMode ? 'bg-blue-500/10' : 'bg-blue-50'} rounded-xl p-4 border ${isDarkMode ? 'border-blue-500/30' : 'border-blue-100'}`}>
+                      <div className="flex items-center mb-3">
+                        <div className="w-2 h-2 rounded-full bg-blue-500 mr-2"></div>
+                        <h3 className={`text-sm font-medium ${isDarkMode ? 'text-blue-300' : 'text-blue-800'}`}>Sell Orders</h3>
+                        <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${isDarkMode ? 'bg-blue-500/20 text-blue-300' : 'bg-blue-100 text-blue-800'}`}>
+                          {filteredClients.filter(client => client.orderStatus === 'sell').length} orders
+                        </span>
+                      </div>
+                      
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className={`${isDarkMode ? 'bg-white/5' : 'bg-white'} p-2 rounded-lg border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
+                          <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Total</p>
+                          <p className="text-sm font-bold text-blue-500 mt-0.5 flex items-center">
+                            <BsCurrencyRupee className="text-xs" />
+                            {filteredClients
+                              .filter(client => client.orderStatus === 'sell')
+                              .reduce((total, client) => total + (client.grandTotal || 0), 0)
+                              .toFixed(2)}
+                          </p>
+                        </div>
+                        <div className={`${isDarkMode ? 'bg-white/5' : 'bg-white'} p-2 rounded-lg border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
+                          <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Received</p>
+                          <p className="text-sm font-bold text-emerald-500 mt-0.5 flex items-center">
+                            <BsCurrencyRupee className="text-xs" />
+                            {filteredClients
+                              .filter(client => client.orderStatus === 'sell')
+                              .reduce((total, client) => total + (client.amountPaid || 0), 0)
+                              .toFixed(2)}
+                          </p>
+                        </div>
+                        <div className={`${isDarkMode ? 'bg-white/5' : 'bg-white'} p-2 rounded-lg border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
+                          <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Pending</p>
+                          <p className="text-sm font-bold text-amber-500 mt-0.5 flex items-center">
+                            <BsCurrencyRupee className="text-xs" />
+                            {filteredClients
+                              .filter(client => client.orderStatus === 'sell')
+                              .reduce((total, client) => {
+                                const grandTotal = typeof client.grandTotal === 'number' ? client.grandTotal : 0;
+                                const amountPaid = typeof client.amountPaid === 'number' ? client.amountPaid : 0;
+                                return total + (grandTotal - amountPaid);
+                              }, 0)
+                              .toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Purchased Orders Stats */}
+                    <div className={`${isDarkMode ? 'bg-purple-500/10' : 'bg-purple-50'} rounded-xl p-4 border ${isDarkMode ? 'border-purple-500/30' : 'border-purple-100'}`}>
+                      <div className="flex items-center mb-3">
+                        <div className="w-2 h-2 rounded-full bg-purple-500 mr-2"></div>
+                        <h3 className={`text-sm font-medium ${isDarkMode ? 'text-purple-300' : 'text-purple-800'}`}>Purchased Orders</h3>
+                        <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${isDarkMode ? 'bg-purple-500/20 text-purple-300' : 'bg-purple-100 text-purple-800'}`}>
+                          {filteredClients.filter(client => client.orderStatus === 'purchased').length} orders
+                        </span>
+                      </div>
+                      
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className={`${isDarkMode ? 'bg-white/5' : 'bg-white'} p-2 rounded-lg border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
+                          <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Total</p>
+                          <p className="text-sm font-bold text-purple-500 mt-0.5 flex items-center">
+                            <BsCurrencyRupee className="text-xs" />
+                            {filteredClients
+                              .filter(client => client.orderStatus === 'purchased')
+                              .reduce((total, client) => total + (client.grandTotal || 0), 0)
+                              .toFixed(2)}
+                          </p>
+                        </div>
+                        <div className={`${isDarkMode ? 'bg-white/5' : 'bg-white'} p-2 rounded-lg border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
+                          <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Paid</p>
+                          <p className="text-sm font-bold text-emerald-500 mt-0.5 flex items-center">
+                            <BsCurrencyRupee className="text-xs" />
+                            {filteredClients
+                              .filter(client => client.orderStatus === 'purchased')
+                              .reduce((total, client) => total + (client.amountPaid || 0), 0)
+                              .toFixed(2)}
+                          </p>
+                        </div>
+                        <div className={`${isDarkMode ? 'bg-white/5' : 'bg-white'} p-2 rounded-lg border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
+                          <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Pending</p>
+                          <p className="text-sm font-bold text-amber-500 mt-0.5 flex items-center">
+                            <BsCurrencyRupee className="text-xs" />
+                            {filteredClients
+                              .filter(client => client.orderStatus === 'purchased')
+                              .reduce((total, client) => {
+                                const grandTotal = typeof client.grandTotal === 'number' ? client.grandTotal : 0;
+                                const amountPaid = typeof client.amountPaid === 'number' ? client.amountPaid : 0;
+                                return total + (grandTotal - amountPaid);
+                              }, 0)
+                              .toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
                 </div>
               )}
 
@@ -1720,7 +1820,7 @@ const ClientList = () => {
               {searchQuery && (
                 <button
                   onClick={clearSearchQuery}
-                  className="absolute inset-y-0 right-8 flex items-center pr-3"
+                  className={`absolute inset-y-0 ${mergeMode ? 'right-28' : 'right-8'} flex items-center pr-3`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${isDarkMode ? 'text-slate-400 hover:text-white' : 'text-gray-400 hover:text-gray-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

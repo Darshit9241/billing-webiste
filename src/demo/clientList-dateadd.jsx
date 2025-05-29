@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import ThemeToggle from './components/ThemeToggle';
-import { useTheme } from './context/ThemeContext';
-import { fetchAllClients, deleteClient, clearClientPayment, updateClient } from './firebase/clientsFirebase';
+import ThemeToggle from '../components/ThemeToggle';
+import { useTheme } from '../context/ThemeContext';
+import { fetchAllClients, deleteClient, clearClientPayment, updateClient } from '../firebase/clientsFirebase';
 import { BsCurrencyRupee } from "react-icons/bs";
 
 // Custom CSS for animations

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createClient, fetchAllClients, updateClient } from './firebase/clientsFirebase';
+import { createClient, fetchAllClients, updateClient } from '../firebase/clientsFirebase';
 import { ref, get } from 'firebase/database';
-import { database } from './firebase/config';
+import { database } from '../firebase/config';
 
 const AddProducts = () => {
   const navigate = useNavigate();

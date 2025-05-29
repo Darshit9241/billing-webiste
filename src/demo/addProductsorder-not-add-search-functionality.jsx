@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createClient, fetchAllClients } from './firebase/clientsFirebase';
+import { createClient, fetchAllClients } from '../firebase/clientsFirebase';
 
 const AddProducts = () => {
   const navigate = useNavigate();

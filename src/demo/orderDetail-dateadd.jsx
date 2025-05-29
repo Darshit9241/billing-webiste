@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { usePDF } from 'react-to-pdf';
 import { ref, get, update } from 'firebase/database';
-import { database } from './firebase/config';
+import { database } from '../firebase/config';
 import { BsCurrencyRupee } from 'react-icons/bs';
 
 const OrderDetail = () => {

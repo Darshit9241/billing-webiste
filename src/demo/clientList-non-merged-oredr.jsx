@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import ThemeToggle from './components/ThemeToggle';
-import { useTheme } from './context/ThemeContext';
-import { fetchAllClients, deleteClient, clearClientPayment, updateClient } from './firebase/clientsFirebase';
+import ThemeToggle from '../components/ThemeToggle';
+import { useTheme } from '../context/ThemeContext';
+import { fetchAllClients, deleteClient, clearClientPayment, updateClient } from '../firebase/clientsFirebase';
 
 // Custom CSS for animations
 const customStyles = `

@@ -123,6 +123,9 @@ const ClientList = () => {
 
   const [paymentDate, setPaymentDate] = useState('');
 
+  const [showProductsModal, setShowProductsModal] = useState(false);
+  const [selectedProductsClient, setSelectedProductsClient] = useState(null);
+
   // Function to update URL query parameters
   const updateUrlParams = (params) => {
     const searchParams = new URLSearchParams(location.search);
@@ -661,6 +664,7 @@ const ClientList = () => {
       name: product.name || '',
       price: product.price || 0,
       count: product.count || 1,
+      discount: product.discount || 0,
       timestamp: product.timestamp || Date.now() // Capture existing timestamp or set current time
     });
   };
@@ -671,6 +675,7 @@ const ClientList = () => {
       name: '',
       price: 0,
       count: 1,
+      discount: 0,
       timestamp: Date.now() // Add timestamp to the form data
     });
   };
@@ -697,27 +702,33 @@ const ClientList = () => {
     const updatedProducts = [...editFormData.products];
     const currentTime = Date.now();
 
-    // Ensure numeric values for price and count
+    // Ensure numeric values for price, count and discount
     const price = parseFloat(productFormData.price || 0);
     const count = parseFloat(productFormData.count || 0);
+    const discount = parseFloat(productFormData.discount || 0);
 
-    // Calculate total with 2 decimal precision
-    const total = parseFloat((price * count).toFixed(2));
+    // Calculate subtotal
+    const subtotal = parseFloat((price * count).toFixed(2));
+    
+    // Calculate total with discount (if any)
+    const discountAmount = discount > 0 ? parseFloat((subtotal * (discount / 100)).toFixed(2)) : 0;
+    const total = parseFloat((subtotal - discountAmount).toFixed(2));
 
     updatedProducts[editingProduct.index] = {
       ...editingProduct,
       name: productFormData.name,
       price: price,
       count: count,
+      discount: discount,
+      subtotal: subtotal,
+      discountAmount: discountAmount,
       total: total,
       timestamp: productFormData.timestamp || currentTime // Use the timestamp from form data
     };
 
-    // Recalculate the grand total
+    // Recalculate the grand total accounting for discounts
     const grandTotal = parseFloat(updatedProducts.reduce((total, product) => {
-      const productPrice = parseFloat(product.price || 0);
-      const productCount = parseFloat(product.count || 0);
-      return total + (productPrice * productCount);
+      return total + (product.total || 0);
     }, 0).toFixed(2));
 
     // Handle amount paid and payment status consistency
@@ -756,11 +767,9 @@ const ClientList = () => {
     const updatedProducts = [...editFormData.products];
     updatedProducts.splice(index, 1);
 
-    // Recalculate the grand total
+    // Recalculate the grand total accounting for discounts
     const grandTotal = parseFloat(updatedProducts.reduce((total, product) => {
-      const productPrice = parseFloat(product.price || 0);
-      const productCount = parseFloat(product.count || 0);
-      return total + (productPrice * productCount);
+      return total + (product.total || 0);
     }, 0).toFixed(2));
 
     // If the grand total is now less than the amount paid, adjust the amount paid
@@ -801,6 +810,7 @@ const ClientList = () => {
       name: '',
       price: 0,
       count: 1,
+      discount: 0,
       total: 0, // Initialize with zero total
       index: editFormData.products.length,
       timestamp: Date.now() // Add timestamp for new products
@@ -808,7 +818,8 @@ const ClientList = () => {
     setProductFormData({
       name: '',
       price: '',
-      count: ''
+      count: '',
+      discount: 0
     });
   };
 
@@ -929,8 +940,8 @@ const ClientList = () => {
     e.preventDefault();
 
     const grandTotal = parseFloat(editFormData.products.reduce((total, product) => {
-      const productTotal = product.total || (product.count * product.price);
-      return total + productTotal;
+      // Use the calculated total property which already accounts for discounts
+      return total + (product.total || 0);
     }, 0).toFixed(2));
 
     try {
@@ -1065,6 +1076,22 @@ const ClientList = () => {
         console.error('Failed to copy: ', err);
       });
   };
+
+  // Add useEffect to handle body scrolling when modal is open
+  useEffect(() => {
+    if (showProductsModal) {
+      // Prevent scrolling on the body when modal is open
+      document.body.style.overflow = 'hidden';
+    } else {
+      // Re-enable scrolling when modal is closed
+      document.body.style.overflow = 'auto';
+    }
+    
+    // Cleanup function to ensure body scrolling is re-enabled when component unmounts
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [showProductsModal]);
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-gray-100 to-white'} py-8 px-4 sm:px-6 lg:px-8 transition-colors duration-200`}>
@@ -1650,7 +1677,7 @@ const ClientList = () => {
                     } transition-colors`}
                 >
                   {mergeMode ? 'Exit' : <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
                   </svg>}
                 </button>
 
@@ -1856,10 +1883,14 @@ const ClientList = () => {
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>
-                    Products
-                    <span className="ml-2 px-1.5 py-0.5 bg-white/10 rounded-full text-xs">
-                      {editFormData.products.length}
-                    </span>
+                    <p className={`text-xs sm:text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Products</p>
+                    {editFormData.products && editFormData.products.some(p => p.discount > 0) && (
+                      <div className="ml-2 bg-red-500/20 p-1 rounded-full" title="Contains discounted products">
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${isDarkMode ? 'text-red-400' : 'text-red-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                        </svg>
+                      </div>
+                    )}
                   </div>
                 </button>
               </div>
@@ -2218,18 +2249,67 @@ const ClientList = () => {
                               </div>
                             </div>
                           </div>
+                          
+                          {/* Add Discount Field */}
+                          <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-1">Discount (%)</label>
+                            <div className="relative">
+                              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                                <span className="text-slate-400 text-sm">%</span>
+                              </div>
+                              <input
+                                type="number"
+                                name="discount"
+                                value={productFormData.discount || ''}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  // Prevent negative values and cap at 100%
+                                  if (parseFloat(value) < 0) return;
+                                  if (parseFloat(value) > 100) return;
 
-                          {/* Add timestamp editing field */}
-                          {/* <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">Date Added</label>
-                            <input
-                              type="datetime-local"
-                              value={productFormData.timestamp ? formatDateForInput(productFormData.timestamp) : ''}
-                              onChange={handleTimestampChange}
-                              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
-                            />
-                            <p className="mt-1 text-xs text-slate-500">This controls when the product appears to have been added</p>
-                          </div> */}
+                                  setProductFormData({
+                                    ...productFormData,
+                                    discount: value === '' ? '' : parseFloat(value)
+                                  });
+                                }}
+                                min="0"
+                                max="100"
+                                step="0.01"
+                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
+                                placeholder="0"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Preview total with discount */}
+                          {(productFormData.count > 0 && productFormData.price > 0) && (
+                            <div className="bg-white/5 p-3 rounded-xl border border-white/10">
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm text-slate-300">Subtotal:</span>
+                                <span className="text-sm text-slate-300 flex items-center">
+                                  <BsCurrencyRupee />{(productFormData.count * productFormData.price).toFixed(2)}
+                                </span>
+                              </div>
+                              {productFormData.discount > 0 && (
+                                <div className="flex justify-between items-center mt-1">
+                                  <span className="text-sm text-red-400">Discount ({productFormData.discount}%):</span>
+                                  <span className="text-sm text-red-400 flex items-center">
+                                    -<BsCurrencyRupee />{((productFormData.count * productFormData.price) * (productFormData.discount / 100)).toFixed(2)}
+                                  </span>
+                                </div>
+                              )}
+                              <div className="flex justify-between items-center mt-1 pt-1 border-t border-white/10">
+                                <span className="text-sm font-medium text-emerald-400">Total:</span>
+                                <span className="text-sm font-medium text-emerald-400 flex items-center">
+                                  <BsCurrencyRupee />{
+                                    productFormData.discount > 0 
+                                    ? ((productFormData.count * productFormData.price) * (1 - (productFormData.discount / 100))).toFixed(2)
+                                    : (productFormData.count * productFormData.price).toFixed(2)
+                                  }
+                                </span>
+                              </div>
+                            </div>
+                          )}
 
                           <div className="flex justify-end gap-2 pt-2">
                             <button
@@ -2270,19 +2350,35 @@ const ClientList = () => {
                             <li key={index} className="flex items-center justify-between bg-white/5 rounded-xl p-3 border border-white/10 hover:border-emerald-500/30 transition-colors">
                               <div className="flex-1 min-w-0">
                                 <p className="text-white text-sm font-medium truncate text-left">{product.name || 'Unnamed Product'}</p>
-                                <div className="flex items-center mt-1">
-                                  <span className="text-xs text-slate-400">
-                                    {product.count} × <span className="inline-flex items-center"><BsCurrencyRupee />{typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(product.price || 0).toFixed(2)}</span> =
-                                  </span>
-                                  <span className="text-xs text-emerald-400 ml-1 font-medium">
-                                    <span className="inline-flex items-center"><BsCurrencyRupee />{(product.count * (typeof product.price === 'number' ? product.price : parseFloat(product.price || 0))).toFixed(2)}</span>
-                                  </span>
-                                </div>
-                                {/* {product.timestamp && (
-                                  <div className="mt-1 text-xs text-slate-500">
-                                    Added: {formatDate(product.timestamp)}
+                                <div className="flex flex-col mt-1">
+                                  <div className="flex items-center">
+                                    <span className="text-xs text-slate-400">
+                                      {product.count} × <span className="inline-flex items-center"><BsCurrencyRupee />{typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(product.price || 0).toFixed(2)}</span>
+                                      {product.discount > 0 && (
+                                        <span className="ml-1 text-red-400">(-{product.discount}%)</span>
+                                      )}
+                                    </span>
                                   </div>
-                                )} */}
+                                  
+                                  <div className="flex items-center mt-0.5">
+                                    <span className="text-xs text-slate-400 mr-1">Total:</span>
+                                    {product.discount > 0 && (
+                                      <span className="text-xs text-slate-500 line-through mr-2 inline-flex items-center">
+                                        <BsCurrencyRupee className="text-[10px]" />
+                                        {(product.count * (typeof product.price === 'number' ? product.price : parseFloat(product.price || 0))).toFixed(2)}
+                                      </span>
+                                    )}
+                                    <span className="text-xs text-emerald-400 font-medium inline-flex items-center">
+                                      <BsCurrencyRupee />
+                                      {product.total ? product.total.toFixed(2) : 
+                                        (product.discount ? 
+                                          ((product.count * (typeof product.price === 'number' ? product.price : parseFloat(product.price || 0))) * (1 - product.discount/100)).toFixed(2) : 
+                                          (product.count * (typeof product.price === 'number' ? product.price : parseFloat(product.price || 0))).toFixed(2)
+                                        )
+                                      }
+                                    </span>
+                                  </div>
+                                </div>
                               </div>
                               <div className="flex ml-4">
                                 <button
@@ -2761,28 +2857,79 @@ const ClientList = () => {
                     </div>
                     <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} backdrop-blur-md rounded-lg p-2.5 sm:p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} transform transition-all hover:scale-105`}>
                       <p className={`text-[10px] sm:text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Amount Paid:</p>
-                      {/* <p className="font-medium text-emerald-500 text-xs sm:text-sm md:text-base truncate flex items-center justify-center"><BsCurrencyRupee />{typeof client.amountPaid === 'number' ? client.amountPaid.toFixed(2) : '0.00'}</p> */}
-
                       <p className="font-medium text-emerald-500 text-xs sm:text-sm md:text-base truncate flex items-center justify-center"><BsCurrencyRupee />{typeof client.amountPaid === 'number' ? client.amountPaid.toFixed(2) : '0.00'}</p>
                     </div>
                     <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} backdrop-blur-md rounded-lg p-2.5 sm:p-3 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} transform transition-all hover:scale-105 xs:col-span-2 sm:col-span-1`}>
                       <p className={`text-[10px] sm:text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Balance Due:</p>
-                      <p className={`font-medium text-xs sm:text-sm md:text-base truncate flex items-center justify-center ${((typeof client.grandTotal === 'number' ? client.grandTotal : 0) - (typeof client.amountPaid === 'number' ? client.amountPaid : 0)) <= 0 ? 'text-sky-500' : 'text-amber-500'}`}>                        <BsCurrencyRupee />{((typeof client.grandTotal === 'number' ? client.grandTotal : 0) - (typeof client.amountPaid === 'number' ? client.amountPaid : 0)).toFixed(2)}                      </p>
+                      <p className={`font-medium text-xs sm:text-sm md:text-base truncate flex items-center justify-center ${((typeof client.grandTotal === 'number' ? client.grandTotal : 0) - (typeof client.amountPaid === 'number' ? client.amountPaid : 0)) <= 0 ? 'text-sky-500' : 'text-amber-500'}`}><BsCurrencyRupee />{((typeof client.grandTotal === 'number' ? client.grandTotal : 0) - (typeof client.amountPaid === 'number' ? client.amountPaid : 0)).toFixed(2)}</p>
                     </div>
                   </div>
+                  
+                  {client.products && client.products.some(p => p.discount > 0) && (
+                    <div className="mt-2 px-3 py-1.5 bg-red-500/10 rounded-lg border border-red-500/20 flex justify-between items-center">
+                      <span className={`text-[10px] ${isDarkMode ? 'text-red-400' : 'text-red-500'} flex items-center`}>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Discount Applied
+                      </span>
+                      <span className={`text-[10px] font-medium ${isDarkMode ? 'text-red-400' : 'text-red-500'} flex items-center`}>
+                        <BsCurrencyRupee />
+                        {client.products.reduce((total, product) => {
+                          if (product.discount > 0) {
+                            return total + ((product.count * product.price) * (product.discount / 100));
+                          }
+                          return total;
+                        }, 0).toFixed(2)}
+                      </span>
+                    </div>
+                  )}
 
                   {/* Products section - Updated design */}
-                  <div className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} backdrop-blur-md rounded-lg p-3 sm:p-4 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
-                    <div className="flex justify-between items-center mb-3">
+                  <div 
+                    className={`${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} backdrop-blur-md rounded-lg p-3 sm:p-4 border ${isDarkMode ? 'border-white/10' : 'border-gray-200'} ${client.products && client.products.length > 0 ? 'cursor-pointer hover:bg-white/10 transition-colors' : ''}`}
+                    onClick={() => {
+                      if (client.products && client.products.length > 0) {
+                        setSelectedProductsClient(client);
+                        setShowProductsModal(true);
+                      }
+                    }}
+                  >
+                    <div className="flex justify-between items-center">
                       <div className="flex items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 mr-2 ${isDarkMode ? 'text-emerald-400' : 'text-emerald-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                         </svg>
                         <p className={`text-xs sm:text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Products</p>
+                        {client.products && client.products.some(p => p.discount > 0) && (
+                          <div className="ml-2 bg-red-500/20 p-1 rounded-full" title="Contains discounted products">
+                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${isDarkMode ? 'text-red-400' : 'text-red-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                        )}
                       </div>
-                      <span className={`${isDarkMode ? 'bg-emerald-500/20' : 'bg-emerald-100'} text-xs ${isDarkMode ? 'text-emerald-300' : 'text-emerald-700'} px-2 py-0.5 sm:py-1 rounded-full font-medium`}>
-                        {client.products?.length || 0} items
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={`${isDarkMode ? 'bg-emerald-500/20' : 'bg-emerald-100'} text-xs ${isDarkMode ? 'text-emerald-300' : 'text-emerald-700'} px-2 py-0.5 sm:py-1 rounded-full font-medium`}>
+                          {client.products?.length || 0} items
+                        </span>
+                        {client.products && client.products.length > 0 && (
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedProductsClient(client);
+                              setShowProductsModal(true);
+                            }}
+                            className="p-1 rounded-full bg-white/5 hover:bg-white/10 text-emerald-400 transition-colors"
+                            title="View all products"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     {/* Add merged info section if this is a merged card */}
@@ -2818,63 +2965,6 @@ const ClientList = () => {
                             ))}
                           </ul>
                         </div>
-                      </div>
-                    )}
-
-                    {client.products && client.products.length > 0 ? (
-                      <div className="relative">
-                        <div className={`${isDarkMode ? 'bg-white/10' : 'bg-gray-100'} sticky top-0 z-10 rounded-t-lg`}>
-                          <div className="grid grid-cols-12 gap-2 px-3 py-2">
-                            <div className="col-span-6 text-left">
-                              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase text-left tracking-wider">Product</span>
-                            </div>
-                            <div className="col-span-3 text-left">
-                              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase text-left tracking-wider">Qty</span>
-                            </div>
-                            <div className="col-span-3 text-right">
-                              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase text-right tracking-wider">Price</span>
-                            </div>
-                            {/* <div className="col-span-3 text-right">
-                              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase text-right tracking-wider">Date</span>
-                            </div> */}
-                          </div>
-                        </div>
-                        <div className="max-h-36 overflow-y-auto custom-scrollbar">
-                          <div className="divide-y divide-gray-200 dark:divide-white/5">
-                            {client.products.map((product, index) => (
-                              <div
-                                key={index}
-                                className={`grid grid-cols-12 gap-2 px-3 py-2 ${isDarkMode ? 'hover:bg-white/5' : 'hover:bg-gray-50'} transition-colors`}
-                              >
-                                <div className="col-span-6 text-left">
-                                  <span className={`text-sm ${isDarkMode ? 'text-slate-300' : 'text-gray-700'} truncate block`}>
-                                    {product.name || 'Unnamed Product'}
-                                  </span>
-                                </div>
-                                <div className="col-span-3 text-left">
-                                  <span className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
-                                    {product.count}
-                                  </span>
-                                </div>
-                                <div className="col-span-3 text-right">
-                                  <span className={`text-xs font-medium ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'} flex items-center justify-end`}>                                    <BsCurrencyRupee />{typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(product.price || 0).toFixed(2)}                                  </span>
-                                </div>
-                                {/* <div className="col-span-3 text-left">
-                                  <span className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
-                                  {product.timestamp ? formatDate(product.timestamp) : 'N/A'}
-                                  </span>
-                                </div> */}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className={`flex items-center justify-center py-4 ${isDarkMode ? 'text-slate-500' : 'text-gray-400'} italic text-xs`}>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        No products in this order
                       </div>
                     )}
                   </div>
@@ -3297,25 +3387,85 @@ const ClientList = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                   </svg>
                   Products ({mergedClient.products ? mergedClient.products.length : 0})
+                  {mergedClient.products && mergedClient.products.some(p => p.discount > 0) && (
+                    <div className="ml-2 bg-red-500/20 p-1 rounded-full" title="Contains discounted products">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                  )}
+                  <button 
+                    onClick={() => {
+                      setSelectedProductsClient(mergedClient);
+                      setShowProductsModal(true);
+                    }}
+                    className="ml-2 p-1 rounded-full bg-white/5 hover:bg-white/10 text-emerald-400 transition-colors"
+                    title="View all products"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  </button>
                 </h4>
                 {mergedClient.products && mergedClient.products.length > 0 ? (
-                  <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+                  <div 
+                    className="bg-white/5 rounded-xl border border-white/10 overflow-hidden cursor-pointer hover:bg-white/10 transition-colors"
+                    onClick={() => {
+                      setSelectedProductsClient(mergedClient);
+                      setShowProductsModal(true);
+                    }}
+                  >
                     <table className="w-full">
                       <thead className="bg-white/10">
                         <tr>
-                          <th className="py-2.5 px-4 text-left text-xs font-medium text-slate-300">Product</th>
-                          <th className="py-2.5 px-4 text-right text-xs font-medium text-slate-300">Quantity</th>
-                          <th className="py-2.5 px-4 text-right text-xs font-medium text-slate-300">Price</th>
-                          <th className="py-2.5 px-4 text-right text-xs font-medium text-slate-300">Total</th>
+                          <th className="py-2.5 px-4 text-left text-xs font-medium text-slate-300 w-1/3">Product</th>
+                          <th className="py-2.5 px-4 text-center text-xs font-medium text-slate-300 w-1/6">Quantity</th>
+                          <th className="py-2.5 px-4 text-right text-xs font-medium text-slate-300 w-1/6">Price</th>
+                          <th className="py-2.5 px-4 text-right text-xs font-medium text-slate-300 w-1/6">
+                            {mergedClient.products.some(p => p.discount > 0) ? "Discount" : ""}
+                          </th>
+                          <th className="py-2.5 px-4 text-right text-xs font-medium text-slate-300 w-1/6">Total</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5">
                         {mergedClient.products.map((product, index) => (
-                          <tr key={index} className="text-white hover:bg-white/5">
-                            <td className="py-2.5 px-4 text-sm">{product.name}</td>
-                            <td className="py-2.5 px-4 text-xs text-right text-slate-300">{product.count}</td>
-                            <td className="py-2.5 px-4 text-xs text-right text-slate-300"><span className="flex items-center justify-end"><BsCurrencyRupee />{parseFloat(product.price).toFixed(2)}</span></td>
-                            <td className="py-2.5 px-4 text-xs text-right font-medium text-emerald-500">                              <span className="flex items-center justify-end"><BsCurrencyRupee />{(product.count * parseFloat(product.price)).toFixed(2)}</span>                            </td>
+                          <tr key={index} className="hover:bg-white/5 transition-colors">
+                            <td className="py-2.5 px-4 text-left">
+                              <div className="text-sm text-white">{product.name || 'Unnamed Product'}</div>
+                            </td>
+                            <td className="py-2.5 px-4 text-center">
+                              <div className="text-sm text-slate-300">{product.count}</div>
+                            </td>
+                            <td className="py-2.5 px-4 text-right">
+                              <div className="text-sm text-slate-300">₹{typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(product.price || 0).toFixed(2)}</div>
+                            </td>
+                            <td className="py-2.5 px-4 text-right">
+                              {product.discount > 0 ? (
+                                <div className="text-sm text-red-400 bg-red-500/10 px-2 py-1 rounded-full inline-block">{product.discount}%</div>
+                              ) : (
+                                <div className="text-sm text-slate-500">
+                                  {mergedClient.products.some(p => p.discount > 0) ? "-" : ""}
+                                </div>
+                              )}
+                            </td>
+                            <td className="py-2.5 px-4 text-right">
+                              <div className="flex flex-col items-end">
+                                {product.discount > 0 && (
+                                  <span className="text-xs line-through text-slate-500">
+                                    ₹{(product.count * product.price).toFixed(2)}
+                                  </span>
+                                )}
+                                <span className="text-sm text-emerald-400">
+                                  ₹{product.total ? product.total.toFixed(2) : 
+                                    (product.discount ? 
+                                      ((product.count * product.price) * (1 - product.discount/100)).toFixed(2) : 
+                                      (product.count * product.price).toFixed(2)
+                                    )
+                                  }
+                                </span>
+                              </div>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -3434,8 +3584,159 @@ const ClientList = () => {
           </div>
         </div>
       )}
+
+      {/* Products Modal */}
+      {showProductsModal && selectedProductsClient && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-hidden">
+          <div className="bg-slate-800 rounded-2xl w-full max-w-xl p-6 shadow-xl max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div className="mb-4 flex justify-between items-center">
+              <h3 className="text-lg font-medium text-white flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+                {selectedProductsClient.clientName || 'Client'}'s Products
+                {selectedProductsClient.products && selectedProductsClient.products.some(p => p.discount > 0) && (
+                  <div className="ml-2 bg-red-500/20 p-1 rounded-full flex items-center" title="Contains discounted products">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="text-xs text-red-400 ml-1">Discounted</span>
+                  </div>
+                )}
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowProductsModal(false);
+                  setSelectedProductsClient(null);
+                }}
+                className="text-slate-400 hover:text-white transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="bg-white/5 rounded-xl p-4 mb-5 border border-white/10">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-sm text-slate-300">Order Total:</span>
+                <span className="text-base font-medium text-white flex items-center">
+                  <BsCurrencyRupee />{selectedProductsClient.grandTotal?.toFixed(2) || '0.00'}
+                </span>
+              </div>
+              {selectedProductsClient.products && selectedProductsClient.products.some(p => p.discount > 0) && (
+                <div className="flex justify-between items-center mb-3 p-2 bg-red-500/10 rounded-lg">
+                  <span className="text-sm text-red-400">Total Discount:</span>
+                  <span className="text-sm font-medium text-red-400 flex items-center">
+                    <BsCurrencyRupee />
+                    {selectedProductsClient.products.reduce((total, product) => {
+                      if (product.discount > 0) {
+                        return total + ((product.count * product.price) * (product.discount / 100));
+                      }
+                      return total;
+                    }, 0).toFixed(2)}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {selectedProductsClient.products && selectedProductsClient.products.length > 0 ? (
+              <div>
+                <div className="grid grid-cols-12 gap-2 px-3 py-2 bg-white/10 rounded-lg mb-2">
+                  <div className="col-span-4 text-left">
+                    <span className="text-xs font-medium text-slate-300 uppercase">Product</span>
+                  </div>
+                  <div className="col-span-2 text-center">
+                    <span className="text-xs font-medium text-slate-300 uppercase">Qty</span>
+                  </div>
+                  <div className="col-span-2 text-right">
+                    <span className="text-xs font-medium text-slate-300 uppercase">Price</span>
+                  </div>
+                  <div className="col-span-2 text-right">
+                    <span className="text-xs font-medium text-slate-300 uppercase">
+                      {selectedProductsClient.products.some(p => p.discount > 0) ? "Discount" : ""}
+                    </span>
+                  </div>
+                  <div className="col-span-2 text-right">
+                    <span className="text-xs font-medium text-slate-300 uppercase">Total</span>
+                  </div>
+                </div>
+                
+                <div className="space-y-2 max-h-96 overflow-y-auto pr-1 custom-scrollbar">
+                  {selectedProductsClient.products.map((product, index) => (
+                    <div key={index} className="grid grid-cols-12 gap-2 px-3 py-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
+                      <div className="col-span-4 text-left">
+                        <span className="text-sm text-white">{product.name || 'Unnamed Product'}</span>
+                      </div>
+                      <div className="col-span-2 text-center">
+                        <span className="text-sm text-slate-300">{product.count}</span>
+                      </div>
+                      <div className="col-span-2 text-right">
+                        <span className="text-sm text-emerald-400 flex items-center justify-end">
+                          <BsCurrencyRupee />{typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(product.price || 0).toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="col-span-2 text-right">
+                        {product.discount > 0 ? (
+                          <span className="text-sm text-red-400 bg-red-500/10 px-2 py-1 rounded-full inline-block">
+                            {product.discount}%
+                          </span>
+                        ) : (
+                          <span className="text-sm text-slate-500">
+                            {selectedProductsClient.products.some(p => p.discount > 0) ? "-" : ""}
+                          </span>
+                        )}
+                      </div>
+                      <div className="col-span-2 text-right">
+                        <div className="flex flex-col items-end">
+                          {product.discount > 0 && (
+                            <span className="text-xs line-through text-slate-500">
+                              <BsCurrencyRupee className="inline text-[10px]" />
+                              {(product.count * product.price).toFixed(2)}
+                            </span>
+                          )}
+                          <span className="text-sm text-emerald-400 flex items-center justify-end">
+                            <BsCurrencyRupee />
+                            {product.total ? product.total.toFixed(2) : 
+                              (product.discount ? 
+                                ((product.count * product.price) * (1 - product.discount/100)).toFixed(2) : 
+                                (product.count * product.price).toFixed(2)
+                              )
+                            }
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="py-8 text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-slate-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+                <p className="text-slate-400">No products found in this order</p>
+              </div>
+            )}
+
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowProductsModal(false);
+                  setSelectedProductsClient(null);
+                }}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default ClientList; 
+export default ClientList;

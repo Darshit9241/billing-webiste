@@ -793,6 +793,20 @@ const OrderDetail = () => {
                   })}
                 </span>
               </div>
+              
+              {/* Discount indicator - only shows when products have discounts */}
+              {orderData.products && orderData.products.some(product => product.discount > 0) && (
+                <div className="w-full mt-3 pt-3 border-t border-gray-200 flex items-center">
+                  <div className="flex items-center bg-red-50 text-red-600 px-3 py-1 rounded-lg border border-red-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="text-xs font-medium">
+                      This order includes {orderData.products.filter(p => p.discount > 0).length} product(s) with discounts
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -884,6 +898,10 @@ const OrderDetail = () => {
                   <th scope="col" className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Item</th>
                   <th scope="col" className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Qty</th>
                   <th scope="col" className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Price</th>
+                  {/* Only show discount column if at least one product has a discount */}
+                  {orderData.products && orderData.products.some(product => product.discount > 0) && (
+                    <th scope="col" className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-red-500 uppercase tracking-wider print:bg-gray-100">Discount</th>
+                  )}
                   <th scope="col" className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider print:bg-gray-100">Amount</th>
                 </tr>
               </thead>
@@ -893,8 +911,36 @@ const OrderDetail = () => {
                     <td className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs text-gray-500">{index + 1}</td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium text-gray-900">{product.name || 'Product Item'}</td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 text-right">{product.count}</td>
-                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 text-right">₹{product.price}</td>
-                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 text-right">₹{product.total}</td>
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 text-right">
+                      {product.discount > 0 ? (
+                        <div className="flex flex-col items-end">
+                          <span className="line-through text-gray-400">₹{product.price}</span>
+                          <span className="text-emerald-600">₹{(product.price * (1 - product.discount/100)).toFixed(2)}</span>
+                        </div>
+                      ) : (
+                        `₹${product.price}`
+                      )}
+                    </td>
+                    {/* Only show discount column if at least one product has a discount */}
+                    {orderData.products && orderData.products.some(p => p.discount > 0) && (
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-right">
+                        {product.discount > 0 ? (
+                          <span className="text-red-500">{product.discount}%</span>
+                        ) : (
+                          "-"
+                        )}
+                      </td>
+                    )}
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 text-right">
+                      {product.discount > 0 ? (
+                        <div className="flex flex-col items-end">
+                          <span className="line-through text-gray-400">₹{(product.count * product.price).toFixed(2)}</span>
+                          <span className="text-emerald-600">₹{product.total}</span>
+                        </div>
+                      ) : (
+                        `₹${product.total}`
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -909,6 +955,35 @@ const OrderDetail = () => {
               <div className="lg:col-span-12">
                 <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border border-gray-100 shadow-sm print:bg-white print:border">
                   <div className="space-y-2">
+                    {/* Calculate subtotal (before discount) if any products have discounts */}
+                    {orderData.products && orderData.products.some(product => product.discount > 0) && (
+                      <div className="flex justify-between text-sm text-gray-600 pb-2">
+                        <span>Subtotal (before discount)</span>
+                        <span className="font-medium flex items-center">
+                          ₹{orderData.products.reduce((sum, product) => {
+                            return sum + (product.count * product.price);
+                          }, 0).toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {/* Show total discount amount if any discounts applied */}
+                    {orderData.products && orderData.products.some(product => product.discount > 0) && (
+                      <div className="flex justify-between text-sm text-red-600 pb-2">
+                        <span>Discount</span>
+                        <span className="font-medium flex items-center">
+                          -₹{orderData.products.reduce((sum, product) => {
+                            if (product.discount > 0) {
+                              const productTotal = product.count * product.price;
+                              const discountAmount = productTotal * (product.discount / 100);
+                              return sum + discountAmount;
+                            }
+                            return sum;
+                          }, 0).toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+                    
                     <div className="flex justify-between text-sm text-gray-600 pb-2">
                       <span>Subtotal</span>
                       <span className="font-medium flex items-center">₹{typeof orderData.grandTotal === 'number' ? orderData.grandTotal.toFixed(2) : '0.00'}</span>

@@ -18,7 +18,7 @@ const AddProducts = () => {
     new Date().toISOString().split("T")[0]
   ); // Add state for order date
   const [products, setProducts] = useState([
-    { id: 1, name: "", count: "", price: "", total: 0 },
+    { id: 1, name: "", count: "", price: "", discount: "", total: 0 },
   ]);
   const [saveStatus, setSaveStatus] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -186,6 +186,7 @@ const AddProducts = () => {
           name: "",
           count: "",
           price: "",
+          discount: "",
           total: 0,
         },
       ]);
@@ -305,7 +306,7 @@ const AddProducts = () => {
         const currentIndex = products.findIndex((p) => p.id === id);
         // Define field sequence based on bill mode
         const fieldSequence =
-          billMode === "full" ? ["name", "count", "price"] : ["count", "price"];
+          billMode === "full" ? ["name", "count", "price", "discount"] : ["count", "price", "discount"];
 
         const currentFieldIndex = fieldSequence.indexOf(field);
         const nextField = fieldSequence[currentFieldIndex + 1];
@@ -344,7 +345,7 @@ const AddProducts = () => {
   }, [products.length, billMode]);
 
   const handleChange = (id, field, value) => {
-    // Validation for count and price fields
+    // Validation for count, price, and discount fields
     if (field === "count") {
       // Remove any non-numeric characters except decimal point
       value = value.replace(/[^0-9]/g, "");
@@ -357,7 +358,7 @@ const AddProducts = () => {
           value = Math.max(0, numValue).toString();
         }
       }
-    } else if (field === "price") {
+    } else if (field === "price" || field === "discount") {
       // Remove any non-numeric characters except decimal point
       value = value.replace(/[^0-9.]/g, "");
 
@@ -372,7 +373,12 @@ const AddProducts = () => {
         const numValue = parseFloat(value);
         // Ensure value is not negative and is a valid number
         if (!isNaN(numValue)) {
-          value = Math.max(0, numValue).toString();
+          // For discount, ensure it's not more than 100%
+          if (field === "discount" && numValue > 100) {
+            value = "100";
+          } else {
+            value = Math.max(0, numValue).toString();
+          }
         }
       }
     }
@@ -381,16 +387,22 @@ const AddProducts = () => {
       if (product.id === id) {
         const updatedProduct = { ...product, [field]: value };
 
-        // Recalculate total when count or price changes
-        if (field === "count" || field === "price") {
+        // Recalculate total when count, price, or discount changes
+        if (field === "count" || field === "price" || field === "discount") {
           // Convert empty strings to 0
-          const count =
-            updatedProduct.count === "" ? 0 : parseFloat(updatedProduct.count);
-          const price =
-            updatedProduct.price === "" ? 0 : parseFloat(updatedProduct.price);
+          const count = updatedProduct.count === "" ? 0 : parseFloat(updatedProduct.count);
+          const price = updatedProduct.price === "" ? 0 : parseFloat(updatedProduct.price);
+          const discount = updatedProduct.discount === "" ? 0 : parseFloat(updatedProduct.discount);
+
+          // Calculate subtotal before discount
+          const subtotal = count * price;
+          
+          // Apply discount
+          const discountAmount = subtotal * (discount / 100);
+          const discountedTotal = subtotal - discountAmount;
 
           // Calculate total with two decimal places and ensure it's a number
-          updatedProduct.total = parseFloat((count * price).toFixed(2));
+          updatedProduct.total = parseFloat(discountedTotal.toFixed(2));
         }
 
         // If this is a new product being edited for the first time, add a timestamp
@@ -415,6 +427,7 @@ const AddProducts = () => {
       name: "",
       count: "",
       price: "",
+      discount: "",
       total: 0,
       timestamp: Date.now(), // Add timestamp for the new product
     };
@@ -548,6 +561,39 @@ const AddProducts = () => {
       return false;
     }
 
+    // Check for invalid discount values (more than 100%)
+    const invalidDiscountProducts = products.filter(
+      (product) => product.discount && parseFloat(product.discount) > 100
+    );
+
+    if (invalidDiscountProducts.length > 0) {
+      setErrorMessage("Discount cannot be more than 100%");
+      setShowErrorModal(true);
+
+      // Focus on the first invalid discount field
+      const firstInvalidProduct = invalidDiscountProducts[0];
+      setTimeout(() => {
+        const focusRef = productRefs.current[`${firstInvalidProduct.id}_discount`];
+        if (focusRef) {
+          focusRef.focus();
+          focusRef.scrollIntoView({ behavior: "smooth", block: "center" });
+
+          // Add visual highlighting to the field
+          const originalBorderColor = focusRef.style.borderColor;
+          focusRef.style.borderColor = "#ef4444"; // red-500
+          focusRef.style.boxShadow = "0 0 0 3px rgba(239, 68, 68, 0.3)";
+
+          // Remove highlighting after a short delay
+          setTimeout(() => {
+            focusRef.style.borderColor = originalBorderColor;
+            focusRef.style.boxShadow = "";
+          }, 2000);
+        }
+      }, 500);
+
+      return false;
+    }
+
     return true;
   };
 
@@ -619,43 +665,61 @@ const AddProducts = () => {
             }
           })
           .map((product) => {
-            // Ensure total is properly calculated as a number
+            // Ensure total is properly calculated as a number with discount applied
             const count = parseFloat(product.count || 0);
             const price = parseFloat(product.price || 0);
+            const discount = parseFloat(product.discount || 0);
+            
+            // Calculate subtotal and apply discount
+            const subtotal = count * price;
+            const discountAmount = subtotal * (discount / 100);
+            const discountedTotal = subtotal - discountAmount;
+            
             return {
               ...product,
               count: count,
               price: price,
-              total: parseFloat((count * price).toFixed(2)),
+              discount: discount,
+              subtotal: parseFloat(subtotal.toFixed(2)),
+              discountAmount: parseFloat(discountAmount.toFixed(2)),
+              total: parseFloat(discountedTotal.toFixed(2)),
             };
           });
 
         // Combine products (keeping existing products and adding new ones)
         const combinedProducts = [
           ...existingProducts.map((product) => {
-            // Ensure existing products also have numeric values and correct totals
+            // Ensure existing products also have numeric values and correct totals with discount
             const count = parseFloat(product.count || 0);
             const price = parseFloat(product.price || 0);
+            const discount = parseFloat(product.discount || 0);
+            
+            // Calculate or preserve existing values
+            const subtotal = count * price;
+            const discountAmount = subtotal * (discount / 100);
+            const discountedTotal = product.total || (subtotal - discountAmount);
+            
             return {
               ...product,
               count: count,
               price: price,
-              total: parseFloat((count * price).toFixed(2)),
+              discount: discount,
+              subtotal: parseFloat(subtotal.toFixed(2)),
+              discountAmount: parseFloat(discountAmount.toFixed(2)),
+              total: parseFloat(discountedTotal.toFixed(2)),
             };
           }),
           ...validNewProducts.filter((p) => !productIds.has(p.id)),
         ];
 
-        // Calculate new grand total based on all products
+        // Calculate new grand total based on all products with discounts applied
         const updatedGrandTotal = parseFloat(
           combinedProducts
             .reduce((sum, product) => {
-              // Make sure we're adding numeric values
-              const productTotal =
-                typeof product.total === "number"
-                  ? product.total
-                  : parseFloat(product.count || 0) *
-                    parseFloat(product.price || 0);
+              // Make sure we're adding numeric values with discount applied
+              const productTotal = typeof product.total === "number" 
+                ? product.total 
+                : parseFloat(product.total || 0);
               return sum + productTotal;
             }, 0)
             .toFixed(2)
@@ -702,7 +766,7 @@ const AddProducts = () => {
           });
         }
 
-        // Filter out empty products and ensure correct data types for all fields
+        // Filter out empty products and ensure correct data types for all fields including discount
         const validProducts = products
           .filter((product) => {
             if (billMode === "full") {
@@ -715,14 +779,31 @@ const AddProducts = () => {
             // Convert all numeric fields to ensure they're numbers, not strings
             const count = parseFloat(product.count || 0);
             const price = parseFloat(product.price || 0);
+            const discount = parseFloat(product.discount || 0);
+            
+            // Calculate subtotal and apply discount
+            const subtotal = count * price;
+            const discountAmount = subtotal * (discount / 100);
+            const discountedTotal = subtotal - discountAmount;
+            
             return {
               ...product,
               count: count,
               price: price,
-              total: parseFloat((count * price).toFixed(2)),
+              discount: discount,
+              subtotal: parseFloat(subtotal.toFixed(2)),
+              discountAmount: parseFloat(discountAmount.toFixed(2)),
+              total: parseFloat(discountedTotal.toFixed(2)),
               timestamp: product.timestamp || Date.now(), // Ensure all products have a timestamp
             };
           });
+
+        // Calculate grand total with discounts applied
+        const grandTotalWithDiscount = parseFloat(
+          validProducts
+            .reduce((sum, product) => sum + product.total, 0)
+            .toFixed(2)
+        );
 
         // Create order data object
         const orderData = {
@@ -731,14 +812,10 @@ const AddProducts = () => {
           clientPhone,
           clientGst,
           orderDate, // Include order date in new orders
-          products: validProducts, // Use the filtered and processed products
-          grandTotal: parseFloat(
-            validProducts
-              .reduce((sum, product) => sum + product.total, 0)
-              .toFixed(2)
-          ),
+          products: validProducts, // Use the filtered and processed products with discount info
+          grandTotal: grandTotalWithDiscount, // Use the discounted grand total
           paymentStatus:
-            initialPaymentAmount >= grandTotal ? "cleared" : "pending",
+            initialPaymentAmount >= grandTotalWithDiscount ? "cleared" : "pending",
           orderStatus, // Include order status in new orders
           amountPaid: initialPaymentAmount,
           timestamp: Date.now(),
@@ -780,7 +857,7 @@ const AddProducts = () => {
     setClientPhone("");
     setClientGst("");
     setOrderDate(new Date().toISOString().split("T")[0]); // Reset date to today
-    setProducts([{ id: 1, name: "", count: "", price: "", total: 0 }]);
+    setProducts([{ id: 1, name: "", count: "", price: "", discount: "", total: 0 }]);
     setAmountPaid("");
     setPaymentStatus("pending");
     setOrderStatus("sell"); // Reset order status
@@ -2057,26 +2134,21 @@ const AddProducts = () => {
                   )}
                   <div
                     className={
-                      billMode === "full" ? "col-span-2" : "col-span-4"
+                      billMode === "full" ? "col-span-2" : "col-span-3"
                     }
                   >
                     Quantity
                   </div>
                   <div
                     className={
-                      billMode === "full" ? "col-span-2" : "col-span-4"
+                      billMode === "full" ? "col-span-2" : "col-span-3"
                     }
                   >
                     Price
                   </div>
-                  <div
-                    className={
-                      billMode === "full" ? "col-span-3" : "col-span-2"
-                    }
-                  >
-                    Total
-                  </div>
-                  <div className="col-span-2">Action</div>
+                  <div className="col-span-2">Discount (%)</div>
+                  <div className="col-span-2">Total</div>
+                  <div className="col-span-1">Action</div>
                 </div>
 
                 <div
@@ -2201,20 +2273,65 @@ const AddProducts = () => {
                                 if (e.key === "-" || e.key === "_") {
                                   e.preventDefault();
                                 }
-                                handleKeyPress(
-                                  e,
-                                  product.id,
-                                  "price",
-                                  product.id ===
-                                    products[products.length - 1].id
-                                );
+                                handleKeyPress(e, product.id, "price", product.id === products[products.length - 1].id);
                               }}
                               title="Please enter a positive number"
                             />
                           </div>
                         </div>
+                        
+                        {/* Add Discount Field for Mobile */}
+                        <div className="mb-3">
+                          <label
+                            className={`block text-sm font-medium ${
+                              darkMode ? "text-gray-300" : "text-gray-700"
+                            } mb-1`}
+                          >
+                            Discount (%)
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              className={`w-full p-3 pl-6 border ${
+                                darkMode
+                                  ? "border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400"
+                                  : "border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
+                              } rounded-xl transition-all duration-200 text-base`}
+                              value={product.discount}
+                              onChange={(e) =>
+                                handleChange(
+                                  product.id,
+                                  "discount",
+                                  e.target.value
+                                )
+                              }
+                              placeholder="0"
+                              min="0"
+                              max="100"
+                              ref={(el) =>
+                                (productRefs.current[`${product.id}_discount`] = el)
+                              }
+                              onKeyDown={(e) => {
+                                // Prevent "-" and "_" characters
+                                if (e.key === "-" || e.key === "_") {
+                                  e.preventDefault();
+                                }
+                                handleKeyPress(
+                                  e,
+                                  product.id,
+                                  "discount",
+                                  product.id === products[products.length - 1].id
+                                );
+                              }}
+                              title="Please enter a discount percentage (0-100)"
+                            />
+                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">%</span>
+                          </div>
+                        </div>
+                        
                         <div className="mb-3 flex flex-col sm:flex-row gap-3 justify-between">
-                          <div className="w-full sm:w-1/2">
+                          <div className="w-full">
                             <label
                               className={`block text-sm font-medium ${
                                 darkMode ? "text-gray-300" : "text-gray-700"
@@ -2229,7 +2346,34 @@ const AddProducts = () => {
                                   : "bg-indigo-50 text-indigo-800 border-indigo-100"
                               } rounded-xl font-medium border text-base`}
                             >
-                              ₹ {product.total.toFixed(2)}
+                              {/* Calculate subtotal, discount amount and final total */}
+                              {(() => {
+                                const count = parseFloat(product.count || 0);
+                                const price = parseFloat(product.price || 0);
+                                const discount = parseFloat(product.discount || 0);
+                                const subtotal = count * price;
+                                const discountAmount = subtotal * (discount / 100);
+                                const finalTotal = subtotal - discountAmount;
+                                
+                                return (
+                                  <div className="flex flex-col text-xs">
+                                    <div className="flex justify-between mb-1">
+                                      <span>Subtotal:</span>
+                                      <span>₹ {subtotal.toFixed(2)}</span>
+                                    </div>
+                                    {discount > 0 && (
+                                      <div className="flex justify-between mb-1 text-red-400">
+                                        <span>Discount ({discount}%):</span>
+                                        <span>-₹ {discountAmount.toFixed(2)}</span>
+                                      </div>
+                                    )}
+                                    <div className="flex justify-between font-bold text-sm pt-1 border-t border-gray-500 border-opacity-30 mt-1">
+                                      <span>Total:</span>
+                                      <span>₹ {finalTotal.toFixed(2)}</span>
+                                    </div>
+                                  </div>
+                                );
+                              })()}
                             </div>
                           </div>
                           <div className="flex items-end">
@@ -2284,7 +2428,7 @@ const AddProducts = () => {
                         className={`hidden md:block ${
                           billMode === "full"
                             ? "md:col-span-2"
-                            : "md:col-span-4"
+                            : "md:col-span-3"
                         }`}
                       >
                         <input
@@ -2319,7 +2463,7 @@ const AddProducts = () => {
                         className={`hidden md:block ${
                           billMode === "full"
                             ? "md:col-span-2"
-                            : "md:col-span-4"
+                            : "md:col-span-3"
                         }`}
                       >
                         <input
@@ -2345,22 +2489,54 @@ const AddProducts = () => {
                             if (e.key === "-" || e.key === "_") {
                               e.preventDefault();
                             }
-                            handleKeyPress(
-                              e,
-                              product.id,
-                              "price",
-                              product.id === products[products.length - 1].id
-                            );
+                            handleKeyPress(e, product.id, "price", product.id === products[products.length - 1].id);
                           }}
                           title="Please enter a positive number"
                         />
                       </div>
+                      
+                      {/* Add Discount Field */}
+                      <div className="hidden md:block md:col-span-2">
+                        <div className="relative">
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            className={`w-full p-3 pl-6 border ${
+                              darkMode
+                                ? "border-gray-600 bg-gray-700 text-white focus:ring-indigo-400 focus:border-indigo-400"
+                                : "border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
+                            } rounded-xl transition-all duration-200`}
+                            value={product.discount}
+                            onChange={(e) =>
+                              handleChange(product.id, "discount", e.target.value)
+                            }
+                            placeholder="0"
+                            min="0"
+                            max="100"
+                            step="0.01"
+                            ref={(el) =>
+                              (productRefs.current[`${product.id}_discount`] = el)
+                            }
+                            onKeyDown={(e) => {
+                              // Prevent "-" and "_" characters
+                              if (e.key === "-" || e.key === "_") { 
+                                e.preventDefault();
+                              }
+                              handleKeyPress(
+                                e,
+                                product.id,
+                                "discount",
+                                product.id === products[products.length - 1].id
+                              );
+                            }}
+                            title="Please enter a discount percentage (0-100)"
+                          />
+                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">%</span>
+                        </div>
+                      </div>
+                      
                       <div
-                        className={`hidden md:block font-medium ${
-                          billMode === "full"
-                            ? "md:col-span-3"
-                            : "md:col-span-2"
-                        }`}
+                        className={`hidden md:block font-medium md:col-span-2`}
                       >
                         <div
                           className={`p-3 ${
@@ -2369,17 +2545,45 @@ const AddProducts = () => {
                               : "bg-indigo-50 text-indigo-800 border-indigo-100"
                           } rounded-xl border`}
                         >
-                          ₹ {product.total.toFixed(2)}
+                          {/* Calculate subtotal, discount amount and final total */}
+                          {(() => {
+                            const count = parseFloat(product.count || 0);
+                            const price = parseFloat(product.price || 0);
+                            const discount = parseFloat(product.discount || 0);
+                            const subtotal = count * price;
+                            const discountAmount = subtotal * (discount / 100);
+                            const finalTotal = subtotal - discountAmount;
+                            
+                            return (
+                              <div className="flex flex-col text-xs">
+                                <div className="flex justify-between mb-1">
+                                  <span>Subtotal:</span>
+                                  <span>₹ {subtotal.toFixed(2)}</span>
+                                </div>
+                                {/* {discount > 0 && (
+                                  <div className="flex justify-between mb-1 text-red-400">
+                                    <span>Discount ({discount}%):</span>
+                                    <span>-₹ {discountAmount.toFixed(2)}</span>
+                                  </div>
+                                )} */}
+                                <div className="flex justify-between font-bold text-sm pt-1 border-t border-gray-500 border-opacity-30 mt-1">
+                                  <span>Total:</span>
+                                  <span>₹ {finalTotal.toFixed(2)}</span>
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
                       </div>
-                      <div className="hidden md:block md:col-span-2 lg:flex md:justify-center">
+                      
+                      <div className="hidden md:block md:col-span-1 lg:flex md:justify-center">
                         <button
                           className="flex items-center p-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all duration-300"
                           onClick={() => removeProduct(product.id)}
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5 mr-1"
+                            className="h-5 w-5"
                             viewBox="0 0 20 20"
                             fill="currentColor"
                           >
@@ -2389,7 +2593,6 @@ const AddProducts = () => {
                               clipRule="evenodd"
                             />
                           </svg>
-                          Remove
                         </button>
                       </div>
                     </div>

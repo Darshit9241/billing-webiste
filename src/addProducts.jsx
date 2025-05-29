@@ -2554,7 +2554,7 @@ const AddProducts = () => {
                         className={`hidden md:block font-medium md:col-span-2`}
                       >
                         <div
-                          className={`p-3 ${
+                          className={`px-1 py-2 ${
                             darkMode
                               ? "bg-gray-600 text-indigo-300 border-gray-700"
                               : "bg-indigo-50 text-indigo-800 border-indigo-100"

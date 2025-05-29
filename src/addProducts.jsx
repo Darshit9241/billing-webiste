@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   createClient,
   fetchAllClients,
@@ -10,6 +10,7 @@ import { database } from "./firebase/config";
 
 const AddProducts = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [clientName, setClientName] = useState("");
   const [clientAddress, setClientAddress] = useState("");
   const [clientPhone, setClientPhone] = useState("");
@@ -81,6 +82,20 @@ const AddProducts = () => {
       document.documentElement.classList.remove("dark");
     }
   }, []);
+
+  // Focus on client name field when component mounts or when returning from clients page
+  useEffect(() => {
+    // Check if we're coming back from the clients page
+    const timer = setTimeout(() => {
+      if (billMode !== "existing" && clientNameRef.current) {
+        clientNameRef.current.focus();
+      } else if (billMode === "existing" && orderIdRef.current) {
+        orderIdRef.current.focus();
+      }
+    }, 100); // Small delay to ensure DOM is ready
+    
+    return () => clearTimeout(timer);
+  }, [billMode, location.pathname]);
 
   // Toggle dark mode
   const toggleDarkMode = () => {

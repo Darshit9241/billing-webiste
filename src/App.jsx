@@ -12,6 +12,7 @@ import Dashboard from './Dashboard';
 import ExpenseTracker from './ExpenseTracker';
 import NotificationsPage from './components/NotificationsPage';
 import DailyOrders from './DailyOrders';
+import AllPaymentHistory from './AllPaymentHistory';
 //   import React, { useState, useEffect } from 'react';
 
 // // Simple error boundary component
@@ -103,6 +104,7 @@ function App() {
               <Route path="/all-client-orders" element={<AllClientOrders />} />
               <Route path="/all-clients/:clientName" element={<ClientNameOrders />} />
               <Route path="/all-clients" element={<AllClients />} />
+              <Route path="/payment-history" element={<AllPaymentHistory />} />
               <Route path="/expenses" element={<ExpenseTracker />} />
               <Route path="/notifications" element={<NotificationsPage />} />
               <Route path="/daily-orders" element={<DailyOrders />} />

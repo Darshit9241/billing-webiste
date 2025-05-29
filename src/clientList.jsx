@@ -1817,7 +1817,7 @@ const ClientList = () => {
                   </button>
                 )}
               </div>
-              {searchQuery && (
+              {/* {searchQuery && (
                 <button
                   onClick={clearSearchQuery}
                   className={`absolute inset-y-0 ${mergeMode ? 'right-28' : 'right-8'} flex items-center pr-3`}
@@ -1826,7 +1826,7 @@ const ClientList = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
-              )}
+              )} */}
             </div>
           </div>
         </div>

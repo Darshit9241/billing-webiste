@@ -3433,8 +3433,7 @@ const ClientList = () => {
                   </div>
                   <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                     <p className="text-xs text-slate-400 mb-1">Balance Due</p>
-                    <p className={`text-xl font-bold ${(mergedClient.grandTotal - mergedClient.amountPaid) <= 0 ? 'text-sky-500' : 'text-amber-500'}`}>
-                      <BsCurrencyRupee />{(mergedClient.grandTotal - mergedClient.amountPaid).toFixed(2)}                    </p>
+                    <p className={`text-xl font-bold flex items-center ${(mergedClient.grandTotal - mergedClient.amountPaid) <= 0 ? 'text-sky-500' : 'text-amber-500'}`}><BsCurrencyRupee />{(mergedClient.grandTotal - mergedClient.amountPaid).toFixed(2)}</p>
                   </div>
                 </div>
               </div>

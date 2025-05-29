@@ -433,6 +433,7 @@ const OrderDetail = () => {
     (typeof orderData.amountPaid === 'number' ? orderData.amountPaid : 0);
   const isPaid = balanceDue <= 0 || orderData.paymentStatus === 'cleared';
 
+
   return (
     <div className="min-h-screen bg-gradient-to-r from-gray-50 to-gray-100 py-4 sm:py-6 md:py-8 px-2 sm:px-4 md:px-6 print:py-0 print:px-0">
       <div className="max-w-5xl mx-auto bg-white shadow-xl rounded-xl overflow-hidden print:shadow-none border border-gray-100">
@@ -1002,8 +1003,9 @@ const OrderDetail = () => {
                       </span>
                     </div>
                     <div className="flex justify-between text-base font-bold pt-2">
-                      <span className={isPaid ? 'text-green-600' : 'text-red-600'}>Balance Due</span>
-                      <span className={isPaid ? 'text-green-600' : 'text-red-600'} style={{ display: 'flex', alignItems: 'center' }}>₹{Math.max(0, balanceDue).toFixed(2)}
+                      <span className={balanceDue < 0 ? 'text-blue-600' : isPaid ? 'text-green-600' : 'text-red-600'}>Balance Due</span>
+                      <span className={balanceDue < 0 ? 'text-blue-600' : isPaid ? 'text-green-600' : 'text-red-600'} style={{ display: 'flex', alignItems: 'center' }}>
+                      ₹{balanceDue}
                       </span>
                     </div>
                   </div>

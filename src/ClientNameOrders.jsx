@@ -1121,49 +1121,57 @@ const ClientNameOrders = () => {
         
         {/* Sort controls */}
         <div className="mb-6">
-          <div className="flex flex-wrap gap-2">
-            <SortButton 
-              field="timestamp" 
-              label="Date" 
-              currentSort={sortField} 
-              direction={sortDirection} 
-              onClick={handleSort} 
-            />
-            <SortButton 
-              field="grandTotal" 
-              label="Total" 
-              currentSort={sortField} 
-              direction={sortDirection} 
-              onClick={handleSort} 
-            />
-            <SortButton 
-              field="amountPaid" 
-              label="Paid" 
-              currentSort={sortField} 
-              direction={sortDirection} 
-              onClick={handleSort} 
-            />
-            <SortButton 
-              field="balanceDue" 
-              label="Due" 
-              currentSort={sortField} 
-              direction={sortDirection} 
-              onClick={handleSort} 
-            />
-            <SortButton 
-              field="paymentStatus" 
-              label="Payment Status" 
-              currentSort={sortField} 
-              direction={sortDirection} 
-              onClick={handleSort} 
-            />
-            <SortButton 
-              field="orderStatus" 
-              label="Order Type" 
-              currentSort={sortField} 
-              direction={sortDirection} 
-              onClick={handleSort} 
-            />
+          <div className="flex flex-wrap gap-2 justify-between items-center">
+            <div className="flex flex-wrap gap-2">
+              <SortButton 
+                field="timestamp" 
+                label="Date" 
+                currentSort={sortField} 
+                direction={sortDirection} 
+                onClick={handleSort} 
+              />
+              <SortButton 
+                field="grandTotal" 
+                label="Total" 
+                currentSort={sortField} 
+                direction={sortDirection} 
+                onClick={handleSort} 
+              />
+              <SortButton 
+                field="amountPaid" 
+                label="Paid" 
+                currentSort={sortField} 
+                direction={sortDirection} 
+                onClick={handleSort} 
+              />
+              <SortButton 
+                field="balanceDue" 
+                label="Due" 
+                currentSort={sortField} 
+                direction={sortDirection} 
+                onClick={handleSort} 
+              />
+              <SortButton 
+                field="paymentStatus" 
+                label="Payment Status" 
+                currentSort={sortField} 
+                direction={sortDirection} 
+                onClick={handleSort} 
+              />
+              <SortButton 
+                field="orderStatus" 
+                label="Order Type" 
+                currentSort={sortField} 
+                direction={sortDirection} 
+                onClick={handleSort} 
+              />
+            </div>
+            
+            {/* Legend for red dot indicator */}
+            <div className={`flex items-center ${isDarkMode ? 'text-slate-300' : 'text-gray-600'} text-xs`}>
+              <span className="inline-block h-3 w-3 bg-red-500 rounded-full mr-2"></span>
+              <span>Discounted products</span>
+            </div>
           </div>
         </div>
         
@@ -1546,6 +1554,10 @@ const ClientNameOrders = () => {
                 {sortedOrders.map((order) => {
                   const isSelected = selectedOrders.some(o => o.id === order.id);
                   const isDisabled = order.isEnabled === false;
+                  // Check if any product has a discount
+                  const hasDiscount = order.products && order.products.some(product => 
+                    product.discount && parseFloat(product.discount) > 0
+                  );
                   return (
                   <div 
                     key={order.id} 
@@ -1604,8 +1616,14 @@ const ClientNameOrders = () => {
                     <div className={`p-5 ${isDarkMode ? 'bg-gradient-to-r from-slate-800/80 to-slate-700/80' : 'bg-gradient-to-r from-gray-50 to-gray-100'} border-b ${isDarkMode ? 'border-slate-600/30' : 'border-gray-200'}`}>
                       <div className="flex justify-between items-start">
                         <div>
-                          <h3 className={`font-semibold text-left text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                          <h3 className={`font-semibold text-left text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'} flex items-center`}>
                             {order.merged ? '🔄 ' : ''}Order #{order.id.substring(0, 8)}
+                            {hasDiscount && (
+                              <span 
+                                className="inline-block ml-2 h-3 w-3 bg-red-500 rounded-full animate-pulse"
+                                title="This order contains discounted products"
+                              ></span>
+                            )}
                           </h3>
                           <p className={`text-xs text-left ${isDarkMode ? 'text-slate-400' : 'text-gray-500'} mt-1`}>
                             {formatDate(order.orderDate || order.timestamp)}
@@ -1705,6 +1723,10 @@ const ClientNameOrders = () => {
                         const balanceDue = (parseFloat(order.grandTotal) || 0) - (parseFloat(order.amountPaid) || 0);
                         const isSelected = selectedOrders.some(o => o.id === order.id);
                         const isDisabled = order.isEnabled === false;
+                        // Check if any product has a discount
+                        const hasDiscount = order.products && order.products.some(product => 
+                          product.discount && parseFloat(product.discount) > 0
+                        );
                         return (
                           <tr 
                             key={order.id} 
@@ -1733,6 +1755,12 @@ const ClientNameOrders = () => {
                             )}
                             <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium text-left ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                               {order.merged ? '🔄 ' : ''}#{order.id.substring(0, 8)}
+                              {hasDiscount && (
+                                <span 
+                                  className="inline-block ml-2 h-3 w-3 bg-red-500 rounded-full animate-pulse" 
+                                  title="This order contains discounted products"
+                                ></span>
+                              )}
                             </td>
                             <td className={`px-6 py-4 whitespace-nowrap text-sm text-left ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>{formatDate(order.orderDate || order.orderDate)}</td>
                             <td className={`px-6 py-4 whitespace-nowrap text-sm text-center ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>₹{parseFloat(order.grandTotal || 0).toFixed(2)}</td>

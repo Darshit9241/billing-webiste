@@ -2185,6 +2185,7 @@ const ClientList = () => {
 
                     <div className="flex flex-col md:flex-row md:gap-10">
                       <div>
+                        {/* <label className="block text-sm font-medium text-slate-300 mb-1">Payment Status</label> */}
                         <div className="flex items-center space-x-4">
                         <label className="inline-flex items-center cursor-pointer">
                           <input
@@ -2224,6 +2225,7 @@ const ClientList = () => {
 
                     {/* Order Status field */}
                     <div>
+                      {/* <label className="block text-sm font-medium text-slate-300 mb-1">Order Status</label> */}
                       <div className="flex items-center space-x-4">
                         <label className="inline-flex items-center cursor-pointer">
                           <input

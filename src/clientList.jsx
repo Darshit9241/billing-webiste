@@ -2183,53 +2183,43 @@ const ClientList = () => {
                       </div>
                     )}
 
-                    <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-1">Payment Status</label>
-                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={() => setShowPaymentStatusDropdown(!showPaymentStatusDropdown)}
-                          className={`w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 flex items-center justify-between`}
-                        >
-                          <span className="flex items-center">
-                            <span className={`w-2 h-2 rounded-full mr-2 ${editFormData.paymentStatus === 'cleared' ? 'bg-sky-500' : 'bg-amber-500'}`}></span>
-                            {editFormData.paymentStatus === 'cleared' ? 'Cleared' : 'Pending'}
-                          </span>
-                          <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transform transition-transform duration-200 ${showPaymentStatusDropdown ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </button>
+                    <div className="flex flex-col md:flex-row md:gap-10">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-1">Payment Status</label>
+                        <div className="flex items-center space-x-4">
+                        <label className="inline-flex items-center cursor-pointer">
+                          <input
+                            type="radio"
+                            className="sr-only peer"
+                            name="paymentStatus"
+                            value="pending"
+                            checked={editFormData.paymentStatus === 'pending'}
+                            onChange={() => setEditFormData({ ...editFormData, paymentStatus: 'pending' })}
+                          />
+                          <div className="w-10 h-5 bg-slate-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-amber-500/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-600 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-600 relative"></div>
+                          <span className="ml-2 text-sm text-slate-300">Pending</span>
+                        </label>
 
-                        {showPaymentStatusDropdown && (
-                          <div className="absolute z-10 w-full mt-1 bg-slate-700 rounded-xl shadow-lg border border-slate-600 overflow-hidden">
-                            <div className="py-1">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setEditFormData({ ...editFormData, paymentStatus: 'pending' });
-                                  setShowPaymentStatusDropdown(false);
-                                }}
-                                className={`w-full px-4 py-2 text-left text-sm flex items-center hover:bg-white/5 transition-colors ${editFormData.paymentStatus === 'pending' ? 'text-white bg-white/10' : 'text-slate-300'
-                                  }`}
-                              >
-                                <span className="w-2 h-2 rounded-full bg-amber-500 mr-2"></span>
-                                Pending
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setEditFormData({ ...editFormData, paymentStatus: 'cleared' });
-                                  setShowPaymentStatusDropdown(false);
-                                }}
-                                className={`w-full px-4 py-2 text-left text-sm flex items-center hover:bg-white/5 transition-colors ${editFormData.paymentStatus === 'cleared' ? 'text-white bg-white/10' : 'text-slate-300'
-                                  }`}
-                              >
-                                <span className="w-2 h-2 rounded-full bg-sky-500 mr-2"></span>
-                                Cleared
-                              </button>
-                            </div>
-                          </div>
-                        )}
+                        <label className="inline-flex items-center cursor-pointer">
+                          <input
+                            type="radio"
+                            className="sr-only peer"
+                            name="paymentStatus"
+                            value="cleared"
+                            checked={editFormData.paymentStatus === 'cleared'}
+                            onChange={() => setEditFormData({ ...editFormData, paymentStatus: 'cleared' })}
+                          />
+                          <div className="w-10 h-5 bg-slate-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-sky-500/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-600 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-sky-600 relative"></div>
+                          <span className="ml-2 text-sm text-slate-300">Cleared</span>
+                        </label>
+                      </div>
+                      <div className="mt-2 flex items-center">
+                        <span className={`px-2 py-1 text-xs rounded-md ${editFormData.paymentStatus === 'pending'
+                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                          : 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
+                          }`}>
+                          {editFormData.paymentStatus === 'pending' ? '⏳ Pending' : '✓ Cleared'}
+                        </span>
                       </div>
                     </div>
 
@@ -2272,6 +2262,8 @@ const ClientList = () => {
                         </span>
                       </div>
                     </div>
+                    </div>
+
                   </div>
                 ) : (
                   <div className="p-5">

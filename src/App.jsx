@@ -13,6 +13,7 @@ import ExpenseTracker from './ExpenseTracker';
 import NotificationsPage from './components/NotificationsPage';
 import DailyOrders from './DailyOrders';
 import AllPaymentHistory from './AllPaymentHistory';
+import ProductManager from './ProductManager';
 //   import React, { useState, useEffect } from 'react';
 
 // // Simple error boundary component
@@ -108,6 +109,7 @@ function App() {
               <Route path="/expenses" element={<ExpenseTracker />} />
               <Route path="/notifications" element={<NotificationsPage />} />
               <Route path="/daily-orders" element={<DailyOrders />} />
+              <Route path="/products" element={<ProductManager />} />
             </Route>
             
             {/* Redirect any unknown routes to login */}

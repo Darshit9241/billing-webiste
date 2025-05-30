@@ -231,13 +231,30 @@ const ProductManager = () => {
     }
   };
 
+  // Handle back button click
+  const handleBackClick = () => {
+    // You can replace this with your actual navigation logic
+    window.history.back();
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-950 to-black text-white p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-400">
-            Product Manager
-          </h1>
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+          <div className="flex items-center">
+            <button 
+              onClick={handleBackClick}
+              className="mr-4 p-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-all group"
+              aria-label="Go back"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-cyan-400 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </button>
+            <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-400">
+              Product Manager
+            </h1>
+          </div>
           <button 
             onClick={openAddProductModal}
             className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white rounded-xl font-medium transition-all shadow-lg shadow-cyan-500/20 flex items-center gap-2"
@@ -245,6 +262,7 @@ const ProductManager = () => {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
             </svg>
+            Add Product
           </button>
         </div>
         
@@ -410,13 +428,13 @@ const ProductManager = () => {
       {/* Add/Edit Product Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-900 rounded-3xl border border-white/10 shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto animate-fade-in">
+          <div className="bg-gradient-to-br from-gray-900 to-slate-900 rounded-3xl border border-white/10 shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto animate-fade-in">
             <div className="sticky top-0 bg-slate-900/90 backdrop-blur-sm p-6 border-b border-white/10 flex justify-between items-center">
               <div className="flex items-center gap-3">
-                <div className="h-8 w-1 bg-gradient-to-b from-emerald-400 to-cyan-400 rounded-full"></div>
-                <h2 className="text-2xl font-semibold text-white">
-                  {editingProduct ? 'Edit Product' : 'Add New Product'}
-                </h2>
+            <div className="h-8 w-1 bg-gradient-to-b from-emerald-400 to-cyan-400 rounded-full"></div>
+            <h2 className="text-2xl font-semibold text-white">
+              {editingProduct ? 'Edit Product' : 'Add New Product'}
+            </h2>
               </div>
               <button 
                 onClick={() => setIsModalOpen(false)} 
@@ -426,181 +444,181 @@ const ProductManager = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
-            </div>
-            
+          </div>
+          
             <div className="p-6">
-              {error && (
-                <div className="mb-6 p-4 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-2xl text-red-200 flex items-center gap-3">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                  <span>{error}</span>
-                </div>
-              )}
-              
-              <form onSubmit={handleSubmit} className="space-y-6">
+          {error && (
+            <div className="mb-6 p-4 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-2xl text-red-200 flex items-center gap-3">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              <span>{error}</span>
+            </div>
+          )}
+          
+          <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-slate-300 mb-1">
-                      Product Name
-                    </label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={currentProduct.name}
-                      onChange={handleInputChange}
-                      placeholder="Enter product name"
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
-                    />
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-300 mb-1">
+                  Product Name
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={currentProduct.name}
+                  onChange={handleInputChange}
+                  placeholder="Enter product name"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-300 mb-1">
+                  Count
+                </label>
+                <input
+                  type="number"
+                  name="count"
+                  value={currentProduct.count}
+                  onChange={handleInputChange}
+                  min="0"
+                  step="1"
+                  placeholder="0"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
+                />
                   </div>
-                  
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-slate-300 mb-1">
-                      Count
-                    </label>
-                    <input
-                      type="number"
-                      name="count"
-                      value={currentProduct.count}
-                      onChange={handleInputChange}
-                      min="0"
-                      step="1"
-                      placeholder="0"
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-300 mb-1">
-                    Image
-                  </label>
-                  <div 
-                    className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-xl ${currentProduct.imageUrl ? 'border-cyan-500/30 bg-cyan-900/10' : 'border-white/10 hover:border-white/20'} transition-all cursor-pointer`}
-                    onClick={triggerFileInput}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      const file = e.dataTransfer.files[0];
-                      if (file && file.type.startsWith('image/')) {
-                        const fileInput = fileInputRef.current;
-                        fileInput.files = e.dataTransfer.files;
-                        const event = new Event('change', { bubbles: true });
-                        fileInput.dispatchEvent(event);
-                      }
-                    }}
-                  >
-                    <div className="space-y-1 text-center">
-                      {currentProduct.imageUrl ? (
-                        <div className="relative mx-auto w-32 h-32 mb-2 overflow-hidden rounded-lg border border-white/20 group">
-                          <img 
-                            src={currentProduct.imageUrl} 
-                            alt="Preview" 
-                            className="h-full w-full object-cover transition-transform group-hover:scale-110"
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = "https://via.placeholder.com/300?text=Invalid+URL";
-                            }}
-                          />
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (editingProduct) {
-                                setEditingProduct({
-                                  ...editingProduct,
+              </div>
+              
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-300 mb-1">
+                  Image
+                </label>
+                <div 
+                  className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-xl ${currentProduct.imageUrl ? 'border-cyan-500/30 bg-cyan-900/10' : 'border-white/10 hover:border-white/20'} transition-all cursor-pointer`}
+                  onClick={triggerFileInput}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const file = e.dataTransfer.files[0];
+                    if (file && file.type.startsWith('image/')) {
+                      const fileInput = fileInputRef.current;
+                      fileInput.files = e.dataTransfer.files;
+                      const event = new Event('change', { bubbles: true });
+                      fileInput.dispatchEvent(event);
+                    }
+                  }}
+                >
+                  <div className="space-y-1 text-center">
+                    {currentProduct.imageUrl ? (
+                      <div className="relative mx-auto w-32 h-32 mb-2 overflow-hidden rounded-lg border border-white/20 group">
+                        <img 
+                          src={currentProduct.imageUrl} 
+                          alt="Preview" 
+                          className="h-full w-full object-cover transition-transform group-hover:scale-110"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "https://via.placeholder.com/300?text=Invalid+URL";
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (editingProduct) {
+                              setEditingProduct({
+                                ...editingProduct,
                                   imageUrl: '',
                                   isNewImage: false
-                                });
-                              } else {
-                                setNewProduct({
-                                  ...newProduct,
+                              });
+                            } else {
+                              setNewProduct({
+                                ...newProduct,
                                   imageUrl: '',
                                   isNewImage: false
-                                });
-                              }
-                              setUploadedFile(null);
-                            }}
-                            className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg opacity-70 hover:opacity-100 transition-opacity"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
+                              });
+                            }
+                            setUploadedFile(null);
+                          }}
+                          className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg opacity-70 hover:opacity-100 transition-opacity"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
                           {currentProduct.isNewImage && (
                             <div className="absolute bottom-0 left-0 right-0 bg-emerald-500/70 text-white text-xs py-1 text-center">
                               New Image
                             </div>
                           )}
-                        </div>
-                      ) : (
-                        <svg className="mx-auto h-12 w-12 text-slate-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                          <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      )}
-                      <div className="flex text-sm text-slate-400 justify-center">
-                        <label
-                          htmlFor="file-upload"
-                          className="relative cursor-pointer rounded-md font-medium text-cyan-400 hover:text-cyan-300 focus-within:outline-none"
-                        >
-                          <span>{currentProduct.imageUrl ? 'Change image' : 'Upload an image'}</span>
-                        </label>
-                        <input
-                          id="file-upload"
-                          type="file"
-                          ref={fileInputRef}
-                          onChange={handleImageUpload}
-                          accept="image/*"
-                          className="hidden"
-                        />
                       </div>
-                      <p className="text-xs text-slate-400">
-                        PNG, JPG, GIF up to 10MB
-                      </p>
-                      {!currentProduct.imageUrl && (
-                        <p className="text-xs text-slate-500 mt-1">
-                          Or drag and drop
-                        </p>
-                      )}
+                    ) : (
+                      <svg className="mx-auto h-12 w-12 text-slate-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                    <div className="flex text-sm text-slate-400 justify-center">
+                      <label
+                        htmlFor="file-upload"
+                        className="relative cursor-pointer rounded-md font-medium text-cyan-400 hover:text-cyan-300 focus-within:outline-none"
+                      >
+                        <span>{currentProduct.imageUrl ? 'Change image' : 'Upload an image'}</span>
+                      </label>
+                      <input
+                        id="file-upload"
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleImageUpload}
+                        accept="image/*"
+                        className="hidden"
+                      />
                     </div>
-                  </div>
+                    <p className="text-xs text-slate-400">
+                      PNG, JPG, GIF up to 10MB
+                    </p>
+                    {!currentProduct.imageUrl && (
+                      <p className="text-xs text-slate-500 mt-1">
+                        Or drag and drop
+                      </p>
+                    )}
                 </div>
-                
+              </div>
+            </div>
+            
                 <div className="flex justify-end space-x-4 pt-4">
-                  <button
-                    type="button"
+                <button
+                  type="button"
                     onClick={() => {
                       handleCancelEdit();
                       setIsModalOpen(false);
                     }}
-                    className="px-6 py-3 bg-slate-700/50 hover:bg-slate-700 text-white rounded-xl font-medium transition-colors border border-white/5 hover:border-white/10"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className={`px-8 py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white rounded-xl font-medium transition-all shadow-lg shadow-cyan-500/20 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
-                  >
-                    {isSubmitting ? (
-                      <div className="flex items-center gap-2">
-                        <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <span>Saving...</span>
-                      </div>
-                    ) : (
-                      editingProduct ? 'Update Product' : 'Save Product'
-                    )}
-                  </button>
-                </div>
-              </form>
+                  className="px-6 py-3 bg-slate-700/50 hover:bg-slate-700 text-white rounded-xl font-medium transition-colors border border-white/5 hover:border-white/10"
+                >
+                  Cancel
+                </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className={`px-8 py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white rounded-xl font-medium transition-all shadow-lg shadow-cyan-500/20 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
+              >
+                {isSubmitting ? (
+                  <div className="flex items-center gap-2">
+                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Saving...</span>
+                  </div>
+                ) : (
+                  editingProduct ? 'Update Product' : 'Save Product'
+                )}
+              </button>
             </div>
+          </form>
+        </div>
           </div>
         </div>
       )}

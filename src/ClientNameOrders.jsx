@@ -845,11 +845,15 @@ const ClientNameOrders = () => {
       settledTo: pendingOrders.map(order => order.id)
     };
 
+    // Calculate new balance for overpaid order
+    const newOverpaidBalance = (parseFloat(overpaidOrder.grandTotal) || 0) - 
+      (parseFloat(overpaidOrder.amountPaid) - (overpaidAmount - remainingOverpaidAmount));
+
     // Update overpaid order with remaining amount
     const updatedOverpaidOrder = {
       ...overpaidOrder,
       amountPaid: parseFloat(overpaidOrder.amountPaid) - (overpaidAmount - remainingOverpaidAmount),
-      paymentStatus: remainingOverpaidAmount === 0 ? 'cleared' : 'pending',
+      paymentStatus: newOverpaidBalance <= 0 ? 'cleared' : 'pending',
       paymentHistory: [...(overpaidOrder.paymentHistory || []), overpaidPaymentHistoryEntry]
     };
     updatedOrders.push(updatedOverpaidOrder);

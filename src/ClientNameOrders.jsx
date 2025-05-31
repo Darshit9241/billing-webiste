@@ -93,6 +93,8 @@ const ClientNameOrders = () => {
   const [showMergeConfirm, setShowMergeConfirm] = useState(false);
   const [mergedOrder, setMergedOrder] = useState(null);
   const [mergeLoading, setMergeLoading] = useState(false);
+  const [showSettleConfirm, setShowSettleConfirm] = useState(false);
+  const [settleLoading, setSettleLoading] = useState(false);
   
   // State for delete confirmation
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -779,6 +781,111 @@ const ClientNameOrders = () => {
     }
   }, [orders]);
 
+  // Add new function to handle settlement
+  const handleSettleOrders = async () => {
+    if (selectedOrders.length < 2) {
+      setError("Please select at least 2 orders - one overpaid and one or more pending");
+      return;
+    }
+
+    // Find overpaid and pending orders
+    const overpaidOrder = selectedOrders.find(order => {
+      const balance = (parseFloat(order.grandTotal) || 0) - (parseFloat(order.amountPaid) || 0);
+      return balance < 0;
+    });
+
+    const pendingOrders = selectedOrders.filter(order => {
+      const balance = (parseFloat(order.grandTotal) || 0) - (parseFloat(order.amountPaid) || 0);
+      return balance > 0;
+    });
+
+    if (!overpaidOrder || pendingOrders.length === 0) {
+      setError("Please select one overpaid order and one or more pending orders");
+      return;
+    }
+
+    const overpaidAmount = Math.abs((parseFloat(overpaidOrder.grandTotal) || 0) - (parseFloat(overpaidOrder.amountPaid) || 0));
+    let remainingOverpaidAmount = overpaidAmount;
+
+    // Create array to store all updated orders
+    const updatedOrders = [];
+
+    // Update pending orders first
+    for (const pendingOrder of pendingOrders) {
+      const pendingAmount = (parseFloat(pendingOrder.grandTotal) || 0) - (parseFloat(pendingOrder.amountPaid) || 0);
+      const amountToTransfer = Math.min(remainingOverpaidAmount, pendingAmount);
+
+      if (amountToTransfer > 0) {
+        // Create payment history entry for the pending order
+        const paymentHistoryEntry = {
+          date: new Date().toISOString(),
+          amount: amountToTransfer,
+          method: 'settlement',
+          notes: `Settled from overpaid order #${overpaidOrder.id.substring(0, 8)}`,
+          settledFrom: overpaidOrder.id
+        };
+
+        const updatedPendingOrder = {
+          ...pendingOrder,
+          amountPaid: parseFloat(pendingOrder.amountPaid) + amountToTransfer,
+          paymentStatus: (parseFloat(pendingOrder.amountPaid) + amountToTransfer) >= parseFloat(pendingOrder.grandTotal) ? 'cleared' : 'pending',
+          paymentHistory: [...(pendingOrder.paymentHistory || []), paymentHistoryEntry]
+        };
+        updatedOrders.push(updatedPendingOrder);
+        remainingOverpaidAmount -= amountToTransfer;
+      }
+    }
+
+    // Create payment history entry for the overpaid order
+    const overpaidPaymentHistoryEntry = {
+      date: new Date().toISOString(),
+      amount: -(overpaidAmount - remainingOverpaidAmount), // Negative amount to show deduction
+      method: 'settlement',
+      notes: `Settled to ${pendingOrders.length} pending order${pendingOrders.length > 1 ? 's' : ''}`,
+      settledTo: pendingOrders.map(order => order.id)
+    };
+
+    // Update overpaid order with remaining amount
+    const updatedOverpaidOrder = {
+      ...overpaidOrder,
+      amountPaid: parseFloat(overpaidOrder.amountPaid) - (overpaidAmount - remainingOverpaidAmount),
+      paymentStatus: remainingOverpaidAmount === 0 ? 'cleared' : 'pending',
+      paymentHistory: [...(overpaidOrder.paymentHistory || []), overpaidPaymentHistoryEntry]
+    };
+    updatedOrders.push(updatedOverpaidOrder);
+
+    setSettleLoading(true);
+    try {
+      // Update all orders in Firebase
+      for (const order of updatedOrders) {
+        await updateClient(order);
+      }
+
+      // Update local state
+      setOrders(prev => prev.map(order => {
+        const updatedOrder = updatedOrders.find(o => o.id === order.id);
+        return updatedOrder || order;
+      }));
+
+      // Clear selection
+      setSelectedOrders([]);
+      setIsSelectionMode(false);
+      setShowSettleConfirm(false);
+
+      // Show success message
+      setError('Orders successfully settled!');
+      setTimeout(() => setError(''), 3000);
+
+      // Refresh orders
+      await fetchOrdersByClientName(decodedClientName);
+    } catch (err) {
+      setError(`Failed to settle orders: ${err.message}`);
+      setTimeout(() => setError(''), 5000);
+    } finally {
+      setSettleLoading(false);
+    }
+  };
+
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-gray-100 to-white'} py-8 px-4 sm:px-6 lg:px-8 transition-colors duration-200`}>
       {/* Inject CSS keyframes */}
@@ -853,6 +960,20 @@ const ClientNameOrders = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
                     </svg>
                     <span>Merge Selected ({selectedOrders.length})</span>
+                  </button>
+                  <button 
+                    onClick={() => setShowSettleConfirm(true)}
+                    disabled={selectedOrders.length < 2}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center
+                      ${selectedOrders.length < 2 
+                        ? (isDarkMode ? 'bg-slate-700/50 text-slate-500' : 'bg-gray-200 text-gray-400') 
+                        : (isDarkMode ? 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30' : 'bg-blue-100 text-blue-700 hover:bg-blue-200')
+                      } transition-colors`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Settle Selected ({selectedOrders.length})</span>
                   </button>
                   <button 
                     onClick={toggleSelectionMode}
@@ -2040,6 +2161,109 @@ const ClientNameOrders = () => {
                     </>
                   ) : (
                     'Delete Order'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Add Settle Confirmation Modal */}
+        {showSettleConfirm && selectedOrders.length >= 2 && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className={`w-full max-w-2xl rounded-xl shadow-2xl ${isDarkMode ? 'bg-slate-800' : 'bg-white'} p-6`}>
+              <h3 className={`text-xl font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                Confirm Order Settlement
+              </h3>
+              
+              <div className="space-y-4 mb-6">
+                <p className={`${isDarkMode ? 'text-slate-300' : 'text-gray-700'}`}>
+                  You are about to settle the selected orders. The overpaid amount will be distributed among the pending orders.
+                </p>
+                
+                <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
+                  <h4 className={`font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Settlement Summary:</h4>
+                  {selectedOrders.map(order => {
+                    const balance = (parseFloat(order.grandTotal) || 0) - (parseFloat(order.amountPaid) || 0);
+                    return (
+                      <div key={order.id} className="mb-4 last:mb-0">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className={`${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Order #{order.id.substring(0, 8)}</span>
+                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                            balance < 0 
+                              ? `${isDarkMode ? 'bg-green-500/20 text-green-300' : 'bg-green-100 text-green-700'}`
+                              : `${isDarkMode ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-100 text-amber-700'}`
+                          }`}>
+                            {balance < 0 ? 'Overpaid' : 'Pending'}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Total Amount:</p>
+                            <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>₹{parseFloat(order.grandTotal || 0).toFixed(2)}</p>
+                          </div>
+                          <div>
+                            <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Amount Paid:</p>
+                            <p className="font-medium text-emerald-500">₹{parseFloat(order.amountPaid || 0).toFixed(2)}</p>
+                          </div>
+                          <div>
+                            <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Balance:</p>
+                            <p className={`font-medium ${balance <= 0 ? 'text-green-500' : 'text-amber-500'}`}>
+                              {balance <= 0 ? 
+                                `₹${Math.abs(balance).toFixed(2)} (Overpaid)` : 
+                                `₹${balance.toFixed(2)} (Pending)`
+                              }
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                <div className={`${isDarkMode ? 'bg-blue-500/10 border-blue-500/30 text-blue-300' : 'bg-blue-50 border-blue-200 text-blue-800'} p-3 rounded-lg border`}>
+                  <div className="flex items-start">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-sm">
+                      The overpaid amount will be distributed among the pending orders in the order they are listed. If the overpaid amount is more than the total pending amount, the remaining overpaid amount will stay in the original order.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3">
+                <button 
+                  onClick={() => setShowSettleConfirm(false)}
+                  disabled={settleLoading}
+                  className={`px-4 py-2 rounded-lg ${
+                    isDarkMode 
+                      ? 'bg-white/10 text-white hover:bg-white/20' 
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  } transition-colors`}
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleSettleOrders}
+                  disabled={settleLoading}
+                  className={`px-4 py-2 rounded-lg flex items-center ${
+                    isDarkMode 
+                      ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                      : 'bg-blue-500 text-white hover:bg-blue-600'
+                  } transition-colors`}
+                >
+                  {settleLoading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Processing...
+                    </>
+                  ) : (
+                    'Confirm Settlement'
                   )}
                 </button>
               </div>

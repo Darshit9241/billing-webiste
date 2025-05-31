@@ -1446,6 +1446,39 @@ const ClientNameOrders = () => {
                     </div>
                   </div>
                   
+                  {/* New field: Purchase Pending - Sell Paid */}
+                  <div className={`${isDarkMode ? 'bg-orange-500/10' : 'bg-orange-50'} rounded-xl p-4 border ${isDarkMode ? 'border-orange-500/20' : 'border-orange-200'} mb-4`}>
+                    <div className="flex justify-between items-center">
+                      <p className={`text-sm ${isDarkMode ? 'text-orange-300' : 'text-orange-700'}`}>Purchase Pending - Sell Paid</p>
+                      <div className="flex items-center">
+                        <span className={`text-xs px-2 py-1 rounded-full mr-2 ${isDarkMode ? 'bg-white/10 text-white' : 'bg-gray-100 text-gray-700'}`}>
+                          Net Balance
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center mt-1">
+                      <div>
+                        <p className={`text-xs ${isDarkMode ? 'text-orange-300/70' : 'text-orange-700/70'}`}>
+                          {(searchTerm || isDateFilterActive) ? 
+                            `₹${filteredPurchasePendingAmount.toFixed(2)} - ₹${filteredSellPaidAmount.toFixed(2)}` : 
+                            `₹${purchasePendingAmount.toFixed(2)} - ₹${sellPaidAmount.toFixed(2)}`}
+                        </p>
+                      </div>
+                      <p className={`text-xl font-bold ${
+                        (searchTerm || isDateFilterActive) ? 
+                          (filteredPurchasePendingAmount - filteredSellPaidAmount <= 0 ? "text-green-500" : "text-amber-500") : 
+                          (purchasePendingAmount - sellPaidAmount <= 0 ? "text-green-500" : "text-amber-500")
+                      }`}>
+                        ₹{Math.abs((searchTerm || isDateFilterActive) ? 
+                          (filteredPurchasePendingAmount - filteredSellPaidAmount).toFixed(2) : 
+                          (purchasePendingAmount - sellPaidAmount).toFixed(2))}
+                        {((searchTerm || isDateFilterActive) ? 
+                          (filteredPurchasePendingAmount - filteredSellPaidAmount <= 0) : 
+                          (purchasePendingAmount - sellPaidAmount <= 0)) ? " (Credit)" : " (Debit)"}
+                      </p>
+                    </div>
+                  </div>
+                  
                   {/* Purchase Orders List */}
                   {expandedSections.purchaseOrders && (
                     <div className={`mt-2 rounded-xl border ${isDarkMode ? 'border-purple-500/20 bg-purple-500/5' : 'border-purple-100 bg-purple-50'} overflow-hidden`}>
